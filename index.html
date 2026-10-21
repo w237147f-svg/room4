@@ -37,16 +37,16 @@ pannellum.viewer('panorama', {
         "scene1": {
             "title": "地点1",
             "type": "equirectangular",
-            "panorama": "66.jpg", // 同じフォルダにある 66.jpg を読み込む
+            "panorama": "66.jpg",
             "hotSpots": [
                 {
-                    "pitch": -5, // ホットスポットの上下の位置
-                    "yaw": 120,  // ホットスポットの左右の位置（※実際の画像に合わせて調整してください）
+                    "pitch": -5, // 少し下を見る角度（目線の高さ調整）
+                    "yaw": 150,  // ★ 画像の中央(0度)から150度の位置
                     "type": "scene",
                     "text": "地点2へ移動",
                     "sceneId": "scene2",
-                    "targetYaw": "same",   // ★移動後も同じ水平方向のカメラ向きを維持する
-                    "targetPitch": "same"  // ★移動後も同じ垂直方向のカメラ向きを維持する
+                    "targetYaw": "same",   // 移動後もカメラの向きを維持
+                    "targetPitch": "same"  
                 }
             ]
         },
@@ -54,16 +54,16 @@ pannellum.viewer('panorama', {
         "scene2": {
             "title": "地点2",
             "type": "equirectangular",
-            "panorama": "68.jpg", // 同じフォルダにある 68.jpg を読み込む
+            "panorama": "68.jpg",
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": -60, // ホットスポットの左右の位置（※実際の画像に合わせて調整してください）
+                    "yaw": -30,  // ★ 150度から来たので、真後ろの方向 (150 - 180 = -30度)
                     "type": "scene",
                     "text": "地点1へ移動",
                     "sceneId": "scene1",
-                    "targetYaw": "same",   // ★移動後も同じカメラ向きを維持する
-                    "targetPitch": "same"  // ★移動後も同じカメラ向きを維持する
+                    "targetYaw": "same",   // 移動後もカメラの向きを維持
+                    "targetPitch": "same"  
                 }
             ]
         }
