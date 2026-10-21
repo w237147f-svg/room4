@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360度パノラマツアー</title>
+    <!-- PannellumのCSSとJavaScriptを読み込む -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <style>
+        /* 画面いっぱいにパノラマを表示する設定 */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #panorama {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+<div id="panorama"></div>
+
+<script>
+// パノラマビューアーの初期化と設定
+pannellum.viewer('panorama', {
+    "default": {
+        "firstScene": "scene1", // 最初に表示するシーン
+        "sceneFadeDuration": 1000, // シーン切り替え時のフェード時間（ミリ秒）
+        "autoLoad": true // 自動で画像を読み込む
+    },
+
+    "scenes": {
+        // --- 地点1 (66.jpg) の設定 ---
+        "scene1": {
+            "title": "地点1",
+            "type": "equirectangular",
+            "panorama": "66.jpg", // 同じフォルダにある 66.jpg を読み込む
+            "hotSpots": [
+                {
+                    "pitch": -5, // ホットスポットの上下の位置
+                    "yaw": 120,  // ホットスポットの左右の位置（※実際の画像に合わせて調整してください）
+                    "type": "scene",
+                    "text": "地点2へ移動",
+                    "sceneId": "scene2",
+                    "targetYaw": "same",   // ★移動後も同じ水平方向のカメラ向きを維持する
+                    "targetPitch": "same"  // ★移動後も同じ垂直方向のカメラ向きを維持する
+                }
+            ]
+        },
+        // --- 地点2 (68.jpg) の設定 ---
+        "scene2": {
+            "title": "地点2",
+            "type": "equirectangular",
+            "panorama": "68.jpg", // 同じフォルダにある 68.jpg を読み込む
+            "hotSpots": [
+                {
+                    "pitch": -5,
+                    "yaw": -60, // ホットスポットの左右の位置（※実際の画像に合わせて調整してください）
+                    "type": "scene",
+                    "text": "地点1へ移動",
+                    "sceneId": "scene1",
+                    "targetYaw": "same",   // ★移動後も同じカメラ向きを維持する
+                    "targetPitch": "same"  // ★移動後も同じカメラ向きを維持する
+                }
+            ]
+        }
+    }
+});
+</script>
+
+</body>
+</html>
