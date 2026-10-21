@@ -161,7 +161,7 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": 180, // ★ 180度の位置に変更
+                    "yaw": 210, // ★ 180度から+30度移動
                     "type": "scene",
                     "text": "地点2へ移動",
                     "sceneId": "scene2",
@@ -177,7 +177,7 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": 0, // ★ 180度から振り返る位置 (180 - 180 = 0度)
+                    "yaw": 30, // ★ 210度から振り返る位置 (210 - 180 = 30度)
                     "type": "scene",
                     "text": "地点1へ移動",
                     "sceneId": "scene1",
@@ -186,7 +186,7 @@ pannellum.viewer('panorama', {
                 },
                 {
                     "pitch": 0,
-                    "yaw": 160, // ★ 170度から-10度移動した位置に変更
+                    "yaw": 160, 
                     "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz
                 }
