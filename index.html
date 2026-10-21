@@ -22,28 +22,26 @@
         .bulb-hotspot {
             width: 60px;
             height: 60px;
-            background-image: url('bulb.png'); /* 画像を読み込む */
+            background-image: url('bulb.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            /* 探しやすいように通常時はうっすら表示し、マウスオーバーでくっきり表示させます */
             opacity: 0.2; 
             transition: all 0.3s ease;
         }
-        /* マウスオーバー時の動作 */
         .bulb-hotspot:hover {
-            opacity: 1; /* 完全に表示する */
-            transform: scale(1.1); /* 少し大きくする */
+            opacity: 1;
+            transform: scale(1.1);
         }
 
         /* クイズ画面（モーダル）のスタイル */
         #quiz-overlay {
-            display: none; /* 初期状態では非表示 */
+            display: none;
             position: absolute;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.7); /* 背景を暗くする */
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -124,7 +122,6 @@ function answerQuiz(choice) {
     const resultDiv = document.getElementById('quiz-result');
     const choicesDiv = document.getElementById('quiz-choices');
     
-    // 選択肢を隠して結果を表示
     choicesDiv.style.display = 'none';
     resultDiv.style.display = 'block';
     
@@ -164,7 +161,7 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": 150, 
+                    "yaw": 180, // ★ 180度の位置に変更
                     "type": "scene",
                     "text": "地点2へ移動",
                     "sceneId": "scene2",
@@ -180,19 +177,18 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": -30, 
+                    "yaw": 0, // ★ 180度から振り返る位置 (180 - 180 = 0度)
                     "type": "scene",
                     "text": "地点1へ移動",
                     "sceneId": "scene1",
                     "targetYaw": "same",
                     "targetPitch": "same"
                 },
-                // --- 新しく追加したクイズ用ホットスポット ---
                 {
-                    "pitch": 0,    // アイコンの上下位置
-                    "yaw": 170,    // 画面中央から170度の位置
-                    "cssClass": "bulb-hotspot", // 上記で作ったCSSクラスを適用
-                    "clickHandlerFunc": showQuiz // クリック時にshowQuiz関数を実行
+                    "pitch": 0,
+                    "yaw": 160, // ★ 170度から-10度移動した位置に変更
+                    "cssClass": "bulb-hotspot",
+                    "clickHandlerFunc": showQuiz
                 }
             ]
         }
