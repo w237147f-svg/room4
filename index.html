@@ -4,18 +4,88 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>360度パノラマツアー</title>
-    <!-- PannellumのCSSとJavaScriptを読み込む -->
+    <!-- PannellumのCSSとJavaScript -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
-        /* 画面いっぱいにパノラマを表示する設定 */
         body {
             margin: 0;
             padding: 0;
+            font-family: sans-serif;
         }
         #panorama {
             width: 100vw;
             height: 100vh;
+        }
+
+        /* カスタムホットスポット（電球アイコン）のスタイル */
+        .bulb-hotspot {
+            width: 60px;
+            height: 60px;
+            background-image: url('bulb.png'); /* 画像を読み込む */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            /* 探しやすいように通常時はうっすら表示し、マウスオーバーでくっきり表示させます */
+            opacity: 0.2; 
+            transition: all 0.3s ease;
+        }
+        /* マウスオーバー時の動作 */
+        .bulb-hotspot:hover {
+            opacity: 1; /* 完全に表示する */
+            transform: scale(1.1); /* 少し大きくする */
+        }
+
+        /* クイズ画面（モーダル）のスタイル */
+        #quiz-overlay {
+            display: none; /* 初期状態では非表示 */
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.7); /* 背景を暗くする */
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .quiz-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .quiz-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .quiz-btn:hover { background-color: #e9e9e9; }
+        #quiz-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            line-height: 1.5;
+        }
+        .close-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -23,34 +93,86 @@
 
 <div id="panorama"></div>
 
+<!-- クイズ画面のHTML -->
+<div id="quiz-overlay">
+    <div class="quiz-box">
+        <h3 style="margin-top: 0;">問題：</h3>
+        <p>水の無駄を減らす行動として、適切なのはどれでしょう？</p>
+        
+        <div id="quiz-choices">
+            <button class="quiz-btn" onclick="answerQuiz('A')">A．少しだけ水が出る状態にする</button>
+            <button class="quiz-btn" onclick="answerQuiz('B')">B．次の人が使うまで流しておく</button>
+            <button class="quiz-btn" onclick="answerQuiz('C')">C．蛇口を閉めて水を止める</button>
+        </div>
+
+        <div id="quiz-result"></div>
+        
+        <button class="close-btn" onclick="closeQuiz()">閉じる</button>
+    </div>
+</div>
+
 <script>
-// パノラマビューアーの初期化と設定
+// クイズを表示する関数
+function showQuiz() {
+    document.getElementById('quiz-overlay').style.display = 'flex';
+    document.getElementById('quiz-choices').style.display = 'block';
+    document.getElementById('quiz-result').style.display = 'none';
+}
+
+// クイズに解答したときの処理
+function answerQuiz(choice) {
+    const resultDiv = document.getElementById('quiz-result');
+    const choicesDiv = document.getElementById('quiz-choices');
+    
+    // 選択肢を隠して結果を表示
+    choicesDiv.style.display = 'none';
+    resultDiv.style.display = 'block';
+    
+    const explanationText = "水を使っていないときに止めることで、使用水量を減らせます。節水は、水の供給や処理に伴うエネルギーの削減にもつながります。";
+
+    if (choice === 'C') {
+        resultDiv.style.backgroundColor = '#d4edda';
+        resultDiv.style.color = '#155724';
+        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#28a745;">正解！</h3>' + 
+                              '<p><strong>解説：</strong><br>' + explanationText + '</p>';
+    } else {
+        resultDiv.style.backgroundColor = '#f8d7da';
+        resultDiv.style.color = '#721c24';
+        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#dc3545;">不正解...</h3>' + 
+                              '<p>正解は <strong>C</strong> です。</p>' +
+                              '<p><strong>解説：</strong><br>' + explanationText + '</p>';
+    }
+}
+
+// クイズを閉じる処理
+function closeQuiz() {
+    document.getElementById('quiz-overlay').style.display = 'none';
+}
+
+// パノラマビューアーの設定
 pannellum.viewer('panorama', {
     "default": {
-        "firstScene": "scene1", // 最初に表示するシーン
-        "sceneFadeDuration": 1000, // シーン切り替え時のフェード時間（ミリ秒）
-        "autoLoad": true // 自動で画像を読み込む
+        "firstScene": "scene1",
+        "sceneFadeDuration": 1000,
+        "autoLoad": true
     },
-
     "scenes": {
-        // --- 地点1 (66.jpg) の設定 ---
         "scene1": {
             "title": "地点1",
             "type": "equirectangular",
             "panorama": "66.jpg",
             "hotSpots": [
                 {
-                    "pitch": -5, // 少し下を見る角度（目線の高さ調整）
-                    "yaw": 170,  // ★ 画像の中央(0度)から150度の位置
+                    "pitch": -5,
+                    "yaw": 150, 
                     "type": "scene",
                     "text": "地点2へ移動",
                     "sceneId": "scene2",
-                    "targetYaw": "same",   // 移動後もカメラの向きを維持
-                    "targetPitch": "same"  
+                    "targetYaw": "same",
+                    "targetPitch": "same"
                 }
             ]
         },
-        // --- 地点2 (68.jpg) の設定 ---
         "scene2": {
             "title": "地点2",
             "type": "equirectangular",
@@ -58,12 +180,19 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 {
                     "pitch": -5,
-                    "yaw": -10,  // ★ 150度から来たので、真後ろの方向 (150 - 180 = -30度)
+                    "yaw": -30, 
                     "type": "scene",
                     "text": "地点1へ移動",
                     "sceneId": "scene1",
-                    "targetYaw": "same",   // 移動後もカメラの向きを維持
-                    "targetPitch": "same"  
+                    "targetYaw": "same",
+                    "targetPitch": "same"
+                },
+                // --- 新しく追加したクイズ用ホットスポット ---
+                {
+                    "pitch": 0,    // アイコンの上下位置
+                    "yaw": 170,    // 画面中央から170度の位置
+                    "cssClass": "bulb-hotspot", // 上記で作ったCSSクラスを適用
+                    "clickHandlerFunc": showQuiz // クリック時にshowQuiz関数を実行
                 }
             ]
         }
