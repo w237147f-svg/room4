@@ -19,15 +19,14 @@
         }
         .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
 
-        /* 新しい移動用ホットスポット（斜め前の矢印）のスタイル */
+        /* 新しい移動用ホットスポット（奥に向かって進む遠近感のある矢印）のスタイル */
         .custom-move-icon {
-            width: 40px; height: 40px;
-            /* 白い斜め前（右斜め上）の矢印をSVGで描画 */
-            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>');
+            width: 50px; height: 50px;
+            /* 遠近感（パース）のついた矢印をSVGで描画 */
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 15 L85 60 L60 55 L65 90 L35 90 L40 55 L15 60 Z" fill="rgba(255,255,255,0.9)" stroke="%23333" stroke-width="3" stroke-linejoin="round" /></svg>');
             background-size: contain; background-repeat: no-repeat; background-position: center;
             cursor: pointer;
-            /* 背景に紛れないように黒い影をつける */
-            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.8));
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
             transition: transform 0.2s;
         }
         .custom-move-icon:hover { transform: scale(1.2); }
@@ -117,7 +116,6 @@ pannellum.viewer('panorama', {
             "panorama": "66.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 210, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                // ★ 地点3への移動アイコンを左に30度(-30)移動
                 { "pitch": -5, "yaw": -30, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 120, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
@@ -149,10 +147,9 @@ pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "200.jpg",
             "hotSpots": [
-                // ★ 振り返って地点1に戻るアイコン(-30度の真逆の150度)
                 { "pitch": -5, "yaw": 150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                // ★ 地点3から地点5への移動(画面中央: 0度)
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+                // ★ 修正：地点3から地点5への移動（0度から180度右に移動）
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { 
                     "pitch": 0, "yaw": -65,
                     "cssClass": "bulb-hotspot", 
@@ -196,8 +193,8 @@ pannellum.viewer('panorama', {
             "panorama": "203.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                // ★ 地点5から地点3への戻るアイコン(0度の真逆の180度)
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+                // ★ 修正：地点5から地点3への戻るアイコン（180度の逆の0度）
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { 
                     "pitch": -10, "yaw": 15,
                     "cssClass": "bulb-hotspot", 
