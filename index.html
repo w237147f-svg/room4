@@ -3,14 +3,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360度パノラマツアー</title>
+    <title>脱炭素クイズツアー</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: sans-serif; }
         #panorama { width: 100vw; height: 100vh; }
         
-        /* クイズ用ホットスポット（電球アイコン）のスタイル */
+        /* ゲーム開始画面のスタイル */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.8); z-index: 2000; /* 最前面に表示 */
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;
+        }
+        .start-btn {
+            padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
+            background: #28a745; color: white; border: none; border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s;
+        }
+        .start-btn:hover { transform: scale(1.05); background: #218838; }
+
+        /* スコアボードのスタイル */
+        #score-board {
+            position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none; /* 初期は非表示 */
+        }
+        .score-highlight { color: #e83e8c; font-size: 22px; }
+
+        /* クイズ用ホットスポット（電球） */
         .bulb-hotspot {
             width: 60px; height: 60px;
             background-image: url('bulb.png');
@@ -19,10 +40,9 @@
         }
         .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
 
-        /* 新しい移動用ホットスポット（奥行きを感じる3Dカーソル風）のスタイル */
+        /* 移動用ホットスポット（奥行きを感じる矢印） */
         .custom-move-icon {
             width: 50px; height: 50px;
-            /* 奥に向かって進む遠近感のある矢印をSVGで描画 */
             background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 50 15 L 90 80 L 50 60 L 10 80 Z" fill="rgba(255,255,255,0.9)" stroke="%23333" stroke-width="3" stroke-linejoin="round" /></svg>');
             background-size: contain; background-repeat: no-repeat; background-position: center;
             cursor: pointer;
@@ -31,7 +51,7 @@
         }
         .custom-move-icon:hover { transform: scale(1.2); }
 
-        /* クイズ画面（モーダル）のスタイル */
+        /* クイズ画面（モーダル） */
         #quiz-overlay {
             display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
@@ -45,8 +65,19 @@
 </head>
 <body>
 
+<!-- ゲーム開始画面（地点1で最初に表示される） -->
+<div id="start-screen">
+    <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
+    <p style="margin-bottom: 30px;">地点を移動して問題を探し、ポイントを集めよう！</p>
+    <button class="start-btn" onclick="startGame()">ゲーム開始</button>
+</div>
+
+<!-- 画面左上のスコアボード -->
+<div id="score-board">現在のポイント: <span id="score-value" class="score-highlight">0</span> 点</div>
+
 <div id="panorama"></div>
 
+<!-- クイズ出題画面 -->
 <div id="quiz-overlay">
     <div class="quiz-box">
         <h3 style="margin-top: 0;">問題：</h3>
@@ -64,6 +95,21 @@
 </div>
 
 <script>
+// ゲーム進行用の変数
+let score = 0;
+let isGameStarted = false;
+let answeredQuestions = new Set(); // 解答済みの問題IDを保存し、重複加算を防ぐ
+
+// ゲーム開始処理
+function startGame() {
+    isGameStarted = true;
+    score = 0;
+    answeredQuestions.clear();
+    document.getElementById('score-value').innerText = score;
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('score-board').style.display = 'block';
+}
+
 let currentQuiz = null;
 
 function showQuiz(event, quizData) {
@@ -85,10 +131,24 @@ function answerQuiz(selectedChoice) {
     choicesDiv.style.display = 'none';
     resultDiv.style.display = 'block';
 
+    // この問題をすでに解いたことがあるかチェック
+    const alreadyAnswered = answeredQuestions.has(currentQuiz.quizId);
+
     if (selectedChoice === currentQuiz.correctAnswer) {
+        // 正解かつ、まだこの問題でポイントを貰っていなければ加算
+        let pointMessage = "";
+        if (isGameStarted && !alreadyAnswered) {
+            score += 1;
+            document.getElementById('score-value').innerText = score;
+            pointMessage = '<p style="font-weight:bold; color:#e83e8c;">+1 ポイント獲得！</p>';
+        } else if (alreadyAnswered) {
+            pointMessage = '<p style="font-size: 14px; color: #666;">※解答済みのためポイントは加算されません。</p>';
+        }
+
         resultDiv.style.backgroundColor = '#d4edda'; 
         resultDiv.style.color = '#155724';
         resultDiv.innerHTML = '<h3 style="margin-top:0; color:#28a745;">正解！</h3>' + 
+                              pointMessage +
                               '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
     } else {
         resultDiv.style.backgroundColor = '#f8d7da'; 
@@ -97,12 +157,18 @@ function answerQuiz(selectedChoice) {
                               '<p>正解は <strong>' + currentQuiz.correctAnswer + '</strong> です。</p>' +
                               '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
     }
+
+    // 解答済みとして記録する
+    if (isGameStarted) {
+        answeredQuestions.add(currentQuiz.quizId);
+    }
 }
 
 function closeQuiz() { 
     document.getElementById('quiz-overlay').style.display = 'none'; 
 }
 
+// パノラマビューアーの設定
 pannellum.viewer('panorama', {
     "default": {
         "firstScene": "scene1",
@@ -132,6 +198,7 @@ pannellum.viewer('panorama', {
                     "pitch": 0, "yaw": 160, "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
+                        "quizId": "quiz_water", // ★ 各問題の識別用ID
                         "question": "水の無駄を減らす行動として、適切なのはどれでしょう？",
                         "choiceA": "A．少しだけ水が出る状態にする",
                         "choiceB": "B．次の人が使うまで流しておく",
@@ -148,13 +215,13 @@ pannellum.viewer('panorama', {
             "panorama": "200.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                // ★ 修正：地点3から地点5への移動（180度から左に90度移動 = 90度）
                 { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { 
                     "pitch": 0, "yaw": -65,
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
+                        "quizId": "quiz_ac", // ★ 各問題の識別用ID
                         "question": "誰もいない教室でエアコンが動いています。この後は使用予定がなく、利用者が停止してよい設備です。<br><br>冷暖房に使うエネルギーを減らすために、どうしますか？",
                         "choiceA": "A．エアコンを停止する",
                         "choiceB": "B．翌日まで運転を続ける",
@@ -177,6 +244,7 @@ pannellum.viewer('panorama', {
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
+                        "quizId": "quiz_monitor", // ★ 各問題の識別用ID
                         "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
                         "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
                         "choiceB": "B．使わないときはこまめに主電源を切る",
@@ -193,13 +261,13 @@ pannellum.viewer('panorama', {
             "panorama": "203.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                // ★ 修正：地点5から地点3への戻るアイコン（90度の逆の-90度）
                 { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { 
                     "pitch": -10, "yaw": 15,
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
+                        "quizId": "quiz_copy", // ★ 各問題の識別用ID
                         "question": "印刷をしていないコピー機が、スリープモードに入らず待機しています。<br><br>使用していない時間の電力消費を抑えるには、どの設定がよいでしょう？",
                         "choiceA": "A．操作画面を常に点灯させる",
                         "choiceB": "B．一定時間使わないとスリープモードになる設定",
