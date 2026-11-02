@@ -10,12 +10,15 @@
         body { margin: 0; padding: 0; font-family: sans-serif; }
         #panorama { width: 100vw; height: 100vh; }
         
-        /* ゲーム開始画面のスタイル */
-        #start-screen {
+        /* ゲーム開始画面・終了画面の共通スタイル */
+        .fullscreen-overlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.8); z-index: 2000; /* 最前面に表示 */
-            display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;
+            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; color: white; text-align: center;
         }
+        #start-screen { z-index: 2000; }
+        #end-screen { z-index: 2500; display: none; /* 初期は非表示 */ }
+        
         .start-btn {
             padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
             background: #28a745; color: white; border: none; border-radius: 10px;
@@ -23,11 +26,16 @@
         }
         .start-btn:hover { transform: scale(1.05); background: #218838; }
 
+        .final-score-box {
+            background: rgba(255, 255, 255, 0.1); padding: 30px 50px; border-radius: 15px; 
+            border: 2px solid #ffc107; font-size: 24px; font-weight: bold; margin-bottom: 30px;
+        }
+
         /* スコアボードのスタイル */
         #score-board {
             position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95);
             padding: 10px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; color: #333;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none; /* 初期は非表示 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none;
         }
         .score-highlight { color: #e83e8c; font-size: 22px; }
 
@@ -59,17 +67,28 @@
         .quiz-box { background: #fff; padding: 30px; border-radius: 10px; width: 80%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .quiz-btn { display: block; width: 100%; margin: 10px 0; padding: 12px; font-size: 16px; cursor: pointer; text-align: left; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
         .quiz-btn:hover { background-color: #e9e9e9; }
-        #quiz-result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; line-height: 1.5; }
+        #quiz-result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; line-height: 1.5; text-align: left; }
         .close-btn { display: block; width: 100%; margin-top: 20px; padding: 10px; background: #333; color: #fff; cursor: pointer; border: none; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<!-- ゲーム開始画面（地点1で最初に表示される） -->
-<div id="start-screen">
+<!-- ゲーム開始画面 -->
+<div id="start-screen" class="fullscreen-overlay">
     <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
-    <p style="margin-bottom: 30px;">地点を移動して問題を探し、ポイントを集めよう！</p>
+    <p style="margin-bottom: 30px;">地点を移動して問題（全4問）を探し、ポイントを集めよう！</p>
     <button class="start-btn" onclick="startGame()">ゲーム開始</button>
+</div>
+
+<!-- ゲーム終了画面 -->
+<div id="end-screen" class="fullscreen-overlay">
+    <h1 style="margin-bottom: 10px;">ツアー終了！</h1>
+    <p style="margin-bottom: 30px;">すべての問題に解答しました。</p>
+    <div class="final-score-box">
+        最終スコア<br>
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / 4 点
+    </div>
+    <button class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
 
 <!-- 画面左上のスコアボード -->
@@ -80,8 +99,8 @@
 <!-- クイズ出題画面 -->
 <div id="quiz-overlay">
     <div class="quiz-box">
-        <h3 style="margin-top: 0;">問題：</h3>
-        <p id="quiz-text"></p>
+        <h3 style="margin-top: 0; text-align: left;">問題：</h3>
+        <p id="quiz-text" style="text-align: left;"></p>
         
         <div id="quiz-choices">
             <button class="quiz-btn" id="btn-A" onclick="answerQuiz('A')"></button>
@@ -96,9 +115,10 @@
 
 <script>
 // ゲーム進行用の変数
+const TOTAL_QUIZZES = 4; // 全問題数
 let score = 0;
 let isGameStarted = false;
-let answeredQuestions = new Set(); // 解答済みの問題IDを保存し、重複加算を防ぐ
+let answeredQuestions = new Set(); // 解答済みの問題IDを保存
 
 // ゲーム開始処理
 function startGame() {
@@ -131,11 +151,9 @@ function answerQuiz(selectedChoice) {
     choicesDiv.style.display = 'none';
     resultDiv.style.display = 'block';
 
-    // この問題をすでに解いたことがあるかチェック
     const alreadyAnswered = answeredQuestions.has(currentQuiz.quizId);
 
     if (selectedChoice === currentQuiz.correctAnswer) {
-        // 正解かつ、まだこの問題でポイントを貰っていなければ加算
         let pointMessage = "";
         if (isGameStarted && !alreadyAnswered) {
             score += 1;
@@ -158,7 +176,6 @@ function answerQuiz(selectedChoice) {
                               '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
     }
 
-    // 解答済みとして記録する
     if (isGameStarted) {
         answeredQuestions.add(currentQuiz.quizId);
     }
@@ -166,9 +183,15 @@ function answerQuiz(selectedChoice) {
 
 function closeQuiz() { 
     document.getElementById('quiz-overlay').style.display = 'none'; 
+    
+    // 全ての問題（4問）を解き終わったかチェック
+    if (isGameStarted && answeredQuestions.size === TOTAL_QUIZZES) {
+        document.getElementById('score-board').style.display = 'none';
+        document.getElementById('final-score-value').innerText = score;
+        document.getElementById('end-screen').style.display = 'flex';
+    }
 }
 
-// パノラマビューアーの設定
 pannellum.viewer('panorama', {
     "default": {
         "firstScene": "scene1",
@@ -198,7 +221,7 @@ pannellum.viewer('panorama', {
                     "pitch": 0, "yaw": 160, "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
-                        "quizId": "quiz_water", // ★ 各問題の識別用ID
+                        "quizId": "quiz_water",
                         "question": "水の無駄を減らす行動として、適切なのはどれでしょう？",
                         "choiceA": "A．少しだけ水が出る状態にする",
                         "choiceB": "B．次の人が使うまで流しておく",
@@ -221,7 +244,7 @@ pannellum.viewer('panorama', {
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
-                        "quizId": "quiz_ac", // ★ 各問題の識別用ID
+                        "quizId": "quiz_ac",
                         "question": "誰もいない教室でエアコンが動いています。この後は使用予定がなく、利用者が停止してよい設備です。<br><br>冷暖房に使うエネルギーを減らすために、どうしますか？",
                         "choiceA": "A．エアコンを停止する",
                         "choiceB": "B．翌日まで運転を続ける",
@@ -244,7 +267,7 @@ pannellum.viewer('panorama', {
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
-                        "quizId": "quiz_monitor", // ★ 各問題の識別用ID
+                        "quizId": "quiz_monitor",
                         "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
                         "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
                         "choiceB": "B．使わないときはこまめに主電源を切る",
@@ -267,7 +290,7 @@ pannellum.viewer('panorama', {
                     "cssClass": "bulb-hotspot", 
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
-                        "quizId": "quiz_copy", // ★ 各問題の識別用ID
+                        "quizId": "quiz_copy",
                         "question": "印刷をしていないコピー機が、スリープモードに入らず待機しています。<br><br>使用していない時間の電力消費を抑えるには、どの設定がよいでしょう？",
                         "choiceA": "A．操作画面を常に点灯させる",
                         "choiceB": "B．一定時間使わないとスリープモードになる設定",
