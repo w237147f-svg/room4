@@ -17,7 +17,7 @@
             justify-content: center; align-items: center; color: white; text-align: center;
         }
         #start-screen { z-index: 2000; }
-        #end-screen { z-index: 2500; display: none; /* 初期は非表示 */ }
+        #end-screen { z-index: 2500; display: none; }
         
         .start-btn {
             padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
@@ -48,7 +48,7 @@
         }
         .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
 
-        /* 移動用ホットスポット（奥行きを感じる矢印） */
+        /* 移動用ホットスポット */
         .custom-move-icon {
             width: 50px; height: 50px;
             background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 50 15 L 90 80 L 50 60 L 10 80 Z" fill="rgba(255,255,255,0.9)" stroke="%23333" stroke-width="3" stroke-linejoin="round" /></svg>');
@@ -76,7 +76,7 @@
 <!-- ゲーム開始画面 -->
 <div id="start-screen" class="fullscreen-overlay">
     <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
-    <p style="margin-bottom: 30px;">地点を移動して問題（全4問）を探し、ポイントを集めよう！</p>
+    <p style="margin-bottom: 30px;">地点を移動して問題（全5問）を探し、ポイントを集めよう！</p>
     <button class="start-btn" onclick="startGame()">ゲーム開始</button>
 </div>
 
@@ -86,12 +86,12 @@
     <p style="margin-bottom: 30px;">すべての問題に解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / 4 点
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / 5 点
     </div>
     <button class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
 
-<!-- 画面左上のスコアボード -->
+<!-- スコアボード -->
 <div id="score-board">現在のポイント: <span id="score-value" class="score-highlight">0</span> 点</div>
 
 <div id="panorama"></div>
@@ -115,12 +115,11 @@
 
 <script>
 // ゲーム進行用の変数
-const TOTAL_QUIZZES = 4; // 全問題数
+const TOTAL_QUIZZES = 5; // 全問題数を5に変更
 let score = 0;
 let isGameStarted = false;
-let answeredQuestions = new Set(); // 解答済みの問題IDを保存
+let answeredQuestions = new Set();
 
-// ゲーム開始処理
 function startGame() {
     isGameStarted = true;
     score = 0;
@@ -184,7 +183,7 @@ function answerQuiz(selectedChoice) {
 function closeQuiz() { 
     document.getElementById('quiz-overlay').style.display = 'none'; 
     
-    // 全ての問題（4問）を解き終わったかチェック
+    // 全ての問題（5問）を解き終わったかチェック
     if (isGameStarted && answeredQuestions.size === TOTAL_QUIZZES) {
         document.getElementById('score-board').style.display = 'none';
         document.getElementById('final-score-value').innerText = score;
@@ -251,6 +250,21 @@ pannellum.viewer('panorama', {
                         "choiceC": "C．窓を開けて運転を続ける",
                         "correctAnswer": "A",
                         "explanation": "使用していない時間のエアコンを停止することで、運転時間を短縮し、エネルギー消費を減らせます。"
+                    }
+                },
+                // ★ 新規追加：ごみ分別の問題（エアコンのアイコンから左に60度、下に30度）
+                { 
+                    "pitch": -30, "yaw": -125,
+                    "cssClass": "bulb-hotspot", 
+                    "clickHandlerFunc": showQuiz,
+                    "clickHandlerArgs": {
+                        "quizId": "quiz_garbage",
+                        "question": "ごみの分別に関する問題です。<br><br>プラスチック容器をごみとして捨てる際、リサイクルしやすくするための行動として適切なのはどれでしょう？",
+                        "choiceA": "A．汚れたまま捨てる",
+                        "choiceB": "B．軽く水ですすいで汚れを落としてから捨てる",
+                        "choiceC": "C．細かくハサミで切って捨てる",
+                        "correctAnswer": "B",
+                        "explanation": "プラスチック容器に汚れが残っているとリサイクルの妨げになり、焼却処理されてしまうことがあります。汚れを落とすことで質の高いリサイクルにつながり、CO2排出量の削減に貢献します。"
                     }
                 }
             ]
