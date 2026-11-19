@@ -3,22 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>脱炭素クイズツアー</title>
+    <title>脱炭素クイズツアー＆屋外ストリートビュー</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: sans-serif; }
         #panorama { width: 100vw; height: 100vh; }
-        
+
         /* ゲーム開始画面・終了画面の共通スタイル */
         .fullscreen-overlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; 
+            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
             justify-content: center; align-items: center; color: white; text-align: center;
         }
         #start-screen { z-index: 2000; }
         #end-screen { z-index: 2500; display: none; }
-        
+
         .start-btn {
             padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
             background: #28a745; color: white; border: none; border-radius: 10px;
@@ -27,7 +27,7 @@
         .start-btn:hover { transform: scale(1.05); background: #218838; }
 
         .final-score-box {
-            background: rgba(255, 255, 255, 0.1); padding: 30px 50px; border-radius: 15px; 
+            background: rgba(255, 255, 255, 0.1); padding: 30px 50px; border-radius: 15px;
             border: 2px solid #ffc107; font-size: 24px; font-weight: bold; margin-bottom: 30px;
         }
 
@@ -48,7 +48,7 @@
         }
         .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
 
-        /* 移動用ホットスポット */
+        /* 移動用ホットスポット（奥行きを感じる矢印） */
         .custom-move-icon {
             width: 50px; height: 50px;
             background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 50 15 L 90 80 L 50 60 L 10 80 Z" fill="rgba(255,255,255,0.9)" stroke="%23333" stroke-width="3" stroke-linejoin="round" /></svg>');
@@ -58,6 +58,28 @@
             transition: transform 0.2s;
         }
         .custom-move-icon:hover { transform: scale(1.2); }
+
+        /* 屋外ストリートビュー用「→」アイコン */
+        .right-arrow-icon {
+            width: 54px; height: 54px;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="rgba(0,0,0,0.6)" stroke="white" stroke-width="4"/><path d="M 25 50 L 70 50 M 52 30 L 72 50 L 52 70" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            cursor: pointer;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+        }
+        .right-arrow-icon:hover { transform: scale(1.15); }
+
+        /* 戻る用「←」アイコン */
+        .left-arrow-icon {
+            width: 50px; height: 50px;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="rgba(0,0,0,0.6)" stroke="white" stroke-width="4"/><path d="M 75 50 L 30 50 M 48 30 L 28 50 L 48 70" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            cursor: pointer;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+        }
+        .left-arrow-icon:hover { transform: scale(1.15); }
 
         /* クイズ画面（モーダル） */
         #quiz-overlay {
@@ -101,13 +123,13 @@
     <div class="quiz-box">
         <h3 style="margin-top: 0; text-align: left;">問題：</h3>
         <p id="quiz-text" style="text-align: left;"></p>
-        
+
         <div id="quiz-choices">
             <button class="quiz-btn" id="btn-A" onclick="answerQuiz('A')"></button>
             <button class="quiz-btn" id="btn-B" onclick="answerQuiz('B')"></button>
             <button class="quiz-btn" id="btn-C" onclick="answerQuiz('C')"></button>
         </div>
-        
+
         <div id="quiz-result"></div>
         <button class="close-btn" onclick="closeQuiz()">閉じる</button>
     </div>
@@ -115,7 +137,7 @@
 
 <script>
 // ゲーム進行用の変数
-const TOTAL_QUIZZES = 5; // 全問題数を5に変更
+const TOTAL_QUIZZES = 5;
 let score = 0;
 let isGameStarted = false;
 let answeredQuestions = new Set();
@@ -146,7 +168,7 @@ function showQuiz(event, quizData) {
 function answerQuiz(selectedChoice) {
     const resultDiv = document.getElementById('quiz-result');
     const choicesDiv = document.getElementById('quiz-choices');
-    
+
     choicesDiv.style.display = 'none';
     resultDiv.style.display = 'block';
 
@@ -162,15 +184,15 @@ function answerQuiz(selectedChoice) {
             pointMessage = '<p style="font-size: 14px; color: #666;">※解答済みのためポイントは加算されません。</p>';
         }
 
-        resultDiv.style.backgroundColor = '#d4edda'; 
+        resultDiv.style.backgroundColor = '#d4edda';
         resultDiv.style.color = '#155724';
-        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#28a745;">正解！</h3>' + 
+        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#28a745;">正解！</h3>' +
                               pointMessage +
                               '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
     } else {
-        resultDiv.style.backgroundColor = '#f8d7da'; 
+        resultDiv.style.backgroundColor = '#f8d7da';
         resultDiv.style.color = '#721c24';
-        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#dc3545;">不正解...</h3>' + 
+        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#dc3545;">不正解...</h3>' +
                               '<p>正解は <strong>' + currentQuiz.correctAnswer + '</strong> です。</p>' +
                               '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
     }
@@ -180,10 +202,9 @@ function answerQuiz(selectedChoice) {
     }
 }
 
-function closeQuiz() { 
-    document.getElementById('quiz-overlay').style.display = 'none'; 
-    
-    // 全ての問題（5問）を解き終わったかチェック
+function closeQuiz() {
+    document.getElementById('quiz-overlay').style.display = 'none';
+
     if (isGameStarted && answeredQuestions.size === TOTAL_QUIZZES) {
         document.getElementById('score-board').style.display = 'none';
         document.getElementById('final-score-value').innerText = score;
@@ -206,7 +227,9 @@ pannellum.viewer('panorama', {
                 { "pitch": -5, "yaw": 210, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": -30, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 120, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
+                { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+                // ★ ゼミ室から外のストリートビュー（外1）へ移動
+                { "pitch": -5, "yaw": -120, "type": "scene", "text": "外へ移動（外1）", "sceneId": "out1", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "scene2": {
@@ -216,8 +239,8 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { 
-                    "pitch": 0, "yaw": 160, "cssClass": "bulb-hotspot", 
+                {
+                    "pitch": 0, "yaw": 160, "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
                         "quizId": "quiz_water",
@@ -238,9 +261,9 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 { "pitch": -5, "yaw": 150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { 
+                {
                     "pitch": 0, "yaw": -65,
-                    "cssClass": "bulb-hotspot", 
+                    "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
                         "quizId": "quiz_ac",
@@ -252,10 +275,9 @@ pannellum.viewer('panorama', {
                         "explanation": "使用していない時間のエアコンを停止することで、運転時間を短縮し、エネルギー消費を減らせます。"
                     }
                 },
-                // ★ 新規追加：ごみ分別の問題（エアコンのアイコンから左に60度、下に30度）
-                { 
+                {
                     "pitch": -30, "yaw": -125,
-                    "cssClass": "bulb-hotspot", 
+                    "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
                         "quizId": "quiz_garbage",
@@ -276,9 +298,9 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 { "pitch": -5, "yaw": -60, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { 
+                {
                     "pitch": -5, "yaw": 0,
-                    "cssClass": "bulb-hotspot", 
+                    "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
                         "quizId": "quiz_monitor",
@@ -299,9 +321,9 @@ pannellum.viewer('panorama', {
             "hotSpots": [
                 { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { 
+                {
                     "pitch": -10, "yaw": 15,
-                    "cssClass": "bulb-hotspot", 
+                    "cssClass": "bulb-hotspot",
                     "clickHandlerFunc": showQuiz,
                     "clickHandlerArgs": {
                         "quizId": "quiz_copy",
@@ -313,6 +335,79 @@ pannellum.viewer('panorama', {
                         "explanation": "コピー機のスリープ機能を活用すると、待機中の電力消費を抑えられます。共用機の設定は管理者に確認します。"
                     }
                 }
+            ]
+        },
+
+        // --- 屋外ストリートビュー（1枚目〜8枚目） ---
+        "out1": {
+            "title": "外1",
+            "type": "equirectangular",
+            "panorama": "GP__0977.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 60, "type": "scene", "text": "ゼミ室（地点1）へ戻る", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out2", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out2": {
+            "title": "外2",
+            "type": "equirectangular",
+            "panorama": "GP__0978.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out1", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out3", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out3": {
+            "title": "外3",
+            "type": "equirectangular",
+            "panorama": "GP__0979.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out2", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out4", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out4": {
+            "title": "外4",
+            "type": "equirectangular",
+            "panorama": "GP__0980.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out3", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out5", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out5": {
+            "title": "外5",
+            "type": "equirectangular",
+            "panorama": "GP__0981.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out4", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out6", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out6": {
+            "title": "外6",
+            "type": "equirectangular",
+            "panorama": "GP__0982.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out5", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out7", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out7": {
+            "title": "外7",
+            "type": "equirectangular",
+            "panorama": "GP__0983.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out6", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "次の地点へ進む", "sceneId": "out8", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out8": {
+            "title": "外8",
+            "type": "equirectangular",
+            "panorama": "GP__0984.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "前の地点へ戻る", "sceneId": "out7", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
