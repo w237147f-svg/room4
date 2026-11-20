@@ -137,8 +137,6 @@
 
 <script>
 // ゲーム進行用の変数
-// 全20スポットのうち、類題グループ（group_car, group_solar, group_greenery, group_led, group_building）で
-// 連動非表示になる分を除いた実質ユニーク問題数：15問
 const TOTAL_UNIQUE_QUIZZES = 15;
 let score = 0;
 let isGameStarted = false;
@@ -389,7 +387,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（177〜189：画像内の芝生・街灯・建物・道路に連動した新規テーマ） ---
+    // --- 屋外クイズ（177〜189） ---
     "out177": [
         {
             "id": "hs_out11", "pitch": 0, "yaw": 25, "cssClass": "bulb-hotspot",
@@ -549,7 +547,6 @@ function closeQuiz() {
     }
 }
 
-// 正解済みの個別問題ID、または正解済みの類題グループに該当する電球は表示しない
 function refreshSceneQuizHotspots(sceneId) {
     if (!viewer || !sceneQuizHotspots[sceneId]) return;
     sceneQuizHotspots[sceneId].forEach(hs => {
@@ -618,7 +615,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外360度ルート（147 → … → 175 → [左へ90度移動：-20] 177 → … → 189） ---
+        // --- 屋外360度ルート（147 → … → 173 → 175 → [-30] 177 → … → [-30] 189） ---
         "out147": {
             "title": "外 147",
             "type": "equirectangular",
@@ -751,8 +748,8 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0175.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "173へ戻る", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                // ★ 177へ移動するアイコン：70から左へ90度移動 → -20
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "177へ進む", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                // ★ 175→177以降の進行アイコンは -20 からさらに左へ10度移動 → -30
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "177へ進む", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out177": {
@@ -761,7 +758,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0177.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "175へ戻る", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "179へ進む", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "179へ進む", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out179": {
@@ -770,7 +767,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0179.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "177へ戻る", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "181へ進む", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "181へ進む", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out181": {
@@ -779,7 +776,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0181.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "179へ戻る", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "183へ進む", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "183へ進む", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out183": {
@@ -788,7 +785,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0183.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "181へ戻る", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "185へ進む", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "185へ進む", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out185": {
@@ -797,7 +794,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0185.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "183へ戻る", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "187へ進む", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "187へ進む", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out187": {
@@ -806,7 +803,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0187.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "185へ戻る", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "189へ進む", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "189へ進む", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out189": {
