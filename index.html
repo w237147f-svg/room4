@@ -299,3 +299,156 @@ pannellum.viewer('panorama', {
                 { "pitch": -5, "yaw": -60, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 {
+                    "pitch": -5, "yaw": 0,
+                    "cssClass": "bulb-hotspot",
+                    "clickHandlerFunc": showQuiz,
+                    "clickHandlerArgs": {
+                        "quizId": "quiz_monitor",
+                        "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
+                        "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
+                        "choiceB": "B．使わないときはこまめに主電源を切る",
+                        "choiceC": "C．常に明るさを最大にしておく",
+                        "correctAnswer": "B",
+                        "explanation": "ゼミ室を使わないときや長時間の休憩時は、モニターの主電源を切る（またはコンセントを抜く）ことで待機電力を削減できます。日々の節電の積み重ねが脱炭素につながります。"
+                    }
+                }
+            ]
+        },
+        "scene5": {
+            "title": "地点5",
+            "type": "equirectangular",
+            "panorama": "203.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+                {
+                    "pitch": -10, "yaw": 15,
+                    "cssClass": "bulb-hotspot",
+                    "clickHandlerFunc": showQuiz,
+                    "clickHandlerArgs": {
+                        "quizId": "quiz_copy",
+                        "question": "印刷をしていないコピー機が、スリープモードに入らず待機しています。<br><br>使用していない時間の電力消費を抑えるには、どの設定がよいでしょう？",
+                        "choiceA": "A．操作画面を常に点灯させる",
+                        "choiceB": "B．一定時間使わないとスリープモードになる設定",
+                        "choiceC": "C．省電力機能を解除する設定",
+                        "correctAnswer": "B",
+                        "explanation": "コピー機のスリープ機能を活用すると、待機中の電力消費を抑えられます。共用機の設定は管理者に確認します。"
+                    }
+                }
+            ]
+        },
+
+        // --- 屋外360度ルート（147 → 149 → 151 → 153 → 155 → 157 → 159 → 161 → 163 → 165 → 167 → 169） ---
+        "out147": {
+            "title": "外 147",
+            "type": "equirectangular",
+            "panorama": "GS__0147.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "ゼミ室（地点1）へ戻る", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "149へ進む", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out149": {
+            "title": "外 149",
+            "type": "equirectangular",
+            "panorama": "GS__0149.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "147へ戻る", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "151へ進む", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out151": {
+            "title": "外 151",
+            "type": "equirectangular",
+            "panorama": "GS__0151.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "149へ戻る", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "153へ進む", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out153": {
+            "title": "外 153",
+            "type": "equirectangular",
+            "panorama": "GS__0153.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "151へ戻る", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out155": {
+            "title": "外 155",
+            "type": "equirectangular",
+            "panorama": "GS__0155.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "153へ戻る", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "157へ進む", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out157": {
+            "title": "外 157",
+            "type": "equirectangular",
+            "panorama": "GS__0157.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "155へ戻る", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "159へ進む", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out159": {
+            "title": "外 159",
+            "type": "equirectangular",
+            "panorama": "GS__0159.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "157へ戻る", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "161へ進む", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out161": {
+            "title": "外 161",
+            "type": "equirectangular",
+            "panorama": "GS__0161.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "159へ戻る", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "163へ進む", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out163": {
+            "title": "外 163",
+            "type": "equirectangular",
+            "panorama": "GS__0163.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "161へ戻る", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "165へ進む", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out165": {
+            "title": "外 165",
+            "type": "equirectangular",
+            "panorama": "GS__0165.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "163へ戻る", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "167へ進む", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out167": {
+            "title": "外 167",
+            "type": "equirectangular",
+            "panorama": "GS__0167.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "165へ戻る", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "169へ進む", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out169": {
+            "title": "外 169",
+            "type": "equirectangular",
+            "panorama": "GS__0169.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "167へ戻る", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+            ]
+        }
+    }
+});
+</script>
+
+</body>
+</html>
