@@ -228,7 +228,8 @@ pannellum.viewer('panorama', {
                 { "pitch": -5, "yaw": -30, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 120, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
                 { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "外へ移動（147）", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                // ★ 0から左へ110度移動 → -110
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "外へ移動（147）", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "scene2": {
@@ -337,7 +338,7 @@ pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外360度ルート（左へ20度移動：90→70、270→250） ---
+        // --- 屋外360度ルート（GS__0147.jpg 〜 GS__0169.jpg） ---
         "out147": {
             "title": "外 147",
             "type": "equirectangular",
