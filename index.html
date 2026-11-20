@@ -48,11 +48,6 @@
         }
         .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
 
-        /* 正解済み・類題非表示用のクラス */
-        .hidden-hotspot {
-            display: none !important;
-        }
-
         /* 移動用ホットスポット（奥行きを感じる矢印） */
         .custom-move-icon {
             width: 56px; height: 56px;
@@ -142,14 +137,13 @@
 
 <script>
 // ゲーム進行用の変数
-// 全15スポットのうち、類題ペアが2組（太陽光系2問・車系2問）あるため実質ユニーク出題数は13問
 const TOTAL_UNIQUE_QUIZZES = 13;
 let score = 0;
 let isGameStarted = false;
-let answeredGroups = new Set(); // 正解・解答済みグループ（同じテーマの類題を非表示にするため）
+let answeredGroups = new Set();
 let viewer = null;
 
-// 各シーンに配置する全クイズホットスポット一覧（シーン切替時の非表示制御用）
+// 各シーンに配置する全クイズホットスポット一覧
 const sceneQuizHotspots = {
     "scene2": [
         {
@@ -261,7 +255,6 @@ const sceneQuizHotspots = {
             "id": "hs_out3", "pitch": 5, "yaw": 10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                // ★ out169の太陽光問題と共通グループ（片方正解でもう片方は消える）
                 "quizGroup": "group_solar",
                 "question": "（建物・屋根）<br><br>日当たりの良い大学の建物や屋根を活用した、脱炭素につながる取り組みはどれでしょう？",
                 "choiceA": "A．太陽光パネルを設置し、再生可能エネルギーの電力を自家消費する",
@@ -307,7 +300,6 @@ const sceneQuizHotspots = {
             "id": "hs_out6", "pitch": -5, "yaw": 10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                // ★ out167の自動車エコドライブ問題と共通グループ（片方正解でもう片方は消える）
                 "quizGroup": "group_car",
                 "question": "（駐車場案内・自動車）<br><br>自動車を利用せざるを得ない場面において、デコ活で推奨されている脱炭素につながる選択・行動はどれでしょう？",
                 "choiceA": "A．急発進・急加速を繰り返し、タイヤの空気圧は点検しない",
@@ -353,7 +345,6 @@ const sceneQuizHotspots = {
             "id": "hs_out9", "pitch": -5, "yaw": 140, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                // ★ out161の自動車問題と共通グループ（片方正解でもう片方は消える）
                 "quizGroup": "group_car",
                 "question": "（周辺道路・車）<br><br>キャンパス周辺の道路や駐車場で車を利用する際、燃料消費とCO2排出を抑える「エコドライブ」の行動はどれでしょう？",
                 "choiceA": "A．発進時は最初の5秒で時速20km程度を目安にふんわりアクセルを踏み、駐停車時はアイドリングストップをする",
@@ -369,7 +360,6 @@ const sceneQuizHotspots = {
             "id": "hs_out10", "pitch": 20, "yaw": 150, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                // ★ out151の太陽光問題と共通グループ（片方正解でもう片方は消える）
                 "quizGroup": "group_solar",
                 "question": "（晴天の空・太陽光）<br><br>晴天の日に降り注ぐ太陽の光を活かした、脱炭素につながる取り組みはどれでしょう？",
                 "choiceA": "A．太陽光発電や太陽熱利用を導入し、化石燃料に頼らないエネルギーを活用する",
@@ -425,7 +415,6 @@ function answerQuiz(selectedChoice) {
                 document.getElementById('score-value').innerText = score;
                 pointMessage = '<p style="font-weight:bold; color:#e83e8c;">+1 ポイント獲得！（同テーマの別地点の問題もクリア扱いになります）</p>';
             }
-            // 正解したグループに属するホットスポットを即座に非表示にする
             refreshSceneQuizHotspots(viewer.getScene());
         } else {
             pointMessage = '<p style="font-size: 14px; color: #666;">※すでに正解済みのテーマです。</p>';
@@ -455,11 +444,9 @@ function closeQuiz() {
     }
 }
 
-// シーン切り替え時に、正解済みグループの電球ホットスポットを削除（非表示化）する
 function refreshSceneQuizHotspots(sceneId) {
     if (!viewer || !sceneQuizHotspots[sceneId]) return;
     sceneQuizHotspots[sceneId].forEach(hs => {
-        // 一旦削除してから、未正解グループの場合のみ再追加する
         try { viewer.removeHotSpot(hs.id, sceneId); } catch (e) {}
         if (!answeredGroups.has(hs.quizGroup || hs.clickHandlerArgs.quizGroup)) {
             viewer.addHotSpot(hs, sceneId);
@@ -523,7 +510,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外360度ルート（GS__0147.jpg 〜 GS__0169.jpg） ---
+        // --- 屋外360度ルート（147 → … → 169 → 171 → 173 → 175 → 177 → 179 → 181 → 183 → 185 → 187 → 189） ---
         "out147": {
             "title": "外 147",
             "type": "equirectangular",
@@ -628,13 +615,102 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0169.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "167へ戻る", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "167へ戻る", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "171へ進む", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out171": {
+            "title": "外 171",
+            "type": "equirectangular",
+            "panorama": "GS__0171.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "169へ戻る", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "173へ進む", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out173": {
+            "title": "外 173",
+            "type": "equirectangular",
+            "panorama": "GS__0173.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "171へ戻る", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "175へ進む", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out175": {
+            "title": "外 175",
+            "type": "equirectangular",
+            "panorama": "GS__0175.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "173へ戻る", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "177へ進む", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out177": {
+            "title": "外 177",
+            "type": "equirectangular",
+            "panorama": "GS__0177.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "175へ戻る", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "179へ進む", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out179": {
+            "title": "外 179",
+            "type": "equirectangular",
+            "panorama": "GS__0179.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "177へ戻る", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "181へ進む", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out181": {
+            "title": "外 181",
+            "type": "equirectangular",
+            "panorama": "GS__0181.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "179へ戻る", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "183へ進む", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out183": {
+            "title": "外 183",
+            "type": "equirectangular",
+            "panorama": "GS__0183.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "181へ戻る", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "185へ進む", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out185": {
+            "title": "外 185",
+            "type": "equirectangular",
+            "panorama": "GS__0185.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "183へ戻る", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "187へ進む", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out187": {
+            "title": "外 187",
+            "type": "equirectangular",
+            "panorama": "GS__0187.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "185へ戻る", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "189へ進む", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out189": {
+            "title": "外 189",
+            "type": "equirectangular",
+            "panorama": "GS__0189.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "187へ戻る", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
 });
 
-// シーン読み込み完了時に未正解グループの電球ホットスポットを描画
 viewer.on('load', function() {
     refreshSceneQuizHotspots(viewer.getScene());
 });
