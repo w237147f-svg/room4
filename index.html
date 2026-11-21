@@ -8,16 +8,43 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: sans-serif; }
-        #panorama { width: 100vw; height: 100vh; }
+        #panorama { width: 100vw; height: 100vh; transition: filter 0.6s ease; }
+
+        /* 時間帯フィルター（画像追加なし） */
+        #panorama.time-morning {
+            filter: brightness(1.03) sepia(0.22) saturate(1.25) contrast(1.03);
+        }
+        #panorama.time-day {
+            filter: none;
+        }
+        #panorama.time-night {
+            filter: brightness(0.45) contrast(1.15) hue-rotate(195deg) saturate(0.85);
+        }
 
         /* ゲーム開始画面・終了画面の共通スタイル */
         .fullscreen-overlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
             justify-content: center; align-items: center; color: white; text-align: center;
+            padding: 20px; box-sizing: border-box;
         }
         #start-screen { z-index: 2000; }
         #end-screen { z-index: 2500; display: none; }
+
+        .start-select-group {
+            display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center;
+        }
+        .start-place-btn {
+            padding: 12px 22px; font-size: 16px; font-weight: bold; cursor: pointer;
+            background: rgba(255, 255, 255, 0.12); color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.45); border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .start-place-btn:hover { background: rgba(255, 255, 255, 0.22); }
+        .start-place-btn.active {
+            background: #007bff; border-color: #66b2ff; color: #fff;
+            box-shadow: 0 0 12px rgba(0, 123, 255, 0.6);
+        }
 
         .start-btn {
             padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
@@ -38,6 +65,20 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none;
         }
         .score-highlight { color: #e83e8c; font-size: 22px; }
+
+        /* 時間帯コントロール（右上） */
+        #time-controls {
+            position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.95);
+            padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none;
+            align-items: center; gap: 8px;
+        }
+        .time-random-btn {
+            padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer;
+            background: #007bff; color: white; border: none; border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .time-random-btn:hover { background: #0056b3; }
 
         /* クイズ用ホットスポット（電球） */
         .bulb-hotspot {
@@ -98,14 +139,24 @@
 <!-- ゲーム開始画面 -->
 <div id="start-screen" class="fullscreen-overlay">
     <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
-    <p style="margin-bottom: 30px;">ゼミ室と屋外を移動して問題を探し、ポイントを集めよう！</p>
+    <p style="margin-bottom: 20px;">開始する場所を選んで、朝・昼・夜で変わる場面を巡りながら問題を探そう！</p>
+
+    <div class="start-select-group" role="group" aria-label="開始場所の選択">
+        <button type="button" id="btn-start-indoor" class="start-place-btn active" onclick="selectStartScene('scene1')">
+            ゼミ室から開始（地点1）
+        </button>
+        <button type="button" id="btn-start-outdoor" class="start-place-btn" onclick="selectStartScene('out147')">
+            外から開始（147）
+        </button>
+    </div>
+
     <button class="start-btn" onclick="startGame()">ゲーム開始</button>
 </div>
 
 <!-- ゲーム終了画面 -->
 <div id="end-screen" class="fullscreen-overlay">
     <h1 style="margin-bottom: 10px;">ツアー終了！</h1>
-    <p style="margin-bottom: 30px;">すべての問題に解答しました。</p>
+    <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
         <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">20</span> 点
@@ -116,12 +167,18 @@
 <!-- スコアボード -->
 <div id="score-board">現在のポイント: <span id="score-value" class="score-highlight">0</span> 点</div>
 
+<!-- 時間帯表示＆ランダム変更ボタン -->
+<div id="time-controls">
+    <span>現在の場面: <span id="current-time-label">昼</span></span>
+    <button class="time-random-btn" onclick="randomizeTimeOfDay()">場面をランダム変更</button>
+</div>
+
 <div id="panorama"></div>
 
 <!-- クイズ出題画面 -->
 <div id="quiz-overlay">
     <div class="quiz-box">
-        <h3 style="margin-top: 0; text-align: left;">問題：</h3>
+        <h3 style="margin-top: 0; text-align: left;">問題（<span id="quiz-time-badge">昼</span>）：</h3>
         <p id="quiz-text" style="text-align: left;"></p>
 
         <div id="quiz-choices">
@@ -140,9 +197,86 @@
 const TOTAL_UNIQUE_QUIZZES = 20;
 let score = 0;
 let isGameStarted = false;
+let selectedStartScene = "scene1"; // "scene1"（ゼミ室） または "out147"（外）
 let answeredIds = new Set();    // 正解した個別問題ID（二度と表示しないため）
 let answeredGroups = new Set(); // 正解した類題グループ（似ている問題も非表示にするため）
 let viewer = null;
+
+// 時間帯定義（朝・昼・夜）
+const TIME_MODES = ["morning", "day", "night"];
+const TIME_LABELS = {
+    "morning": "朝",
+    "day": "昼",
+    "night": "夜"
+};
+let currentTimeOfDay = "day";
+
+// 開始場所ボタンの選択状態を切り替える
+function selectStartScene(sceneId) {
+    selectedStartScene = sceneId;
+    const indoorBtn = document.getElementById("btn-start-indoor");
+    const outdoorBtn = document.getElementById("btn-start-outdoor");
+
+    if (sceneId === "out147") {
+        outdoorBtn.classList.add("active");
+        indoorBtn.classList.remove("active");
+    } else {
+        indoorBtn.classList.add("active");
+        outdoorBtn.classList.remove("active");
+    }
+}
+
+// 時間帯をランダムに決定する関数
+function pickRandomTimeOfDay() {
+    const idx = Math.floor(Math.random() * TIME_MODES.length);
+    return TIME_MODES[idx];
+}
+
+// フィルターと表示ラベルを反映し、現在のシーンのホットスポットも更新する
+function applyTimeOfDay(mode, refreshHotspots = true) {
+    currentTimeOfDay = TIME_MODES.includes(mode) ? mode : "day";
+    const panoEl = document.getElementById("panorama");
+    panoEl.classList.remove("time-morning", "time-day", "time-night");
+    panoEl.classList.add("time-" + currentTimeOfDay);
+
+    const labelEl = document.getElementById("current-time-label");
+    if (labelEl) {
+        labelEl.innerText = TIME_LABELS[currentTimeOfDay];
+    }
+
+    if (refreshHotspots && viewer) {
+        refreshSceneQuizHotspots(viewer.getScene());
+    }
+}
+
+// ボタンクリック時のランダム変更（直前と違う時間帯になりやすくする）
+function randomizeTimeOfDay() {
+    const candidates = TIME_MODES.filter(m => m !== currentTimeOfDay);
+    const nextMode = candidates[Math.floor(Math.random() * candidates.length)];
+    applyTimeOfDay(nextMode, true);
+}
+
+// 現在の時間帯に合った問題データを取得（未定義の時間帯は day を使用）
+function getQuizDataForCurrentTime(quizArgs) {
+    const base = {
+        quizId: quizArgs.quizId,
+        quizGroup: quizArgs.quizGroup,
+        question: quizArgs.question,
+        choiceA: quizArgs.choiceA,
+        choiceB: quizArgs.choiceB,
+        choiceC: quizArgs.choiceC,
+        correctAnswer: quizArgs.correctAnswer,
+        explanation: quizArgs.explanation
+    };
+
+    if (quizArgs.variants && typeof quizArgs.variants === "object") {
+        const chosen = quizArgs.variants[currentTimeOfDay] || quizArgs.variants["day"];
+        if (chosen) {
+            return { ...base, ...chosen };
+        }
+    }
+    return base;
+}
 
 // 各シーンに配置する全クイズホットスポット一覧
 const sceneQuizHotspots = {
@@ -153,12 +287,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_water",
                 "quizGroup": "group_water",
-                "question": "水の無駄を減らす行動として、適切なのはどれでしょう？",
-                "choiceA": "A．少しだけ水が出る状態にする",
-                "choiceB": "B．次の人が使うまで流しておく",
-                "choiceC": "C．蛇口を閉めて水を止める",
-                "correctAnswer": "C",
-                "explanation": "水を使っていないときに止めることで、使用水量を減らせます。節水は、水の供給や処理に伴うエネルギーの削減にもつながります。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝の身支度】水の無駄を減らす行動として、適切なのはどれでしょう？",
+                        "choiceA": "A．顔を洗うときも水を出しっぱなしにする",
+                        "choiceB": "B．歯磨きや洗顔の間は蛇口を閉めて水を止める",
+                        "choiceC": "C．次の人が使うまで流しておく",
+                        "correctAnswer": "B",
+                        "explanation": "朝の身支度でこまめに水を止めることで使用水量を減らせます。節水は、水の供給や処理に伴うエネルギー削減にもつながります。"
+                    },
+                    "day": {
+                        "question": "水の無駄を減らす行動として、適切なのはどれでしょう？",
+                        "choiceA": "A．少しだけ水が出る状態にする",
+                        "choiceB": "B．次の人が使うまで流しておく",
+                        "choiceC": "C．蛇口を閉めて水を止める",
+                        "correctAnswer": "C",
+                        "explanation": "水を使っていないときに止めることで、使用水量を減らせます。節水は、水の供給や処理に伴うエネルギーの削減にもつながります。"
+                    },
+                    "night": {
+                        "question": "【夜の片付け】一日の終わりに水の無駄を減らす行動として適切なのはどれでしょう？",
+                        "choiceA": "A．水漏れの有無を確認し、使っていない蛇口をしっかり閉める",
+                        "choiceB": "B．少しだけ水を流したままにする",
+                        "choiceC": "C．洗い物をためて水を出しっぱなしにする",
+                        "correctAnswer": "A",
+                        "explanation": "夜間に蛇口をしっかり閉めて水漏れを防ぐことで、無駄な水と給水・処理エネルギーを抑えられます。"
+                    }
+                }
             }
         }
     ],
@@ -169,12 +323,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_ac",
                 "quizGroup": "group_ac",
-                "question": "誰もいない教室でエアコンが動いています。この後は使用予定がなく、利用者が停止してよい設備です。<br><br>冷暖房に使うエネルギーを減らすために、どうしますか？",
-                "choiceA": "A．エアコンを停止する",
-                "choiceB": "B．翌日まで運転を続ける",
-                "choiceC": "C．窓を開けて運転を続ける",
-                "correctAnswer": "A",
-                "explanation": "使用していない時間のエアコンを停止することで、運転時間を短縮し、エネルギー消費を減らせます。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝の教室】登校直後や朝の冷え込み・暑さの中で、冷暖房エネルギーを抑える行動はどれでしょう？",
+                        "choiceA": "A．誰もいない部屋でも朝からエアコンを強運転にする",
+                        "choiceB": "B．服装で調整しつつ、人がいる時間帯だけ適切な温度設定でエアコンを使う",
+                        "choiceC": "C．窓を開けたまま暖房を最大にする",
+                        "correctAnswer": "B",
+                        "explanation": "朝は上着や重ね着などの服装工夫と適切な室温設定を組み合わせることで、暖房・冷房のエネルギー消費を抑えられます。"
+                    },
+                    "day": {
+                        "question": "誰もいない教室でエアコンが動いています。この後は使用予定がなく、利用者が停止してよい設備です。<br><br>冷暖房に使うエネルギーを減らすために、どうしますか？",
+                        "choiceA": "A．エアコンを停止する",
+                        "choiceB": "B．翌日まで運転を続ける",
+                        "choiceC": "C．窓を開けて運転を続ける",
+                        "correctAnswer": "A",
+                        "explanation": "使用していない時間のエアコンを停止することで、運転時間を短縮し、エネルギー消費を減らせます。"
+                    },
+                    "night": {
+                        "question": "【夜の退出時】誰もいない教室でエアコンが動いています。この後は使用予定がありません。<br><br>夜間や翌朝までの無駄なエネルギー消費を防ぐために、どうしますか？",
+                        "choiceA": "A．エアコンを停止して退出する",
+                        "choiceB": "B．翌朝までつけっぱなしにする",
+                        "choiceC": "C．設定温度を極端に上げて放置する",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の退出時にエアコンを停止することで、長時間の無駄な電力消費とCO2排出を防げます。"
+                    }
+                }
             }
         },
         {
@@ -199,12 +373,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_monitor",
                 "quizGroup": "group_monitor",
-                "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
-                "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
-                "choiceB": "B．使わないときはこまめに主電源を切る",
-                "choiceC": "C．常に明るさを最大にしておく",
-                "correctAnswer": "B",
-                "explanation": "ゼミ室を使わないときや長時間の休憩時は、モニターの主電源を切る（またはコンセントを抜く）ことで待機電力を削減できます。日々の節電の積み重ねが脱炭素につながります。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝のゼミ室】まだゼミが始まっていない朝の時間帯、モニター（テレビ）に関して適切な行動はどれでしょう？",
+                        "choiceA": "A．使う時間になるまで主電源を切っておく",
+                        "choiceB": "B．朝から夕方まで画面を表示し続ける",
+                        "choiceC": "C．画面の明るさを常に最大にしておく",
+                        "correctAnswer": "A",
+                        "explanation": "使用開始前の無駄な点灯や待機電力を減らすことで、朝の節電と脱炭素につながります。"
+                    },
+                    "day": {
+                        "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
+                        "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
+                        "choiceB": "B．使わないときはこまめに主電源を切る",
+                        "choiceC": "C．常に明るさを最大にしておく",
+                        "correctAnswer": "B",
+                        "explanation": "ゼミ室を使わないときや長時間の休憩時は、モニターの主電源を切る（またはコンセントを抜く）ことで待機電力を削減できます。日々の節電の積み重ねが脱炭素につながります。"
+                    },
+                    "night": {
+                        "question": "【夜の帰宅前】夜にゼミ室から退出する際、モニター（テレビ）に関して適切な行動はどれでしょう？",
+                        "choiceA": "A．主電源を切る（またはコンセントを抜く）",
+                        "choiceB": "B．スクリーンセーバーのまま一晩おく",
+                        "choiceC": "C．音量と明るさを上げたままにする",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の退出時に主電源を切ることで、一晩中の無駄な電力消費を抑えられます。"
+                    }
+                }
             }
         }
     ],
@@ -233,12 +427,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_out1",
                 "quizGroup": "group_walk_bike",
-                "question": "（歩道・広場）<br><br>大学のキャンパス内や近隣の移動において、脱炭素（CO2排出削減）に最もつながる移動手段はどれでしょう？",
-                "choiceA": "A．1km程度の近い距離でも自家用車で移動する",
-                "choiceB": "B．徒歩や自転車（シェアサイクル含む）で移動する",
-                "choiceC": "C．アイドリング状態のまま車で待機する",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、近距離の移動を自動車から徒歩や自転車に切り替えることで、走行時のCO2排出量をゼロにでき、健康増進にもつながります。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝の通学・移動】朝のキャンパス内や近隣の移動において、脱炭素に最もつながる移動手段はどれでしょう？",
+                        "choiceA": "A．1km程度の近い距離でも自家用車で移動する",
+                        "choiceB": "B．徒歩や自転車（シェアサイクル含む）で移動する",
+                        "choiceC": "C．朝の混雑時にアイドリングしたまま車で待機する",
+                        "correctAnswer": "B",
+                        "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、朝の近距離移動を徒歩や自転車にすることでCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（歩道・広場）<br><br>大学のキャンパス内や近隣の移動において、脱炭素（CO2排出削減）に最もつながる移動手段はどれでしょう？",
+                        "choiceA": "A．1km程度の近い距離でも自家用車で移動する",
+                        "choiceB": "B．徒歩や自転車（シェアサイクル含む）で移動する",
+                        "choiceC": "C．アイドリング状態のまま車で待機する",
+                        "correctAnswer": "B",
+                        "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、近距離の移動を自動車から徒歩や自転車に切り替えることで、走行時のCO2排出量をゼロにでき、健康増進にもつながります。"
+                    },
+                    "night": {
+                        "question": "【夜の帰宅・移動】夜の移動において、安全性と脱炭素の両立につながる行動はどれでしょう？",
+                        "choiceA": "A．反射材やライトを活用しつつ、徒歩・自転車・公共交通機関を無理のない範囲で選ぶ",
+                        "choiceB": "B．近距離でもエンジンをかけたまま長時間待機する",
+                        "choiceC": "C．無灯火のまま自転車で走る",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の移動では安全確保（ライトや反射材）を優先しつつ、公共交通やエコな移動手段を活用することが大切です。"
+                    }
+                }
             }
         }
     ],
@@ -249,12 +463,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_out2",
                 "quizGroup": "group_led",
-                "question": "（街灯・屋外照明）<br><br>キャンパス内の街灯や屋外照明に関する設備・行動のうち、脱炭素に大きく貢献するのはどれでしょう？",
-                "choiceA": "A．従来の水銀灯や白熱灯を使い続ける",
-                "choiceB": "B．昼間も常に最大照度で点灯させ続ける",
-                "choiceC": "C．高効率なLED照明へ切り替え、人感センサーやタイマーで最適に制御する",
-                "correctAnswer": "C",
-                "explanation": "デコ活アクション「高効率な照明（LED）への交換」に基づき、屋外照明をLED化し、必要な時間帯だけ点灯させることで消費電力を大幅に削減できます。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝の屋外照明】夜が明けて周囲が明るくなってきた朝の時間帯、街灯や屋外照明に関して適切なのはどれでしょう？",
+                        "choiceA": "A．明るさセンサーやタイマーで不要な点灯を自動で抑え、高効率なLED照明を活用する",
+                        "choiceB": "B．真昼になっても街灯を最大出力でつけっぱなしにする",
+                        "choiceC": "C．従来の非効率な照明のまま管理しない",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活アクション「高効率な照明（LED）への交換」やセンサー制御により、朝〜昼の不要な点灯を減らし省エネにつながります。"
+                    },
+                    "day": {
+                        "question": "（街灯・屋外照明）<br><br>キャンパス内の街灯や屋外照明に関する設備・行動のうち、脱炭素に大きく貢献するのはどれでしょう？",
+                        "choiceA": "A．従来の水銀灯や白熱灯を使い続ける",
+                        "choiceB": "B．昼間も常に最大照度で点灯させ続ける",
+                        "choiceC": "C．高効率なLED照明へ切り替え、人感センサーやタイマーで最適に制御する",
+                        "correctAnswer": "C",
+                        "explanation": "デコ活アクション「高効率な照明（LED）への交換」に基づき、屋外照明をLED化し、必要な時間帯だけ点灯させることで消費電力を大幅に削減できます。"
+                    },
+                    "night": {
+                        "question": "【夜の屋外照明】夜のキャンパスや歩道で安全を確保しつつ脱炭素につながる照明の工夫はどれでしょう？",
+                        "choiceA": "A．高効率なLED照明を使い、人感センサーや時間帯制御で必要な場所・時間を最適に照らす",
+                        "choiceB": "B．人がまったくいない場所も常に最大照度で点灯し続ける",
+                        "choiceC": "C．照明をすべて消して足元を見えなくする",
+                        "correctAnswer": "A",
+                        "explanation": "夜の安全性を守りながら、LED化とセンサー・調光制御を組み合わせることで、電力消費とCO2排出を効率よく減らせます。"
+                    }
+                }
             }
         }
     ],
@@ -469,7 +703,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（191〜202：画像に沿ったデコ活三択問題 10問） ---
+    // --- 屋外クイズ（191〜202） ---
     "out191": [
         {
             "id": "hs_out16", "pitch": -12, "yaw": -25, "cssClass": "bulb-hotspot",
@@ -491,12 +725,32 @@ const sceneQuizHotspots = {
             "clickHandlerArgs": {
                 "quizId": "quiz_out17",
                 "quizGroup": "group_season_food",
-                "question": "（色づき始めた木々と自然の風景）<br><br>季節の移ろいを感じる自然環境の中で、私たちが食生活からできるデコ活アクションはどれでしょう？",
-                "choiceA": "A．季節や地域と関係なく、遠方から空輸された食材ばかりを選ぶ",
-                "choiceB": "B．旬の食材や地元でとれた食材（地産地消）を選び、輸送や栽培・保管にかかるCO2を抑える",
-                "choiceC": "C．食べられる分以上に大量に買い込んで廃棄する",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「地産地消・旬の食材の活用」や「食品ロスの削減」により、輸送エネルギーや廃棄に伴うCO2排出量を減らすことができます。"
+                "variants": {
+                    "morning": {
+                        "question": "【朝の食事・朝食】朝の食事を選ぶとき、私たちが実践できるデコ活の食行動はどれでしょう？",
+                        "choiceA": "A．食べきれない量を盛って残す",
+                        "choiceB": "B．旬や地元産の食材を活かし、食べきれる量を準備して食品ロスを減らす",
+                        "choiceC": "C．季節や産地を問わず大量廃棄する",
+                        "correctAnswer": "B",
+                        "explanation": "旬・地元食材の活用や食品ロスの削減は、輸送・生産・廃棄にかかるCO2を減らす大切なデコ活アクションです。"
+                    },
+                    "day": {
+                        "question": "（色づき始めた木々と自然の風景）<br><br>季節の移ろいを感じる自然環境の中で、私たちが食生活からできるデコ活アクションはどれでしょう？",
+                        "choiceA": "A．季節や地域と関係なく、遠方から空輸された食材ばかりを選ぶ",
+                        "choiceB": "B．旬の食材や地元でとれた食材（地産地消）を選び、輸送や栽培・保管にかかるCO2を抑える",
+                        "choiceC": "C．食べられる分以上に大量に買い込んで廃棄する",
+                        "correctAnswer": "B",
+                        "explanation": "デコ活アクション「地産地消・旬の食材の活用」や「食品ロスの削減」により、輸送エネルギーや廃棄に伴うCO2排出量を減らすことができます。"
+                    },
+                    "night": {
+                        "question": "【夜の夕食・買い出し】夜の食事や買い物において、食品ロスとCO2を減らす行動はどれでしょう？",
+                        "choiceA": "A．冷蔵庫の在庫や食べきれる量を確認してから買い・作る",
+                        "choiceB": "B．賞味期限が近いものから順に避け、大量に買い込む",
+                        "choiceC": "C．残った料理を計画なくすぐ捨てる",
+                        "correctAnswer": "A",
+                        "explanation": "必要な分を無駄なく使い切ることで、食品廃棄に伴うCO2排出量を減らせます。"
+                    }
+                }
             }
         }
     ],
@@ -635,17 +889,26 @@ function startGame() {
     document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('score-board').style.display = 'block';
-    refreshSceneQuizHotspots(viewer.getScene());
+    document.getElementById('time-controls').style.display = 'flex';
+
+    // 選択された開始場所（ゼミ室 or 外）へ移動
+    if (viewer && viewer.getScene() !== selectedStartScene) {
+        viewer.loadScene(selectedStartScene);
+    }
+
+    // ゲーム開始時に朝・昼・夜をランダム選択
+    applyTimeOfDay(pickRandomTimeOfDay(), true);
 }
 
 let currentQuiz = null;
 
-function showQuiz(event, quizData) {
-    currentQuiz = quizData;
-    document.getElementById('quiz-text').innerHTML = quizData.question;
-    document.getElementById('btn-A').innerText = quizData.choiceA;
-    document.getElementById('btn-B').innerText = quizData.choiceB;
-    document.getElementById('btn-C').innerText = quizData.choiceC;
+function showQuiz(event, quizArgs) {
+    currentQuiz = getQuizDataForCurrentTime(quizArgs);
+    document.getElementById('quiz-time-badge').innerText = TIME_LABELS[currentTimeOfDay];
+    document.getElementById('quiz-text').innerHTML = currentQuiz.question;
+    document.getElementById('btn-A').innerText = currentQuiz.choiceA;
+    document.getElementById('btn-B').innerText = currentQuiz.choiceB;
+    document.getElementById('btn-C').innerText = currentQuiz.choiceC;
 
     document.getElementById('quiz-overlay').style.display = 'flex';
     document.getElementById('quiz-choices').style.display = 'block';
@@ -698,12 +961,12 @@ function closeQuiz() {
 
     if (isGameStarted && answeredGroups.size === TOTAL_UNIQUE_QUIZZES) {
         document.getElementById('score-board').style.display = 'none';
+        document.getElementById('time-controls').style.display = 'none';
         document.getElementById('final-score-value').innerText = score;
         document.getElementById('end-screen').style.display = 'flex';
     }
 }
 
-// 正解済みの個別問題ID、または正解済みの類題グループに該当する電球は表示しない
 function refreshSceneQuizHotspots(sceneId) {
     if (!viewer || !sceneQuizHotspots[sceneId]) return;
     sceneQuizHotspots[sceneId].forEach(hs => {
@@ -772,7 +1035,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外360度ルート（147 → … → 189 → [進む:-90 / 戻る:90] 191 → … → 202） ---
+        // --- 屋外360度ルート（147 → … → 189 → [進む:-100 / 戻る:80] 191 → … → 202） ---
         "out147": {
             "title": "外 147",
             "type": "equirectangular",
@@ -968,8 +1231,8 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0189.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 160, "type": "scene", "text": "187へ戻る", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                // ★ 進む移動アイコンは左に90度移動（0 → -90）
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "191へ進む", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                // ★ 進む移動アイコンをさらに左へ10度移動（-90 → -100）
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "191へ進む", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out191": {
@@ -977,9 +1240,9 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0191.jpg",
             "hotSpots": [
-                // ★ 戻る移動アイコンは逆（-90 の反対側 → 90）
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "193へ進む", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                // ★ 戻る移動アイコンも逆側へ合わせて変更（90 → 80）
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "193へ進む", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out193": {
@@ -987,8 +1250,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0193.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "191へ戻る", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "195へ進む", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "191へ戻る", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "195へ進む", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out195": {
@@ -996,8 +1259,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0195.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "193へ戻る", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "197へ進む", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "193へ戻る", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "197へ進む", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out197": {
@@ -1005,8 +1268,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0197.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "195へ戻る", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "199へ進む", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "195へ戻る", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "199へ進む", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out199": {
@@ -1014,8 +1277,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0199.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "197へ戻る", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "201へ進む", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "197へ戻る", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "201へ進む", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out201": {
@@ -1023,8 +1286,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0201.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "199へ戻る", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "199へ戻る", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out202": {
@@ -1032,7 +1295,7 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0202.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
