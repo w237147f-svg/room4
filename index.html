@@ -159,7 +159,7 @@
     <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">45</span> 点
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">53</span> 点
     </div>
     <button type="button" class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
@@ -193,7 +193,7 @@
 </div>
 
 <script>
-const TOTAL_UNIQUE_QUIZZES = 45;
+const TOTAL_UNIQUE_QUIZZES = 53;
 let score = 0;
 let isGameStarted = false;
 let selectedStartScene = "scene1";
@@ -1733,6 +1733,176 @@ const sceneQuizHotspots = {
                 "explanation": "移動・エネルギー・モノの選び方を少しずつ脱炭素型へ切り替える「デコ活」の積み重ねが、大きなCO2削減につながります。"
             }
         }
+    ],
+
+    // --- 屋外クイズ（281〜294：各画像の風景に合わせた三択問題） ---
+    "out281": [
+        {
+            "id": "hs_out67", "pitch": 4, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out67",
+                "quizGroup": "group_rain_commute_bike_shed_281",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の駐輪屋根と分岐】屋根付きの駐輪スペースがあるキャンパスで、天気や時間帯に合わせて脱炭素につながる通学・移動の工夫はどれでしょう？",
+                        "choiceA": "A．晴れや小雨の日は自転車・徒歩を活用し、悪天候時は公共交通機関を選んで自家用車の送迎を減らす",
+                        "choiceB": "B．天気にかかわらず毎回自家用車で送迎してもらう",
+                        "choiceC": "C．駐輪スペースの前で車のエンジンをかけたまま長時間待つ",
+                        "correctAnswer": "A",
+                        "explanation": "天候に応じて自転車・徒歩と公共交通機関を組み合わせることで、無理なくCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（屋根付き駐輪スペースと校舎前の分岐）<br><br>屋根付き駐輪スペースが整備された環境を活かし、地域のCO2削減につなげる行動はどれでしょう？",
+                        "choiceA": "A．日差しや雨を避けられる駐輪環境を活用して自転車通学を続け、近距離での自動車利用を控える",
+                        "choiceB": "B．駐輪場があっても近くの移動に毎回車を使う",
+                        "choiceC": "C．駐輪場周辺に空き缶やごみを放置する",
+                        "correctAnswer": "A",
+                        "explanation": "自転車を利用しやすい環境を活かすことで、日常の移動に伴うCO2排出量を減らせます。"
+                    },
+                    "night": {
+                        "question": "【夜の駐輪場と校舎前】夜間に駐輪スペースや分岐路を通行する際、安全と脱炭素を両立する行動はどれでしょう？",
+                        "choiceA": "A．前照灯と反射材で視認性を高め、自転車や公共交通を利用して安全に帰宅する",
+                        "choiceB": "B．無灯火のまま自転車で走行する",
+                        "choiceC": "C．迎えの車に長時間アイドリングさせて待機させる",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の安全装備を徹底しながらエコな移動手段を選ぶことが大切です。"
+                    }
+                }
+            }
+        }
+    ],
+    "out283": [
+        {
+            "id": "hs_out68", "pitch": -4, "yaw": 35, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out68",
+                "quizGroup": "group_pedestrian_bollard_zone_283",
+                "question": "（車止めポールと歩行者専用通路）<br><br>車止め（ボラード）で車両の進入が制限された歩行者通路が整備されていることには、どのような脱炭素・環境面のメリットがあるでしょう？",
+                "choiceA": "A．歩行者が安全かつ快適に歩ける動線をつくることで、徒歩移動が促され構内の自動車走行とCO2排出が減る",
+                "choiceB": "B．歩行者が歩きにくくなるため、かえって車の利用が増える",
+                "choiceC": "C．通路の照明を昼夜問わず最大出力で点灯させる必要が生じる",
+                "correctAnswer": "A",
+                "explanation": "歩きやすい歩行者空間の整備（ウォーカブルなまちづくり・キャンパスづくり）は、自動車に頼らない移動を促し脱炭素に貢献します。"
+            }
+        }
+    ],
+    "out285": [
+        {
+            "id": "hs_out69", "pitch": 8, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out69",
+                "quizGroup": "group_atrium_daylighting_285",
+                "question": "（中央がガラス張りの校舎外観）<br><br>校舎の中央部分に大きなガラス面（吹き抜け・採光部）を設ける建築デザインは、どのような省エネ・脱炭素効果につながるでしょう？",
+                "choiceA": "A．自然光（昼光）を建物の奥まで取り入れることで、日中の照明用電力消費を抑えられる",
+                "choiceB": "B．昼間もすべての照明を最大照度で点け続ける必要がある",
+                "choiceC": "C．断熱や日射調整をまったく行わずに空調を強運転する",
+                "correctAnswer": "A",
+                "explanation": "自然採光（昼光利用）と適切な日射・断熱制御を組み合わせることで、建物の照明・空調エネルギーを削減できます。"
+            }
+        }
+    ],
+    "out287": [
+        {
+            "id": "hs_out70", "pitch": 7, "yaw": 5, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out70",
+                "quizGroup": "group_skybridge_passive_design_287",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の渡り廊下と校舎】朝の光が差し込むガラス張りの渡り廊下や校舎において、省エネにつながる過ごし方はどれでしょう？",
+                        "choiceA": "A．朝の自然光を活かして不要な廊下照明を控え、教室の空調も在室状況に合わせて適切に使う",
+                        "choiceB": "B．朝日が差し込んでいてもすべての通路照明をフル点灯にする",
+                        "choiceC": "C．誰もいない朝から全館の空調を最大出力で稼働させる",
+                        "correctAnswer": "A",
+                        "explanation": "自然光の活用とこまめな消灯・空調管理を組み合わせることで、朝の時間帯の電力消費を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（ガラス張りの渡り廊下と複数棟の校舎）<br><br>複数の校舎をつなぐ渡り廊下や共有通路において、エネルギー消費を抑える適切な運用はどれでしょう？",
+                        "choiceA": "A．自然採光と適切な換気・断熱を活かし、過度に冷暖房を効かせすぎない",
+                        "choiceB": "B．通路の出入口を開け放したまま冷暖房を強くかけ続ける",
+                        "choiceC": "C．昼間も照明をすべて点灯し、ブラインドも閉め切る",
+                        "correctAnswer": "A",
+                        "explanation": "共有通路や渡り廊下は外部との熱の出入りが大きいため、自然光活用と適切な空調運用が省エネの鍵になります。"
+                    },
+                    "night": {
+                        "question": "【夜の渡り廊下と校舎】夜間に渡り廊下や校舎の共有スペースを利用する際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．最後の退出時に不要な照明や空調をオフにし、安全に必要な場所だけ明かりを残す",
+                        "choiceB": "B．翌朝まで全フロアの照明と空調をつけたまま帰宅する",
+                        "choiceC": "C．換気扇や機器の電源を確認せずに放置する",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の消し忘れ防止は、建物全体の待機電力とCO2排出を大きく減らす基本行動です。"
+                    }
+                }
+            }
+        }
+    ],
+    "out289": [
+        {
+            "id": "hs_out71", "pitch": 6, "yaw": 15, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out71",
+                "quizGroup": "group_building_layout_wind_289",
+                "question": "（緑地を挟んで配置された複数の校舎）<br><br>建物の間に緑地や空間をゆとりをもって配置することは、脱炭素や快適性にどのような良い影響を与えるでしょう？",
+                "choiceA": "A．風の通り道（クールスポット）や日照が確保され、ヒートアイランド緩和や冷暖房負荷の低減につながる",
+                "choiceB": "B．周囲がすべてアスファルトで覆われるため、夏場の室温が大幅に上昇する",
+                "choiceC": "C．建物同士の風通しが悪くなり、一年中冷房が必要になる",
+                "correctAnswer": "A",
+                "explanation": "緑地と建物配置の工夫により風の通り道や蒸散作用が働き、周辺環境と建物のエネルギー効率向上につながります。"
+            }
+        }
+    ],
+    "out291": [
+        {
+            "id": "hs_out72", "pitch": 3, "yaw": 120, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out72",
+                "quizGroup": "group_outdoor_bench_coolshare_291",
+                "question": "（ガラス張りの校舎前ベンチとタイル歩道）<br><br>校舎のひさしの下にある屋外ベンチや開放的な共有スペースを休憩時間に活用することは、どのようなデコ活アクションにつながるでしょう？",
+                "choiceA": "A．自然の風や日陰を活かして過ごす「クールシェア」になり、個別の部屋の空調稼働を減らせる",
+                "choiceB": "B．各自が個別の部屋でエアコンを強冷房にして過ごす方が省エネになる",
+                "choiceC": "C．屋外ベンチの周囲に電気ヒーターを何台も置いて暖める",
+                "correctAnswer": "A",
+                "explanation": "ひさしや木陰など快適な共有スペースをみんなで利用することで、建物全体の空調負荷を抑えられます。"
+            }
+        }
+    ],
+    "out293": [
+        {
+            "id": "hs_out73", "pitch": 6, "yaw": 115, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out73",
+                "quizGroup": "group_campus_walkway_compact_293",
+                "question": "（両側の校舎と奥の渡り廊下を結ぶ歩行者動線）<br><br>複数の校舎や施設が歩きやすい通路や渡り廊下でコンパクトにつながっている環境では、どのような行動が脱炭素に貢献するでしょう？",
+                "choiceA": "A．キャンパス内の移動は徒歩を基本とし、エレベーターの過度な利用を控えて階段も活用する",
+                "choiceB": "B．隣の校舎へ移動するだけでも毎回車を使う",
+                "choiceC": "C．1階分の移動でも必ずエレベーターを使う",
+                "correctAnswer": "A",
+                "explanation": "徒歩移動と階段利用（エコ運動）を組み合わせることで、移動・昇降に伴う電力や燃料消費を減らし健康増進にもつながります。"
+            }
+        }
+    ],
+    "out294": [
+        {
+            "id": "hs_out74", "pitch": 7, "yaw": 115, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out74",
+                "quizGroup": "group_campus_hub_summary_294",
+                "question": "（ガラス張りの連絡通路と校舎群が交わる広場）<br><br>学習・研究施設が集まるキャンパスの中心エリアで、学生や教職員が協力して進められる「デコ活」の取り組みはどれでしょう？",
+                "choiceA": "A．使わない教室の消灯・空調オフ、マイボトル・マイバッグの活用、徒歩・自転車・公共交通での通学をみんなで実践する",
+                "choiceB": "B．省エネや脱炭素は個人の行動では変わらないと考え、何もしない",
+                "choiceC": "C．使い捨て容器や紙の大量消費を気にせず続ける",
+                "correctAnswer": "A",
+                "explanation": "一人ひとりの小さな省エネ・資源循環・エコ移動の積み重ねが、キャンパス全体のCO2削減と持続可能な社会づくりにつながります。"
+            }
+        }
     ]
 };
 
@@ -2379,7 +2549,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → [戻る:-10 / 279へ進む:170] 277 → [戻る:0] 279 / 269 ⇄ 280） ---
+        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → [戻る:-10 / 279へ進む:170] 277 → [戻る:0] 279 / 269 → 280 → 281 → … → 294） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
@@ -2513,7 +2683,81 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0280.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 281〜294（進むアイコン：中央から右に70度 = yaw: 70） ---
+        "out281": {
+            "title": "外 281",
+            "type": "equirectangular",
+            "panorama": "GS__0281.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "283へ進む", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out283": {
+            "title": "外 283",
+            "type": "equirectangular",
+            "panorama": "GS__0283.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "281へ戻る", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "285へ進む", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out285": {
+            "title": "外 285",
+            "type": "equirectangular",
+            "panorama": "GS__0285.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "283へ戻る", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "287へ進む", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out287": {
+            "title": "外 287",
+            "type": "equirectangular",
+            "panorama": "GS__0287.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "285へ戻る", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "289へ進む", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out289": {
+            "title": "外 289",
+            "type": "equirectangular",
+            "panorama": "GS__0289.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "287へ戻る", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "291へ進む", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out291": {
+            "title": "外 291",
+            "type": "equirectangular",
+            "panorama": "GS__0291.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "289へ戻る", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "293へ進む", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out293": {
+            "title": "外 293",
+            "type": "equirectangular",
+            "panorama": "GS__0293.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "291へ戻る", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out294": {
+            "title": "外 294",
+            "type": "equirectangular",
+            "panorama": "GS__0294.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 250, "type": "scene", "text": "293へ戻る", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
