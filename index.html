@@ -159,7 +159,7 @@
     <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">20</span> 点
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">30</span> 点
     </div>
     <button class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
@@ -194,6 +194,7 @@
 
 <script>
 // ゲーム進行用の変数
+const TOTAL_UNIQUE_QUIZZES = 30;
 let score = 0;
 let isGameStarted = false;
 let selectedStartScene = "scene1"; // "scene1"（ゼミ室） または "out147"（外）
@@ -818,7 +819,7 @@ const sceneQuizHotspots = {
                 "quizId": "quiz_out22",
                 "quizGroup": "group_building",
                 "question": "（右側の大きな建物とガラス窓）<br><br>建物の中で過ごすとき、冷暖房や照明のエネルギーをムダにしない行動はどれでしょう？",
-                "choiceA": "A．季節に合った服装（クールビズ・ウォームビズ）を工夫し、エアコンの設定温度を無理のない範囲で調整する",
+                "choiceA": "A．季節に合った服装（クールビズ・ウォームビズ）を工夫し、無理のない室温設定で空調を使う",
                 "choiceB": "B．冷房中に窓を開けたままにする",
                 "choiceC": "C．誰もいない部屋の照明を点けたままにする",
                 "correctAnswer": "A",
@@ -1191,38 +1192,38 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（233〜251：デコ活データベース・行動・場面に沿った三択問題10問） ---
+    // --- 屋外クイズ（233〜251：デコ活アクション・データベース視点の10問） ---
     "out233": [
         {
-            "id": "hs_out42", "pitch": 6, "yaw": 25, "cssClass": "bulb-hotspot",
+            "id": "hs_out42", "pitch": 8, "yaw": 10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out42",
-                "quizGroup": "group_telework",
+                "quizGroup": "group_delivery_once",
                 "variants": {
                     "morning": {
-                        "question": "【朝の出勤・通学前】朝の移動時間帯に、デコ活アクション「つながるオフィス テレワーク」やオンライン活用を取り入れる脱炭素の工夫はどれでしょう？",
-                        "choiceA": "A．対面での参加が必須ではない会議や作業はテレワーク・オンラインを活用し、通勤・移動によるCO2排出を減らす",
-                        "choiceB": "B．オンラインで済む用事でも毎回片道長距離を車で移動する",
-                        "choiceC": "C．移動手段や時間効率をまったく考えずに移動する",
+                        "question": "【朝の外出前】その日不在になる予定の宅配便について、再配達とCO2を減らすデコ活アクションはどれでしょう？",
+                        "choiceA": "A．外出前に配達日時を指定したり、宅配ボックス・ロッカーを利用したりして一度で受け取る",
+                        "choiceB": "B．受け取れない時間帯に届けてもらい、何度も再配達を依頼する",
+                        "choiceC": "C．日時指定をせず予定が合わないまま受け取りをやり直す",
                         "correctAnswer": "A",
-                        "explanation": "デコ活では、テレワークやオンライン会議等の活用によって移動に伴う燃料消費やCO2排出を減らせる効果が重視されています。"
+                        "explanation": "デコ活アクション「宅配便は一度で受け取る」により、再配達による配送トラックのCO2排出やドライバーの負担を減らせます。"
                     },
                     "day": {
-                        "question": "（左右に分かれる道路と建物）<br><br>デコ活アクション「つながるオフィス テレワーク」など、働き方や学び方の工夫が脱炭素につながる理由として適切なのはどれでしょう？",
-                        "choiceA": "A．通勤・通学や業務移動の回数を減らすことで、移動に伴うCO2排出量を抑えられるため",
-                        "choiceB": "B．移動距離を増やすほどCO2吸収量が増えるため",
-                        "choiceC": "C．端末の電源を常に最大出力にするため",
+                        "question": "（路面の表示と分かれ道）<br><br>荷物や宅配便の受け取りに関して、デコ活で推奨されている脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．配達日時の指定や宅配ボックス・宅配ロッカーを活用し、できるだけ一度で受け取る",
+                        "choiceB": "B．在宅予定を確認せずに受け取り、何度も再配達してもらう",
+                        "choiceC": "C．不要な梱包や再配達を気にせず注文を繰り返す",
                         "correctAnswer": "A",
-                        "explanation": "デコ活データベースでも行動ごとのCO2削減効果が整理されており、不要な移動を減らすテレワーク・オンライン活用は移動由来CO2の削減につながります。"
+                        "explanation": "デコ活アクション「宅配便は一度で受け取る」は、輸送時のCO2排出削減と暮らしの効率化につながる身近な取り組みです。"
                     },
                     "night": {
-                        "question": "【夜の帰宅・移動後】夜間の業務や連絡において、無駄な移動を減らしつつ省エネにつながる行動はどれでしょう？",
-                        "choiceA": "A．不要な夜間移動を控え、オンライン連絡や翌日の計画的対応を活用し、使わない機器はオフにする",
-                        "choiceB": "B．深夜でも不要な移動を車で繰り返す",
-                        "choiceC": "C．作業を終えてもPCやモニターを点けっぱなしにする",
+                        "question": "【夜の帰宅後】夜に帰宅した際、宅配便や荷物の受け取りに関して脱炭素につながる工夫はどれでしょう？",
+                        "choiceA": "A．帰宅時間に合わせて受取日時を指定したり、宅配ボックス・コンビニ受取を活用したりする",
+                        "choiceB": "B．不在になりやすい時間帯を指定して再配達を増やす",
+                        "choiceC": "C．受取方法を指定せず何度も持ち戻りを発生させる",
                         "correctAnswer": "A",
-                        "explanation": "無駄な移動を減らし、終業後の機器オフを組み合わせることで、移動と電力の両面でCO2排出を抑えられます。"
+                        "explanation": "受取方法や時間帯を工夫して再配達を減らすことで、物流に伴うCO2排出量を抑えられます。"
                     }
                 }
             }
@@ -1230,84 +1231,87 @@ const sceneQuizHotspots = {
     ],
     "out235": [
         {
-            "id": "hs_out43", "pitch": 12, "yaw": -20, "cssClass": "bulb-hotspot",
+            "id": "hs_out43", "pitch": 10, "yaw": -10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out43",
-                "quizGroup": "group_greenery",
-                "question": "（黄金色に色づいた木々と石積み）<br><br>色づいた木々や緑地がある環境で、デコ活データベースでも評価される自然保全・脱炭素の行動はどれでしょう？",
-                "choiceA": "A．緑地や樹木を大切にし、草木や土壌の炭素貯留・CO2吸収機能を損なわない管理や保全活動に協力する",
-                "choiceB": "B．緑地や石垣の周辺にゴミを捨てて放置する",
-                "choiceC": "C．草木を踏み荒らして緑地を減らす",
+                "quizGroup": "group_long_use_share",
+                "question": "（色づいた木々と分かれ道）<br><br>身の回りのモノや機器・衣類などを長く使うことについて、デコ活の考え方として適切なのはどれでしょう？",
+                "choiceA": "A．壊れたり古くなったりしてもすぐ捨てず、修理・リユース・シェアを活用して長く大切に使えば、製造や廃棄に伴うCO2を減らせる",
+                "choiceB": "B．流行が変わるたびに新しいものを買い替え、使えるものもすぐ手放す",
+                "choiceC": "C．使わなくなったモノをそのまま放置して廃棄する",
                 "correctAnswer": "A",
-                "explanation": "樹木や草地・土壌はCO2の吸収・貯留やヒートアイランド緩和に役立ちます。緑を守り汚さないことが脱炭素につながります。"
+                "explanation": "デコ活やゼロカーボンアクションでは、製品を長く使うことやリユース・シェアリング・修理の活用が、製造・廃棄時のCO2削減につながるとされています。"
                     }
                 }
-            ]
-        },
+            }
+        }
+    ],
     "out237": [
         {
-            "id": "hs_out44", "pitch": -6, "yaw": -5, "cssClass": "bulb-hotspot",
+            "id": "hs_out44", "pitch": 9, "yaw": 15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out44",
-                "quizGroup": "group_car",
-                "question": "（石積みのカーブと二股の道）<br><br>デコ活データベースでは、自動車利用に伴うCO2削減の「共通のものさし」として行動効果が整理されています。<br><br>日常で実践できる脱炭素の車利用はどれでしょう？",
-                "choiceA": "A．エコドライブ（ふんわりアクセル・アイドリングストップ・適正空気圧）や次世代自動車（EV・FCV等）を選ぶ",
-                "choiceB": "B．急発進・急ブレーキを繰り返し、不要な荷物を積んだまま走る",
-                "choiceC": "C．停車中もエアコンをつけたままエンジンをかけ続ける",
+                "quizGroup": "group_insulation_window",
+                "question": "（石垣と木々の間の道）<br><br>建物や住まいの「窓」や「断熱」に関して、デコ活で推奨されている脱炭素アクションはどれでしょう？",
+                "choiceA": "A．断熱窓や内窓・断熱シート・遮光カーテンなどを活用して熱の出入りを抑え、冷暖房のエネルギーを減らす",
+                "choiceB": "B．窓のすき間や熱の出入りを放置したまま、エアコンを強く効かせる",
+                "choiceC": "C．冷暖房中に窓やドアを頻繁に開け放す",
                 "correctAnswer": "A",
-                "explanation": "デコ活データベースでは生活者の行動ごとのCO2排出削減効果が算定されており、エコドライブや電動車の選択はCO2削減に直結します。"
+                "explanation": "デコ活アクション「電気も省エネ 断熱住宅」では、熱の出入りが大きい窓などの断熱対策を行うことで、冷暖房効率を高めCO2を減らすことが推奨されています。"
             }
         }
     ],
     "out239": [
         {
-            "id": "hs_out45", "pitch": 7, "yaw": 25, "cssClass": "bulb-hotspot",
+            "id": "hs_out45", "pitch": 11, "yaw": 20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out45",
-                "quizGroup": "group_building",
-                "question": "（右手の建物と分かれ道）<br><br>デコ活の「デ 電気も省エネ 断熱住宅・建築物」や「クールビズ・ウォームビズ」の考え方として適切なのはどれでしょう？",
-                "choiceA": "A．建物側の断熱・日射対策と、季節に合わせた服装・無理のない室温設定を組み合わせて冷暖房負荷を下げる",
-                "choiceB": "B．冷暖房中に窓を開けたままにする",
-                "choiceC": "C．誰もいない部屋の冷暖房や照明をつけっぱなしにする",
-                "correctAnswer": "A",
-                "explanation": "断熱や服装工夫で熱の出入りや体感温度を整えることで、エアコンの電力消費とCO2排出を無理なく減らせます。"
+                "quizGroup": "group_telework_digital",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の移動・出勤前】朝の通勤や移動に関して、デコ活で推奨されている働き方・学び方の工夫はどれでしょう？",
+                        "choiceA": "A．テレワークやオンライン会議・デジタル資料を活用し、不要な移動や紙の印刷を減らす",
+                        "choiceB": "B．オンラインで済む用事でも毎回遠方まで移動し、資料も大量印刷する",
+                        "choiceC": "C．移動手段や働き方の工夫を一切行わない",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活アクション「つながるオフィス テレワーク」やデジタル化の活用により、移動に伴うCO2排出や通勤時間の削減につながります。"
+                    },
+                    "day": {
+                        "question": "（右手の建物と緑の斜面）<br><br>仕事や学業における移動や連絡手段に関して、デコ活で推奨される脱炭素につながる工夫はどれでしょう？",
+                        "choiceA": "A．テレワークやオンライン活用、電子データでのやり取りを取り入れ、移動や紙の消費を抑える",
+                        "choiceB": "B．すべての打ち合わせや手続きを対面・紙面だけに限定する",
+                        "choiceC": "C．移動や印刷の量にかかわらず効率を考えずに進める",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活の「つながるオフィス テレワーク」などの工夫により、移動エネルギーや紙資源の消費を抑えながら柔軟に活動できます。"
+                    },
+                    "night": {
+                        "question": "【夜の作業・連絡】夜間の作業や翌日の予定を立てる際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．翌日のオンライン対応や資料共有をデジタルで整え、不要な移動や印刷を減らす",
+                        "choiceB": "B．深夜に不要な移動や大量印刷を行う",
+                        "choiceC": "C．使った機器や照明を消し忘れてそのままにする",
+                        "correctAnswer": "A",
+                        "explanation": "デジタル活用と節電を組み合わせることで、業務・学習に伴うCO2排出量を抑えられます。"
+                    }
+                }
             }
         }
     ],
     "out241": [
         {
-            "id": "hs_out46", "pitch": -5, "yaw": -15, "cssClass": "bulb-hotspot",
+            "id": "hs_out46", "pitch": 8, "yaw": -15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out46",
-                "quizGroup": "group_delivery",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の外出・宅配受取】朝に外出する際、宅配便の再配達を減らすデコ活アクション「宅配便は一度で受け取る」として適切なのはどれでしょう？",
-                        "choiceA": "A．在宅できる時間帯を指定したり、宅配ボックス・ロッカーやコンビニ受取を活用したりして一回で受け取る",
-                        "choiceB": "B．受け取り予定を考えず外出を繰り返し、再配達を何度も発生させる",
-                        "choiceC": "C．配達日時の指定や受取場所の工夫をまったくしない",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活アクション「宅配便は一度で受け取る」により、配達トラックの再走行が減り、輸送に伴うCO2排出量を削減できます。"
-                    },
-                    "day": {
-                        "question": "（コンクリートの擁壁と分かれ道）<br><br>デコ活アクション「宅配便は一度で受け取る」が脱炭素につながる理由として正しいのはどれでしょう？",
-                        "choiceA": "A．再配達が減ることで配送車の走行距離・時間が短くなり、輸送に伴うCO2排出を抑えられるため",
-                        "choiceB": "B．再配達が増えるほど荷物の包装が減るため",
-                        "choiceC": "C．配送車の燃費が再配達で上がるため",
-                        "correctAnswer": "A",
-                        "explanation": "宅配ボックスの活用や日時指定などで一度で受け取ることは、物流の効率化とCO2削減につながる身近なデコ活行動です。"
-                    },
-                    "night": {
-                        "question": "【夜の帰宅と受取】夜に帰宅したあと、宅配便やネット注文に関して脱炭素につながる行動はどれでしょう？",
-                        "choiceA": "A．宅配ボックスや置き配・ロッカーの確認や、在宅時間に合わせた日時指定を活用して再配達を防ぐ",
-                        "choiceB": "B．急がない荷物でもその都度バラバラに注文し、不在で持ち帰らせる",
-                        "choiceC": "C．受け取り後の段ボールや梱包材を分別せず捨てる",
-                        "correctAnswer": "A",
-                        "explanation": "再配達を減らす工夫と梱包材の適正分別を組み合わせることで、輸送と廃棄の両面でCO2を抑えられます。"
+                "quizGroup": "group_hotwater_water_saving",
+                "question": "（コンクリート構造物と紅葉）<br><br>給湯やお湯・水の使い方に関して、デコ活で推奨されている脱炭素につながる工夫はどれでしょう？",
+                "choiceA": "A．高効率給湯器や節水型機器を活用し、お湯の沸かしすぎや出しっぱなしを減らす",
+                "choiceB": "B．使わないときもお湯を沸かし続けたり、水を流しっぱなしにしたりする",
+                "choiceC": "C．必要以上に熱いお湯を常に大量に使う",
+                "correctAnswer": "A",
+                "explanation": "デコ活では「高効率の給湯器、節水できる機器を選ぶ」ことや節水・適温利用が推奨されており、給湯・給水に伴うエネルギー消費とCO2を減らせます。"
                     }
                 }
             }
@@ -1315,120 +1319,113 @@ const sceneQuizHotspots = {
     ],
     "out243": [
         {
-            "id": "hs_out47", "pitch": 10, "yaw": -10, "cssClass": "bulb-hotspot",
+            "id": "hs_out47", "pitch": 9, "yaw": 5, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out47",
-                "quizGroup": "group_fashion",
-                "question": "（秋の樹木の影と落ち葉の道）<br><br>デコ活アクション「サステナブルファッション（良い服を長く大切に使う）」の実践として適切なのはどれでしょう？",
-                "choiceA": "A．流行だけで安易に買い捨てず、手持ちの服を長く着たり、リユース・修理を活用したりする",
-                "choiceB": "B．まだ着られる服を季節ごとにすぐ処分して新しく買い直す",
-                "choiceC": "C．着なくなった衣類を分別せず一般ごみとして大量に捨てる",
+                "quizGroup": "group_buy_needed",
+                "question": "（木漏れ日と落ち葉の道）<br><br>買い物をする際、デコ活で推奨されている「必要な分だけ買う」工夫として適切なのはどれでしょう？",
+                "choiceA": "A．量り売りや小分け購入、必要な量の見極めを活用し、買いすぎや廃棄を減らす",
+                "choiceB": "B．使い切れないと分かっていても特売で大量に買い込む",
+                "choiceC": "C．包装や量を確認せずに余分なものを毎回買う",
                 "correctAnswer": "A",
-                "explanation": "衣類は製造から廃棄までのライフサイクル全体で多くのCO2が排出されます。長く大切に使うことがデコ活につながります。"
+                "explanation": "デコ活アクション「はかり売りを利用するなど、好きなものを必要な分だけ買う」により、廃棄物や製造・輸送に伴うCO2の削減につながります。"
                     }
                 }
-            ]
-        },
+            }
+        }
+    ],
     "out245": [
         {
-            "id": "hs_out48", "pitch": 5, "yaw": 30, "cssClass": "bulb-hotspot",
+            "id": "hs_out48", "pitch": 10, "yaw": 20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out48",
-                "quizGroup": "group_season_food",
-                "question": "（両側に建物がある分かれ道）<br><br>デコ活アクション「感謝の心 食べ残しゼロ」「地元産の旬の食材を積極的に選ぶ」に沿った行動はどれでしょう？",
-                "choiceA": "A．食べきれる量を注文・調理して食品ロスを減らし、旬や地元産の食材を選ぶ",
-                "choiceB": "B．食べきれないほどの量を注文して残す",
-                "choiceC": "C．食材の期限や在庫を確認せず買い込んで捨てる",
+                "quizGroup": "group_sustainable_fashion",
+                "question": "（右手の建物と落葉樹）<br><br>衣類やファッションに関して、デコ活で推奨されている「サステナブルファッション」の行動はどれでしょう？",
+                "choiceA": "A．今持っている服を長く大切に着たり、環境に配慮した素材・リユース品を選んだりする",
+                "choiceB": "B．数回しか着ない服を次々と買い捨てする",
+                "choiceC": "C．手入れをせずに傷ませてすぐ処分する",
                 "correctAnswer": "A",
-                "explanation": "食品ロスの削減や旬・地元食材の選択は、生産・輸送・廃棄にかかるエネルギーとCO2を減らす重要なデコ活アクションです。"
+                "explanation": "デコ活アクション「クールビズ・ウォームビズ、サステナブルファッションに取り組む」に基づき、服を長く大切に使うことで生産・廃棄時のCO2を減らせます。"
+                    }
+                }
             }
         }
     ],
     "out247": [
         {
-            "id": "hs_out49", "pitch": -3, "yaw": -20, "cssClass": "bulb-hotspot",
+            "id": "hs_out49", "pitch": 8, "yaw": -20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out49",
-                "quizGroup": "group_walk_bike",
-                "question": "（中央の屋根付きスペースと二股の道）<br><br>デコ活アクション「できるだけ公共交通・自転車・徒歩で移動する」の利点として適切なのはどれでしょう？",
-                "choiceA": "A．近距離の移動を徒歩や自転車にすることで、走行時のCO2排出を減らしつつ健康づくりにもつながる",
-                "choiceB": "B．数百メートルの移動でも必ず車を使う方がCO2が減る",
-                "choiceC": "C．徒歩や自転車はCO2削減効果がまったくない",
+                "quizGroup": "group_co2_visualize",
+                "question": "（屋根付きの駐輪・休憩スペース）<br><br>建物や室内のエネルギー・CO2管理に関して、デコ活の取り組みや製品データベースで注目される工夫はどれでしょう？",
+                "choiceA": "A．CO2センサーやエネルギー見える化を活用して過剰な換気や空調のムダを把握し、快適さと省エネを両立する",
+                "choiceB": "B．エネルギー使用量を把握せず、換気や空調を常に過剰に動かす",
+                "choiceC": "C．設備の稼働状況をまったく確認しない",
                 "correctAnswer": "A",
-                "explanation": "徒歩・自転車・公共交通の活用は、CO2排出削減と健康増進の両方に役立つ代表的なデコ活アクションです。"
+                "explanation": "エネルギーやCO2の「見える化」と適切な制御を行うことで、快適さを損なわずに換気・空調などの無駄な電力消費を減らせます。"
+                    }
+                }
             }
         }
     ],
     "out249": [
         {
-            "id": "hs_out50", "pitch": 6, "yaw": 20, "cssClass": "bulb-hotspot",
+            "id": "hs_out50", "pitch": 11, "yaw": 15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out50",
-                "quizGroup": "group_3r_action",
-                "question": "（右手の曲線を描く建物と屋根付きスペース）<br><br>デコ活アクション「ごみはできるだけ減らし、資源としてきちんと分別・再利用する」として適切なのはどれでしょう？",
-                "choiceA": "A．マイボトル・マイバッグやリユース品を活用し、プラや紙・缶などは地域のルールで分別して資源循環につなげる",
-                "choiceB": "B．分別が面倒なので可燃ごみにすべて混ぜて出す",
-                "choiceC": "C．容器や包装の汚れを落とさず、分別ルールを無視して捨てる",
+                "quizGroup": "group_wood_bio_material",
+                "question": "（中央の樹木・木造部と建物）<br><br>木材や植物由来素材などの活用に関して、脱炭素につながる考え方として適切なのはどれでしょう？",
+                "choiceA": "A．適切に管理された国産材・木質製品や植物由来素材を選び長く使うことで、炭素の貯留や資源循環につなげる",
+                "choiceB": "B．森林や植物資源の循環を考えずに使い捨てにする",
+                "choiceC": "C．剪定材や木質資源を分別せずすべて焼却処分する",
                 "correctAnswer": "A",
-                "explanation": "リユースと正しい分別・リサイクルは、廃棄物焼却に伴うCO2の削減と資源の有効活用につながります。"
+                "explanation": "デコ活や登録取組の視点では、木質や植物由来素材を循環・活用し長く使うことが、炭素の固定や資源の有効活用につながります。"
+                    }
+                }
             }
         }
     ],
     "out251": [
         {
-            "id": "hs_out51", "pitch": -4, "yaw": -25, "cssClass": "bulb-hotspot",
+            "id": "hs_out51", "pitch": 9, "yaw": -10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out51",
-                "quizGroup": "group_heatpump_water",
+                "quizGroup": "group_warm_cool_biz",
                 "variants": {
                     "morning": {
-                        "question": "【朝の給湯・お湯利用】朝にお湯や水を使う際、デコ活の「ひとりでにCO2が下がる（高効率給湯器・節水機器を選ぶ）」視点で適切なのはどれでしょう？",
-                        "choiceA": "A．高効率給湯器（ヒートポンプ給湯器など）や節水型機器の活用を意識し、お湯の出しっぱなしや無駄な沸かしすぎを避ける",
-                        "choiceB": "B．使わないときもお湯を流し続け、給湯設定を常に最大にする",
-                        "choiceC": "C．省エネ性能や節水機能を確認せず、無駄なお湯を多く使う",
+                        "question": "【朝の服装と室温】肌寒さや暑さを感じる朝の時間帯、冷暖房のエネルギーを抑えるデコ活の工夫はどれでしょう？",
+                        "choiceA": "A．ウォームビズ・クールビズなど季節に合った服装を選び、冷暖房の設定温度を無理のない範囲で見直す",
+                        "choiceB": "B．薄着のまま暖房を極端に高く設定する",
+                        "choiceC": "C．誰もいない部屋でも冷暖房を強くかけ続ける",
                         "correctAnswer": "A",
-                        "explanation": "デコ活では、高効率な給湯機器や節水機器の選択・活用によって、給湯や水処理に伴うエネルギーとCO2排出を減らせることが示されています。"
+                        "explanation": "デコ活アクション「クールビズ・ウォームビズ」と室温の見直しを組み合わせることで、快適さを保ちながら冷暖房のCO2排出を減らせます。"
                     },
                     "day": {
-                        "question": "（左手の建物・室外機と分かれ道）<br><br>デコ活の「ひとりでにCO2が下がる」アクション（高効率給湯器・節水機器の活用や省エネ設備）の特徴として正しいのはどれでしょう？",
-                        "choiceA": "A．高効率な機器や設備を選ぶことで、毎日の暮らしの中で無理なく継続的にCO2削減効果を得られる",
-                        "choiceB": "B．古い非効率な機器を使い続けてもCO2削減効果は同じである",
-                        "choiceC": "C．節水や高効率機器はCO2排出を増やす",
+                        "question": "（両側の建物と分かれ道）<br><br>季節の気温変化に合わせて過ごす際、デコ活で推奨されている脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．クールビズ・ウォームビズなどの服装工夫とエアコン設定温度の見直し（冷房目安28℃・暖房目安20℃など）を実践する",
+                        "choiceB": "B．季節に合わない服装のまま、冷暖房の温度を極端に設定する",
+                        "choiceC": "C．部屋に人がいなくても冷暖房を点けっぱなしにする",
                         "correctAnswer": "A",
-                        "explanation": "デコ活データベースでも、高効率機器や省エネ・節水設備の導入・利用によるCO2削減効果が整理されており、日々の積み重ねで大きな削減につながります。"
+                        "explanation": "デコ活の「クールビズ・ウォームビズ」や設定温度の見直しは、無理なく始められてCO2削減効果が高い基本アクションです。"
                     },
                     "night": {
-                        "question": "【夜の入浴・片付け】夜にお湯や設備を使う際、省エネとCO2削減につながる行動はどれでしょう？",
-                        "choiceA": "A．必要な分だけお湯を沸かし・使い、使い終わったら蛇口を確実に閉めて無駄な保温や放熱を抑える",
-                        "choiceB": "B．使わないお湯を出しっぱなしにし、翌朝まで無駄に沸かし続ける",
-                        "choiceC": "C．給湯や設備の省エネ設定を切ってしまう",
+                        "question": "【夜の室内と就寝・退出前】夜に部屋で過ごしたり退出したりする際、省エネと脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．ひざ掛けや上着など服装で調整し、使わない部屋や時間帯の冷暖房・照明を切る",
+                        "choiceB": "B．使わない部屋も暖房や照明をつけたままにする",
+                        "choiceC": "C．窓を開けたまま冷暖房を稼働させる",
                         "correctAnswer": "A",
-                        "explanation": "夜間の無駄なお湯・給湯エネルギーを抑えることで、家庭や施設全体のCO2排出量を減らせます。"
+                        "explanation": "服装での調整とこまめなオフを組み合わせることで、夜間の無駄な電力消費とCO2排出を抑えられます。"
                     }
                 }
             }
         }
     ]
 };
-
-function getTotalUniqueQuizGroups() {
-    const groups = new Set();
-    Object.values(sceneQuizHotspots).forEach(list => {
-        list.forEach(hs => {
-            if (hs && hs.clickHandlerArgs && hs.clickHandlerArgs.quizGroup) {
-                groups.add(hs.clickHandlerArgs.quizGroup);
-            }
-        });
-    });
-    return groups.size;
-}
-
-const TOTAL_UNIQUE_QUIZZES = getTotalUniqueQuizGroups();
 
 function startGame() {
     isGameStarted = true;
@@ -1825,4 +1822,262 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0199.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 60, "type": "scene", "text": "197へ戻る", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -120, "type": "scene", "text": "201へ進む", "
+                { "pitch": -5, "yaw": -120, "type": "scene", "text": "201へ進む", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out201": {
+            "title": "外 201",
+            "type": "equirectangular",
+            "panorama": "GS__0201.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 60, "type": "scene", "text": "199へ戻る", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -120, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out202": {
+            "title": "外 202",
+            "type": "equirectangular",
+            "panorama": "GS__0202.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 60, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+            ]
+        },
+
+        // --- 屋外分岐ルート（189 → [進む:-20 / 戻る:160] 203 → … → 213 → [進む:-110 / 戻る:70] 215 → … → 251） ---
+        "out203": {
+            "title": "外 203",
+            "type": "equirectangular",
+            "panorama": "GS__0203.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "205へ進む", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out205": {
+            "title": "外 205",
+            "type": "equirectangular",
+            "panorama": "GS__0205.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "203へ戻る", "sceneId": "out203", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "207へ進む", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out207": {
+            "title": "外 207",
+            "type": "equirectangular",
+            "panorama": "GS__0207.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "205へ戻る", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "209へ進む", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out209": {
+            "title": "外 209",
+            "type": "equirectangular",
+            "panorama": "GS__0209.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "207へ戻る", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "211へ進む", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out211": {
+            "title": "外 211",
+            "type": "equirectangular",
+            "panorama": "GS__0211.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "209へ戻る", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "213へ進む", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out213": {
+            "title": "外 213",
+            "type": "equirectangular",
+            "panorama": "GS__0213.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "211へ戻る", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "215へ進む", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out215": {
+            "title": "外 215",
+            "type": "equirectangular",
+            "panorama": "GS__0215.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "213へ戻る", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "217へ進む", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out217": {
+            "title": "外 217",
+            "type": "equirectangular",
+            "panorama": "GS__0217.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "215へ戻る", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "219へ進む", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out219": {
+            "title": "外 219",
+            "type": "equirectangular",
+            "panorama": "GS__0219.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "217へ戻る", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "221へ進む", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out221": {
+            "title": "外 221",
+            "type": "equirectangular",
+            "panorama": "GS__0221.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "219へ戻る", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "223へ進む", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out223": {
+            "title": "外 223",
+            "type": "equirectangular",
+            "panorama": "GS__0223.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "221へ戻る", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "225へ進む", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out225": {
+            "title": "外 225",
+            "type": "equirectangular",
+            "panorama": "GS__0225.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "223へ戻る", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "227へ進む", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out227": {
+            "title": "外 227",
+            "type": "equirectangular",
+            "panorama": "GS__0227.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "225へ戻る", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "229へ進む", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out229": {
+            "title": "外 229",
+            "type": "equirectangular",
+            "panorama": "GS__0229.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "227へ戻る", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "231へ進む", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out231": {
+            "title": "外 231",
+            "type": "equirectangular",
+            "panorama": "GS__0231.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "229へ戻る", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                // ★ 231から233へ進むアイコン
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "233へ進む", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 屋外続きルート（231 → [進む:-110 / 戻る:70] 233 → 235 → … → 251） ---
+        "out233": {
+            "title": "外 233",
+            "type": "equirectangular",
+            "panorama": "GS__0233.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "231へ戻る", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "235へ進む", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out235": {
+            "title": "外 235",
+            "type": "equirectangular",
+            "panorama": "GS__0235.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "233へ戻る", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "237へ進む", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out237": {
+            "title": "外 237",
+            "type": "equirectangular",
+            "panorama": "GS__0237.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "235へ戻る", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "239へ進む", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out239": {
+            "title": "外 239",
+            "type": "equirectangular",
+            "panorama": "GS__0239.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "237へ戻る", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "241へ進む", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out241": {
+            "title": "外 241",
+            "type": "equirectangular",
+            "panorama": "GS__0241.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "239へ戻る", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "243へ進む", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out243": {
+            "title": "外 243",
+            "type": "equirectangular",
+            "panorama": "GS__0243.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "241へ戻る", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "245へ進む", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out245": {
+            "title": "外 245",
+            "type": "equirectangular",
+            "panorama": "GS__0245.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "243へ戻る", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "247へ進む", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out247": {
+            "title": "外 247",
+            "type": "equirectangular",
+            "panorama": "GS__0247.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "245へ戻る", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "249へ進む", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out249": {
+            "title": "外 249",
+            "type": "equirectangular",
+            "panorama": "GS__0249.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "247へ戻る", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "251へ進む", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out251": {
+            "title": "外 251",
+            "type": "equirectangular",
+            "panorama": "GS__0251.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "249へ戻る", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+            ]
+        }
+    }
+});
+
+viewer.on('load', function() {
+    refreshSceneQuizHotspots(viewer.getScene());
+});
+</script>
+
+</body>
+</html>
