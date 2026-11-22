@@ -10,6 +10,11 @@
         body { margin: 0; padding: 0; font-family: sans-serif; }
         #panorama { width: 100vw; height: 100vh; transition: filter 0.6s ease; }
 
+        /* Pannellumの地点名（タイトルボックス）を非表示 */
+        .pnlm-title-box {
+            display: none !important;
+        }
+
         /* 時間帯フィルター（画像追加なし） */
         #panorama.time-morning {
             filter: brightness(1.03) sepia(0.22) saturate(1.25) contrast(1.03);
@@ -30,21 +35,6 @@
         }
         #start-screen { z-index: 2000; }
         #end-screen { z-index: 2500; display: none; }
-
-        .start-select-group {
-            display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center;
-        }
-        .start-place-btn {
-            padding: 12px 22px; font-size: 16px; font-weight: bold; cursor: pointer;
-            background: rgba(255, 255, 255, 0.12); color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.45); border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .start-place-btn:hover { background: rgba(255, 255, 255, 0.22); }
-        .start-place-btn.active {
-            background: #007bff; border-color: #66b2ff; color: #fff;
-            box-shadow: 0 0 12px rgba(0, 123, 255, 0.6);
-        }
 
         .start-btn {
             padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
@@ -139,17 +129,7 @@
 <!-- ゲーム開始画面 -->
 <div id="start-screen" class="fullscreen-overlay">
     <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
-    <p style="margin-bottom: 20px;">開始する場所を選んで、朝・昼・夜で変わる場面を巡りながら問題を探そう！</p>
-
-    <div class="start-select-group" role="group" aria-label="開始場所の選択">
-        <button type="button" id="btn-start-indoor" class="start-place-btn active" onclick="selectStartScene('scene1')">
-            ゼミ室から開始（地点1）
-        </button>
-        <button type="button" id="btn-start-outdoor" class="start-place-btn" onclick="selectStartScene('out147')">
-            外から開始（147）
-        </button>
-    </div>
-
+    <p style="margin-bottom: 24px;">どこから始まるかはお楽しみ！朝・昼・夜で変わる場面を巡りながら問題を探そう！</p>
     <button type="button" class="start-btn" onclick="startGame()">ゲーム開始</button>
 </div>
 
@@ -196,10 +176,30 @@
 const TOTAL_UNIQUE_QUIZZES = 68;
 let score = 0;
 let isGameStarted = false;
-let selectedStartScene = "scene1";
 let answeredIds = new Set();
 let answeredGroups = new Set();
 let viewer = null;
+
+const SPAWN_SCENES = [
+    "scene1", "scene2", "scene3", "scene4", "scene5",
+    "out147", "out149", "out151", "out153", "out155", "out157", "out159",
+    "out161", "out163", "out165", "out167", "out169", "out171", "out173", "out175",
+    "out177", "out179", "out181", "out183", "out185", "out187", "out189",
+    "out191", "out193", "out195", "out197", "out199", "out201", "out202",
+    "out203", "out205", "out207", "out209", "out211", "out213",
+    "out215", "out217", "out219", "out221", "out223", "out225", "out227", "out229", "out231",
+    "out233", "out235", "out237", "out239", "out241", "out243", "out245", "out247", "out249", "out251",
+    "out253", "out255", "out257", "out259", "out261", "out263", "out265",
+    "out267", "out269", "out271", "out273", "out275", "out277", "out279", "out280",
+    "out281", "out283", "out285", "out287", "out289", "out291", "out293", "out294",
+    "out295", "out296", "out297", "out299", "out301", "out302", "out303", "out305",
+    "out307", "out309", "out311", "out313", "out315", "out317", "out319"
+];
+
+function pickRandomSpawnScene() {
+    const idx = Math.floor(Math.random() * SPAWN_SCENES.length);
+    return SPAWN_SCENES[idx];
+}
 
 const TIME_MODES = ["morning", "day", "night"];
 const TIME_LABELS = {
@@ -208,20 +208,6 @@ const TIME_LABELS = {
     "night": "夜"
 };
 let currentTimeOfDay = "day";
-
-function selectStartScene(sceneId) {
-    selectedStartScene = sceneId;
-    const indoorBtn = document.getElementById("btn-start-indoor");
-    const outdoorBtn = document.getElementById("btn-start-outdoor");
-
-    if (sceneId === "out147") {
-        outdoorBtn.classList.add("active");
-        indoorBtn.classList.remove("active");
-    } else {
-        indoorBtn.classList.add("active");
-        outdoorBtn.classList.remove("active");
-    }
-}
 
 function pickRandomTimeOfDay() {
     const idx = Math.floor(Math.random() * TIME_MODES.length);
@@ -2241,8 +2227,13 @@ function startGame() {
     document.getElementById('score-board').style.display = 'block';
     document.getElementById('time-controls').style.display = 'flex';
 
-    if (viewer && viewer.getScene() !== selectedStartScene) {
-        viewer.loadScene(selectedStartScene);
+    const randomSpawnScene = pickRandomSpawnScene();
+    if (viewer) {
+        if (viewer.getScene() !== randomSpawnScene) {
+            viewer.loadScene(randomSpawnScene);
+        } else {
+            refreshSceneQuizHotspots(randomSpawnScene);
+        }
     }
 
     applyTimeOfDay(pickRandomTimeOfDay(), true);
@@ -3161,14 +3152,14 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 307〜319（進むアイコン：中央から左に100度 = yaw: -100、319と279を接続） ---
+        // --- 307〜319（移動アイコンは左に30度移動、319と279を接続） ---
         "out307": {
             "title": "外 307",
             "type": "equirectangular",
             "panorama": "GS__0307.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out309": {
@@ -3176,8 +3167,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0309.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out311": {
@@ -3185,8 +3176,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0311.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out313": {
@@ -3194,8 +3185,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0313.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out315": {
@@ -3203,8 +3194,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0315.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out317": {
@@ -3212,8 +3203,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0317.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out319": {
@@ -3221,8 +3212,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0319.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 50, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -130, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         }
     }
