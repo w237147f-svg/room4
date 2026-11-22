@@ -2152,7 +2152,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外分岐ルート（189 → [進む:-20 / 戻る:160] 203 → … → 213 → [進む:-110 / 戻る:70] 215 → … → 265） ---
+        // --- 屋外分岐ルート（189 → [進む:-20 / 戻る:160] 203 → … → 213 → [215へ進む:-85] 215 → … → 265） ---
         "out203": {
             "title": "外 203",
             "type": "equirectangular",
@@ -2204,7 +2204,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0213.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 160, "type": "scene", "text": "211へ戻る", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "215へ進む", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -85, "type": "scene", "text": "215へ進む", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out215": {
@@ -2379,7 +2379,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → 277 → 279 / 269 ⇄ 280） ---
+        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → [戻る:-10 / 279へ進む:170] 277 → 279 / 269 ⇄ 280） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
@@ -2444,7 +2444,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 267〜280（269/271/273/275/277への移動アイコンはyaw: 180、269⇄280接続はyaw: 140） ---
+        // --- 267〜280 ---
         "out267": {
             "title": "外 267",
             "type": "equirectangular",
@@ -2496,8 +2496,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0277.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out279": {
