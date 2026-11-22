@@ -2379,7 +2379,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → [戻る:-10 / 279へ進む:170] 277 → 279 / 269 ⇄ 280） ---
+        // --- 屋外続きルート（253 → … → 265 → 267 → [進む:180] 269 → 271 → 273 → 275 → [戻る:-10 / 279へ進む:170] 277 → [戻る:0] 279 / 269 ⇄ 280） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
@@ -2505,7 +2505,7 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0279.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         },
         "out280": {
