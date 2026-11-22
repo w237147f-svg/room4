@@ -159,7 +159,7 @@
     <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">61</span> 点
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">68</span> 点
     </div>
     <button type="button" class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
@@ -193,7 +193,7 @@
 </div>
 
 <script>
-const TOTAL_UNIQUE_QUIZZES = 61;
+const TOTAL_UNIQUE_QUIZZES = 68;
 let score = 0;
 let isGameStarted = false;
 let selectedStartScene = "scene1";
@@ -1594,7 +1594,7 @@ const sceneQuizHotspots = {
                         "question": "【夜の駐輪場と帰宅】夜間に駐輪場から自転車で帰宅する際、安全と脱炭素の両立につながる行動はどれでしょう？",
                         "choiceA": "A．ライト点灯や反射材で安全を確保しつつ、自転車や公共交通を利用して帰宅する",
                         "choiceB": "B．無灯火のまま自転車で走行する",
-                        "choiceC": "C．迎えの車に長時間アイドリングさせて待つ",
+                        "choiceC": "C．迎えの車に長時間アイドリングさせて待機させる",
                         "correctAnswer": "A",
                         "explanation": "夜間の安全対策（ライト・反射材）を行いながら自転車や公共交通を使うことで、環境にやさしい移動ができます。"
                     }
@@ -1905,7 +1905,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（295〜305：各画像の風景に合わせた三択問題） ---
+    // --- 屋外クイズ（295〜305） ---
     "out295": [
         {
             "id": "hs_out75", "pitch": 6, "yaw": 120, "cssClass": "bulb-hotspot",
@@ -2069,6 +2069,160 @@ const sceneQuizHotspots = {
                         "choiceC": "C．無灯火の自転車で車道を逆走する",
                         "correctAnswer": "A",
                         "explanation": "公共交通機関の活用と夜間の安全配慮を組み合わせることで、環境にも人にもやさしい帰宅ができます。"
+                    }
+                }
+            }
+        }
+    ],
+
+    // --- 屋外クイズ（307〜319：各画像の風景に合わせた三択問題） ---
+    "out307": [
+        {
+            "id": "hs_out83", "pitch": -2, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out83",
+                "quizGroup": "group_crosswalk_pond_infrastructure_307",
+                "question": "（横断歩道と調整池・雨水排水設備）<br><br>キャンパス内の調整池や排水設備、歩行者優先の横断歩道が整備された環境において、脱炭素・気候変動適応につながる考え方はどれでしょう？",
+                "choiceA": "A．歩行者優先の歩きやすい環境で徒歩移動を増やし、雨水を貯留する調整池などのグリーンインフラを大切にする",
+                "choiceB": "B．池や水路にごみや空き缶を捨てて排水を妨げる",
+                "choiceC": "C．横断歩道の手前で車が急加速・急ブレーキを繰り返す",
+                "correctAnswer": "A",
+                "explanation": "気候変動に伴う大雨への備え（調整池などのグリーンインフラ保全）と、歩行者優先環境でのエコ移動の両立が大切です。"
+            }
+        }
+    ],
+    "out309": [
+        {
+            "id": "hs_out84", "pitch": 2, "yaw": 5, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out84",
+                "quizGroup": "group_reed_bed_wooden_rail_309",
+                "question": "（水辺のヨシ原・湿地植物と木柵沿いの歩道）<br><br>池の周囲に生えるヨシなどの水辺植物や湿地環境には、どのような脱炭素・環境保全の働きがあるでしょう？",
+                "choiceA": "A．水質を浄化しながら光合成でCO2を吸収・固定し、多様な生き物のすみかにもなる",
+                "choiceB": "B．水辺の植物をすべて抜き取ってコンクリートで覆う方がCO2吸収が増える",
+                "choiceC": "C．枯れたヨシや草木をその場で野焼きする方が環境に良い",
+                "correctAnswer": "A",
+                "explanation": "水辺や湿地の生態系は炭素の吸収・貯留や水質浄化、生物多様性の保全など多くの恵みをもたらします。"
+            }
+        }
+    ],
+    "out311": [
+        {
+            "id": "hs_out85", "pitch": -4, "yaw": 135, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out85",
+                "quizGroup": "group_gentle_slope_eco_driving_311",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の緩やかな坂道と外周道路】朝の通学・通勤時間帯に緩やかな坂道や外周道路を利用する際、CO2排出を抑える行動はどれでしょう？",
+                        "choiceA": "A．自転車や徒歩で心地よく移動し、車を使う場合も早めのアクセルオフや一定速度でスムーズに走る",
+                        "choiceB": "B．下り坂でもアクセルを踏み続け、直前で急ブレーキをかける",
+                        "choiceC": "C．わずかな距離でも毎回自家用車で往復する",
+                        "correctAnswer": "A",
+                        "explanation": "坂道や外周道路では、早めのアクセルオフと穏やかな速度維持によって燃料消費とCO2排出を大きく抑えられます。"
+                    },
+                    "day": {
+                        "question": "（木製フェンス沿いの緩やかな坂道と道路）<br><br>緩やかな坂道が続く外周道路を車で走行する際、燃費とCO2排出を改善する「エコドライブ」はどれでしょう？",
+                        "choiceA": "A．上り坂では無理に急加速せず、下り坂では早めにアクセルを離してエンジンブレーキを活用する",
+                        "choiceB": "B．坂道で常に急発進・急加速を繰り返す",
+                        "choiceC": "C．不要な重い荷物をトランクに積んだまま走る",
+                        "correctAnswer": "A",
+                        "explanation": "坂道でのアクセルワークを工夫することで、燃料消費量とCO2排出量を効果的に削減できます。"
+                    },
+                    "night": {
+                        "question": "【夜の緩やかな坂道と外周道路】夜間に外周道路や歩道を通行する際、安全と脱炭素を両立する行動はどれでしょう？",
+                        "choiceA": "A．見通しと足元に注意しながら歩道を利用し、車の駐停車時はアイドリングを止める",
+                        "choiceB": "B．外周道路の路肩でエンジンをかけたまま長時間停車する",
+                        "choiceC": "C．無灯火の自転車で車道を走行する",
+                        "correctAnswer": "A",
+                        "explanation": "夜間のアイドリングストップと安全な通行を心がけることで、環境負荷と事故リスクの両方を減らせます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out313": [
+        {
+            "id": "hs_out86", "pitch": -10, "yaw": 125, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out86",
+                "quizGroup": "group_stop_line_smooth_decel_313",
+                "question": "（交差点手前の「止まれ」路面表示）<br><br>交差点手前の「止まれ」表示に向かって車で減速する際、安全確保とCO2削減の両方に役立つ運転方法はどれでしょう？",
+                "choiceA": "A．停止線の位置を早めに確認してアクセルを離し、エンジンブレーキを活かして穏やかに減速・停止する",
+                "choiceB": "B．停止線の直前までスピードを出し、急ブレーキで停止してから急発進する",
+                "choiceC": "C．停止線の手前でエンジンをかけたまま長時間電話をする",
+                "correctAnswer": "A",
+                "explanation": "早めのアクセルオフ（燃料カットの活用）と穏やかな発進は、安全運転と同時に燃料消費・CO2排出の削減につながります。"
+            }
+        }
+    ],
+    "out315": [
+        {
+            "id": "hs_out87", "pitch": 4, "yaw": 20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out87",
+                "quizGroup": "group_open_horizon_walk_habit_315",
+                "question": "（視界の開けた直線歩道と青空）<br><br>見通しが良く歩きやすいインターロッキング歩道が整備されたキャンパス外周で、日常に取り入れたいデコ活アクションはどれでしょう？",
+                "choiceA": "A．一駅分やキャンパス内の移動をウォーキングや自転車に切り替え、マイボトル持参で健康と脱炭素を両立する",
+                "choiceB": "B．歩きやすい歩道があっても近距離の移動をすべて車に頼る",
+                "choiceC": "C．散歩の途中にペットボトルやごみをポイ捨てする",
+                "correctAnswer": "A",
+                "explanation": "歩くこと（ウォーキング）や自転車移動はCO2を排出しないだけでなく、日々の運動不足解消や健康づくりにも役立ちます。"
+            }
+        }
+    ],
+    "out317": [
+        {
+            "id": "hs_out88", "pitch": 6, "yaw": -20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out88",
+                "quizGroup": "group_grass_embankment_soil_carbon_317",
+                "question": "（丘陵の芝生法面と木製フェンス）<br><br>キャンパス外周に広がる芝生の法面や草地を保全・維持管理することには、どのような脱炭素上の意義があるでしょう？",
+                "choiceA": "A．植物の根と土壌に有機物・炭素を蓄え、土砂流出を防ぎながら地域の緑地環境を維持できる",
+                "choiceB": "B．草地をすべて剥がして裸地にする方がCO2吸収量が増える",
+                "choiceC": "C．芝生に除草剤を過剰にまいて枯らす方が環境に優しい",
+                "correctAnswer": "A",
+                "explanation": "草地や芝生の法面は土壌炭素の貯留や雨水の浸透・保水に役立ち、地域の自然環境と脱炭素を支えています。"
+            }
+        }
+    ],
+    "out319": [
+        {
+            "id": "hs_out89", "pitch": 4, "yaw": -20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out89",
+                "quizGroup": "group_campus_loop_connection_319",
+                "variants": {
+                    "morning": {
+                        "question": "【朝のキャンパス外周合流点】外周歩道と構内ルートがつながるこの地点から一日を始めるとき、実践したいデコ活の心がけはどれでしょう？",
+                        "choiceA": "A．徒歩・自転車・公共交通での移動、マイボトル・マイバッグの活用、こまめな節電・節水を組み合わせて行動する",
+                        "choiceB": "B．朝は忙しいので省エネや分別は一切気にせず過ごす",
+                        "choiceC": "C．使い捨て製品を毎回買ってそのまま捨てる",
+                        "correctAnswer": "A",
+                        "explanation": "移動・買い物・教室での過ごし方を少しずつ脱炭素型へ変えていくことが「デコ活」の第一歩です。"
+                    },
+                    "day": {
+                        "question": "（外周歩道と構内周回ルートの合流地点）<br><br>キャンパスの外周と内部をつなぐ周回ルートを巡りながら学んだ「デコ活」を、日常生活に広げる方法として最も適切なのはどれでしょう？",
+                        "choiceA": "A．自宅・大学・地域のそれぞれで無理なく続けられる省エネやエコ移動を選び、家族や友人とも共有して実践する",
+                        "choiceB": "B．大学の中だけで意識し、家や外出先ではまったく実践しない",
+                        "choiceC": "C．一度に完璧を目指しすぎてすぐやめてしまう",
+                        "correctAnswer": "A",
+                        "explanation": "身近な行動から楽しく継続し、周囲の人とも輪を広げていくことで、社会全体の脱炭素につながります。"
+                    },
+                    "night": {
+                        "question": "【夜のキャンパス外周合流点】一日の活動を終えて帰路につく際、脱炭素につながる振り返りと行動はどれでしょう？",
+                        "choiceA": "A．教室や部屋の消灯・機器オフを確認し、公共交通や安全な徒歩・自転車で帰宅する",
+                        "choiceB": "B．部屋の電気やエアコンをつけたまま帰宅する",
+                        "choiceC": "C．迎えの車に長時間アイドリングさせて待つ",
+                        "correctAnswer": "A",
+                        "explanation": "帰宅時の消し忘れ防止とエコな移動を習慣にすることで、毎日のCO2排出量を着実に減らせます。"
                     }
                 }
             }
@@ -2719,7 +2873,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → … → 280 → 281 → … → 294 → 295 → … → 305） ---
+        // --- 屋外続きルート（253 → … → 265 → 267 → … → 280 → 281 → … → 294 → 295 → … → 305 → 307 → … → 319 → 279） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
@@ -2845,7 +2999,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0279.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out280": {
@@ -2932,14 +3087,14 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 295〜305（進むアイコン：中央から右に180度 = yaw: 180） ---
+        // --- 295〜305（295〜303の移動アイコンは左に10度移動、305は307へ-100度） ---
         "out295": {
             "title": "外 295",
             "type": "equirectangular",
             "panorama": "GS__0295.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out296": {
@@ -2947,8 +3102,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0296.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out297": {
@@ -2956,8 +3111,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0297.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out299": {
@@ -2965,8 +3120,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0299.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out301": {
@@ -2974,8 +3129,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0301.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out302": {
@@ -2983,8 +3138,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0302.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out303": {
@@ -2992,8 +3147,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0303.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out305": {
@@ -3001,7 +3156,73 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0305.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 307〜319（進むアイコン：中央から左に100度 = yaw: -100、319と279を接続） ---
+        "out307": {
+            "title": "外 307",
+            "type": "equirectangular",
+            "panorama": "GS__0307.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out309": {
+            "title": "外 309",
+            "type": "equirectangular",
+            "panorama": "GS__0309.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out311": {
+            "title": "外 311",
+            "type": "equirectangular",
+            "panorama": "GS__0311.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out313": {
+            "title": "外 313",
+            "type": "equirectangular",
+            "panorama": "GS__0313.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out315": {
+            "title": "外 315",
+            "type": "equirectangular",
+            "panorama": "GS__0315.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out317": {
+            "title": "外 317",
+            "type": "equirectangular",
+            "panorama": "GS__0317.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out319": {
+            "title": "外 319",
+            "type": "equirectangular",
+            "panorama": "GS__0319.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         }
     }
