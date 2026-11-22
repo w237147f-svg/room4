@@ -159,7 +159,7 @@
     <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
     <div class="final-score-box">
         最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">30</span> 点
+        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">37</span> 点
     </div>
     <button type="button" class="start-btn" onclick="location.reload()">最初からやり直す</button>
 </div>
@@ -193,7 +193,7 @@
 </div>
 
 <script>
-const TOTAL_UNIQUE_QUIZZES = 30;
+const TOTAL_UNIQUE_QUIZZES = 37;
 let score = 0;
 let isGameStarted = false;
 let selectedStartScene = "scene1";
@@ -1409,6 +1409,160 @@ const sceneQuizHotspots = {
                 }
             }
         }
+    ],
+
+    // --- 屋外クイズ（253〜265：各画像の風景に合わせた三択問題） ---
+    "out253": [
+        {
+            "id": "hs_out52", "pitch": 4, "yaw": -15, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out52",
+                "quizGroup": "group_fork_route_choice",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の構内分岐】朝の通学・登校時間帯、建物と道路が分かれる構内の分岐で脱炭素につながる移動の工夫はどれでしょう？",
+                        "choiceA": "A．近い校舎や施設へは徒歩や自転車を選び、不要な車の乗り入れやアイドリングを減らす",
+                        "choiceB": "B．すぐ隣の建物へ行くときも毎回車で乗りつける",
+                        "choiceC": "C．分岐の手前でエンジンをかけたまま長時間停車する",
+                        "correctAnswer": "A",
+                        "explanation": "構内の近距離移動を徒歩や自転車にし、不要な車両の走行・アイドリングを減らすことでCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（低層の建物と二股に分かれる構内道路）<br><br>建物脇で道が左右に分かれる構内エリアにおいて、脱炭素につながる移動・走行の工夫はどれでしょう？",
+                        "choiceA": "A．近い目的地なら徒歩や自転車を選び、車を使う場合も遠回りや無駄な加減速を減らす",
+                        "choiceB": "B．建物近くのわずかな移動でも毎回自動車を使う",
+                        "choiceC": "C．道路の分岐付近で不要な停車や急発進を繰り返す",
+                        "correctAnswer": "A",
+                        "explanation": "近距離の徒歩・自転車利用やスムーズな移動は、構内でのCO2排出削減と安全な動線づくりにつながります。"
+                    },
+                    "night": {
+                        "question": "【夜の構内分岐】夜間に建物と分かれ道がある構内道路を通行する際、脱炭素と安全に配慮した行動はどれでしょう？",
+                        "choiceA": "A．ライトや反射材を活用しつつ、駐停車中のアイドリングを避けて穏やかに移動する",
+                        "choiceB": "B．夜間の待ち時間にエンジンをかけっぱなしにする",
+                        "choiceC": "C．無灯火や急加速で分岐を通過する",
+                        "correctAnswer": "A",
+                        "explanation": "夜間のアイドリングストップと安全確認を両立することで、無駄な燃料消費とCO2排出を抑えられます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out255": [
+        {
+            "id": "hs_out53", "pitch": 2, "yaw": -35, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out53",
+                "quizGroup": "group_parking_lot_eco",
+                "question": "（平屋建物と駐車スペース・二股の道）<br><br>建物に隣接した駐車エリアや構内道路で車を利用する際、脱炭素につながる行動はどれでしょう？",
+                "choiceA": "A．駐車や乗降の待ち時間でアイドリングストップを行い、発進時はふんわりアクセルを心がける",
+                "choiceB": "B．駐車スペースの近くでもエアコンをつけたままエンジンをかけ続ける",
+                "choiceC": "C．使わない荷物を載せたまま常に走行する",
+                "correctAnswer": "A",
+                "explanation": "駐車時・待機時のアイドリングストップとやさしい発進は、日常で手軽に取り組めるエコドライブの基本です。"
+            }
+        }
+    ],
+    "out257": [
+        {
+            "id": "hs_out54", "pitch": 8, "yaw": 115, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out54",
+                "quizGroup": "group_skybridge_building",
+                "question": "（渡り廊下でつながる校舎と街灯）<br><br>渡り廊下で結ばれた複数の校舎を行き来したり、建物内で過ごしたりする際、省エネ・脱炭素につながる行動はどれでしょう？",
+                "choiceA": "A．自然光が入る場所では照明を工夫し、使わない部屋の照明や空調はこまめに切る",
+                "choiceB": "B．誰もいない教室や通路でも照明や空調をつけっぱなしにする",
+                "choiceC": "C．冷暖房を使っている最中に窓や扉を開け放す",
+                "correctAnswer": "A",
+                "explanation": "建物間を移動する際にも、使っていないスペースの照明・空調をオフにすることが電力消費とCO2削減につながります。"
+            }
+        }
+    ],
+    "out259": [
+        {
+            "id": "hs_out55", "pitch": 7, "yaw": 105, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out55",
+                "quizGroup": "group_curved_campus_bldg",
+                "question": "（右手の曲線を描く校舎と芝生帯）<br><br>大きな窓や曲線を描く校舎の周辺で、建物の冷暖房負荷を抑える工夫として適切なのはどれでしょう？",
+                "choiceA": "A．日射や室温の変化を抑える工夫をし、在室状況に合わせて空調や照明を適切に使う",
+                "choiceB": "B．誰もいない時間帯も空調を強く稼働させ続ける",
+                "choiceC": "C．窓や出入口を開けたまま冷暖房を使う",
+                "correctAnswer": "A",
+                "explanation": "日射や熱の出入りを抑えつつ、必要な時間帯・空間だけ空調と照明を使うことで、建物のCO2排出を減らせます。"
+            }
+        }
+    ],
+    "out261": [
+        {
+            "id": "hs_out56", "pitch": -4, "yaw": 0, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out56",
+                "quizGroup": "group_parked_cars_ev",
+                "question": "（駐車中の車と奥の紅葉・建物）<br><br>駐車場に並ぶ自動車や今後の車両選択に関して、脱炭素につながる考え方として適切なのはどれでしょう？",
+                "choiceA": "A．電気自動車（EV）やハイブリッド車などの活用を検討しつつ、普段の運転でもエコドライブを実践する",
+                "choiceB": "B．タイヤの空気圧点検や燃費を意識せず、急発進・急加速を繰り返す",
+                "choiceC": "C．駐車中にエンジンをかけたまま長時間待つ",
+                "correctAnswer": "A",
+                "explanation": "低燃費車・電動車の選択と、日頃のエコドライブ（やさしい発進・アイドリングストップ・適正空気圧）を組み合わせることでCO2を減らせます。"
+            }
+        }
+    ],
+    "out263": [
+        {
+            "id": "hs_out57", "pitch": -14, "yaw": -75, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out57",
+                "quizGroup": "group_road_markings_flow",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の路面表示と通行】路面に「学内」「進行」などの表示がある朝の構内道路で、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．路面表示や歩行者・自転車に配慮して落ち着いた速度で進み、無駄な加減速や停車中のアイドリングを減らす",
+                        "choiceB": "B．路面表示を見落としてスピードを出し、急ブレーキと急発進を繰り返す",
+                        "choiceC": "C．進路を迷ってエンジンをかけたまま長時間止まる",
+                        "correctAnswer": "A",
+                        "explanation": "路面表示に従ってスムーズに流れに乗ることで、燃料消費とCO2排出を抑えながら構内の安全も守れます。"
+                    },
+                    "day": {
+                        "question": "（路面の「学内」「進行」表示と分かれ道）<br><br>路面に表示されたルールや進行方向に沿って構内道路を移動するとき、CO2排出を抑える工夫はどれでしょう？",
+                        "choiceA": "A．表示に従って進路や速度を早めに決め、加減速の少ないスムーズな移動を心がける",
+                        "choiceB": "B．分岐の直前までスピードを出して急減速・急加速を繰り返す",
+                        "choiceC": "C．不要な荷物を載せたまま短距離を何度も行き来する",
+                        "correctAnswer": "A",
+                        "explanation": "スムーズな走行と不要な移動・荷物の削減は、燃料消費とCO2排出を減らす効果的な行動です。"
+                    },
+                    "night": {
+                        "question": "【夜の路面表示と通行】夜間に「学内」「進行」表示のある構内道路を通行する際、脱炭素と安全につながる行動はどれでしょう？",
+                        "choiceA": "A．ライトで路面表示や周囲をしっかり確認し、穏やかな速度で走り、停車時はアイドリングを控える",
+                        "choiceB": "B．夜間の待ち時間にエンジンをかけっぱなしにする",
+                        "choiceC": "C．急加速や急ハンドルで分岐を通過する",
+                        "correctAnswer": "A",
+                        "explanation": "夜間の安全確認とアイドリングストップを心がけることで、無駄な燃料消費とCO2排出を抑えられます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out265": [
+        {
+            "id": "hs_out58", "pitch": 6, "yaw": -45, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out58",
+                "quizGroup": "group_autumn_slope_forest",
+                "question": "（紅葉・緑の斜面と青空・校舎）<br><br>校舎の奥に広がる紅葉や緑の斜面・林地に関して、脱炭素につながる保全・活用の考え方はどれでしょう？",
+                "choiceA": "A．樹木や草地の斜面をゴミや無断伐採から守り、CO2吸収源や周辺環境の保全につなげる",
+                "choiceB": "B．斜面や木々の近くにゴミを捨てたり、草木を踏み荒らしたりする",
+                "choiceC": "C．落ち葉や枝をその場で勝手に燃やす",
+                "correctAnswer": "A",
+                "explanation": "樹木や緑地斜面を健全に保つことは、CO2の吸収・固定や生物多様性の維持、周囲の環境保全につながります。"
+            }
+        }
     ]
 };
 
@@ -1828,7 +1982,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外分岐ルート（189 → [進む:-20 / 戻る:160] 203 → … → 213 → [進む:-110 / 戻る:70] 215 → … → 251） ---
+        // --- 屋外分岐ルート（189 → [進む:-20 / 戻る:160] 203 → … → 213 → [進む:-110 / 戻る:70] 215 → … → 265） ---
         "out203": {
             "title": "外 203",
             "type": "equirectangular",
@@ -1964,8 +2118,6 @@ viewer = pannellum.viewer('panorama', {
                 { "pitch": -5, "yaw": -110, "type": "scene", "text": "233へ進む", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
-
-        // --- 屋外続きルート（231 → [進む:-110 / 戻る:70] 233 → 235 → … → 251） ---
         "out233": {
             "title": "外 233",
             "type": "equirectangular",
@@ -2052,7 +2204,72 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0251.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "249へ戻る", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "249へ戻る", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "253へ進む", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 屋外続きルート（251 → [進む:-110 / 戻る:70] 253 → 255 → … → 265） ---
+        "out253": {
+            "title": "外 253",
+            "type": "equirectangular",
+            "panorama": "GS__0253.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "251へ戻る", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "255へ進む", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out255": {
+            "title": "外 255",
+            "type": "equirectangular",
+            "panorama": "GS__0255.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "257へ進む", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out257": {
+            "title": "外 257",
+            "type": "equirectangular",
+            "panorama": "GS__0257.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "255へ戻る", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "259へ進む", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out259": {
+            "title": "外 259",
+            "type": "equirectangular",
+            "panorama": "GS__0259.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "257へ戻る", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "261へ進む", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out261": {
+            "title": "外 261",
+            "type": "equirectangular",
+            "panorama": "GS__0261.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "259へ戻る", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "263へ進む", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out263": {
+            "title": "外 263",
+            "type": "equirectangular",
+            "panorama": "GS__0263.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "261へ戻る", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "265へ進む", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out265": {
+            "title": "外 265",
+            "type": "equirectangular",
+            "panorama": "GS__0265.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 70, "type": "scene", "text": "263へ戻る", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
