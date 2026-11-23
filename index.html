@@ -1,295 +1,640 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>脱炭素クイズツアー＆屋外ストリートビュー</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <title>360度パノラマ 脱炭素クイズゲーム</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; }
-        #panorama { width: 100vw; height: 100vh; transition: filter 0.6s ease; }
-
-        /* Pannellumの地点名（タイトルボックス）を非表示 */
-        .pnlm-title-box {
-            display: none !important;
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
         }
 
-        /* 時間帯フィルター（画像追加なし） */
+        #panorama {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+            transition: filter 0.4s ease;
+        }
+
         #panorama.time-morning {
-            filter: brightness(1.03) sepia(0.22) saturate(1.25) contrast(1.03);
+            filter: brightness(1.03) contrast(0.98) sepia(0.12) saturate(1.08);
         }
+
         #panorama.time-day {
             filter: none;
         }
+
         #panorama.time-night {
-            filter: brightness(0.45) contrast(1.15) hue-rotate(195deg) saturate(0.85);
+            filter: brightness(0.58) contrast(1.12) saturate(0.82) hue-rotate(185deg);
         }
 
-        /* ゲーム開始画面・終了画面の共通スタイル */
-        .fullscreen-overlay {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; color: white; text-align: center;
-            padding: 20px; box-sizing: border-box;
-        }
-        #start-screen { z-index: 2000; }
-        #end-screen { z-index: 2500; display: none; }
-
-        .start-btn {
-            padding: 15px 40px; font-size: 24px; font-weight: bold; cursor: pointer;
-            background: #28a745; color: white; border: none; border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s;
-        }
-        .start-btn:hover { transform: scale(1.05); background: #218838; }
-
-        .final-score-box {
-            background: rgba(255, 255, 255, 0.1); padding: 30px 50px; border-radius: 15px;
-            border: 2px solid #ffc107; font-size: 24px; font-weight: bold; margin-bottom: 30px;
+        #time-tint-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.4s ease, background-color 0.4s ease;
         }
 
-        /* スコアボードのスタイル */
+        #time-tint-overlay.morning {
+            opacity: 1;
+            background: linear-gradient(180deg, rgba(255, 214, 153, 0.18) 0%, rgba(255, 244, 214, 0.06) 60%, rgba(255, 190, 120, 0.14) 100%);
+        }
+
+        #time-tint-overlay.day {
+            opacity: 0;
+            background: transparent;
+        }
+
+        #time-tint-overlay.night {
+            opacity: 1;
+            background: radial-gradient(circle at 50% 45%, rgba(15, 25, 65, 0.18) 0%, rgba(8, 15, 42, 0.48) 100%);
+        }
+
+        /* スタート画面 */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #2e7d32 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #start-screen h1 {
+            font-size: 34px;
+            margin-bottom: 14px;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+            letter-spacing: 0.04em;
+        }
+
+        #start-screen p {
+            font-size: 16px;
+            max-width: 620px;
+            line-height: 1.75;
+            margin-bottom: 28px;
+            color: #f1f8e9;
+        }
+
+        #start-btn {
+            padding: 16px 44px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #1b5e20;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+
+        #start-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+            background-color: #f1f8e9;
+        }
+
+        /* 終了画面 */
+        #end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 32, 39, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3500;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #end-screen h2 {
+            font-size: 32px;
+            margin-bottom: 14px;
+            color: #a5d6a7;
+        }
+
+        #end-screen p {
+            font-size: 20px;
+            margin-bottom: 28px;
+        }
+
+        #restart-btn {
+            padding: 14px 36px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        #restart-btn:hover {
+            transform: translateY(-2px);
+            background-color: #218838;
+        }
+
+        /* スコアボード */
         #score-board {
-            position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95);
-            padding: 10px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; color: #333;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            background-color: rgba(255, 255, 255, 0.94);
+            color: #222;
+            padding: 10px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            z-index: 1500;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+            border-left: 6px solid #28a745;
         }
-        .score-highlight { color: #e83e8c; font-size: 22px; }
 
-        /* 時間帯コントロール（右上） */
+        #score-board span.score-num {
+            color: #28a745;
+            font-size: 22px;
+        }
+
+        /* 時間帯コントロール */
         #time-controls {
-            position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.95);
-            padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #333;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1500; display: none;
-            align-items: center; gap: 8px;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background-color: rgba(255, 255, 255, 0.94);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            z-index: 1500;
+            display: none;
+            align-items: center;
+            gap: 6px;
         }
-        .time-random-btn {
-            padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer;
-            background: #007bff; color: white; border: none; border-radius: 6px;
-            transition: background 0.2s;
-        }
-        .time-random-btn:hover { background: #0056b3; }
 
-        /* クイズ用ホットスポット（電球） */
-        .bulb-hotspot {
-            width: 60px; height: 60px;
-            background-image: url('bulb.png');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            cursor: pointer; opacity: 0.2; transition: all 0.3s ease;
-        }
-        .bulb-hotspot:hover { opacity: 1; transform: scale(1.1); }
-
-        /* 移動用ホットスポット（奥行きを感じる矢印） */
-        .custom-move-icon {
-            width: 56px; height: 56px;
-            background-image: url('yajirushi04_08%20(1).png');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
+        .time-btn {
+            border: 1px solid #cfd8dc;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
             cursor: pointer;
-            filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8)) drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
         }
-        .custom-move-icon:hover { transform: scale(1.2); }
 
-        /* 屋外ストリートビュー用「進む」矢印アイコン */
-        .right-arrow-icon {
-            width: 56px; height: 56px;
-            background-image: url('yajirushi04_08%20(1).png');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            cursor: pointer;
-            filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8)) drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
-            transition: transform 0.2s;
+        .time-btn:hover {
+            background-color: #e9ecef;
         }
-        .right-arrow-icon:hover { transform: scale(1.15); }
 
-        /* 屋外ストリートビュー用「戻る」矢印アイコン */
-        .left-arrow-icon {
-            width: 56px; height: 56px;
-            background-image: url('yajirushi04_08%20(1).png');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            cursor: pointer;
-            filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.8)) drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
-            transition: transform 0.2s;
+        .time-btn.active {
+            background-color: #1e88e5;
+            color: #fff;
+            border-color: #1e88e5;
+            box-shadow: 0 2px 6px rgba(30, 136, 229, 0.35);
         }
-        .left-arrow-icon:hover { transform: scale(1.15); }
 
-        /* クイズ画面（モーダル） */
+        /* クイズモーダル */
         #quiz-overlay {
-            display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.65);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
         }
-        .quiz-box { background: #fff; padding: 30px; border-radius: 10px; width: 80%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .quiz-btn { display: block; width: 100%; margin: 10px 0; padding: 12px; font-size: 16px; cursor: pointer; text-align: left; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
-        .quiz-btn:hover { background-color: #e9e9e9; }
-        #quiz-result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; line-height: 1.5; text-align: left; }
-        .close-btn { display: block; width: 100%; margin: 20px 0 0 0; padding: 10px; background: #333; color: #fff; cursor: pointer; border: none; border-radius: 5px; }
+
+        #quiz-modal {
+            background-color: #fff;
+            padding: 25px 30px;
+            border-radius: 12px;
+            max-width: 520px;
+            width: 90%;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.25s ease-out;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #quiz-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        #quiz-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c7a4b;
+            margin: 0;
+        }
+
+        #quiz-time-badge {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            white-space: nowrap;
+        }
+
+        #quiz-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .quiz-choice-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            font-size: 15px;
+            text-align: left;
+            background-color: #f4f7f5;
+            border: 2px solid #c8dfd1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #222;
+        }
+
+        .quiz-choice-btn:hover {
+            background-color: #e2f1e8;
+            border-color: #2c7a4b;
+        }
+
+        #quiz-result {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        #quiz-close-btn {
+            margin-top: 18px;
+            padding: 10px 22px;
+            font-size: 15px;
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            float: right;
+        }
+
+        #quiz-close-btn:hover {
+            background-color: #215e38;
+        }
+
+        /* 電球ホットスポット */
+        .bulb-hotspot {
+            width: 48px;
+            height: 48px;
+            margin-left: -24px;
+            margin-top: -24px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="%23ffd54f" fill-opacity="0.35"/><path d="M32 10c-9.94 0-18 8.06-18 18 0 6.32 3.26 11.88 8.2 15.08 2.24 1.45 3.8 3.92 3.8 6.62v1.3h12v-1.3c0-2.7 1.56-5.17 3.8-6.62C46.74 39.88 50 34.32 50 28c0-9.94-8.06-18-18-18z" fill="%23ffeb3b" stroke="%23f57f17" stroke-width="3" stroke-linejoin="round"/><rect x="25" y="52" width="14" height="4" rx="2" fill="%2378909c" stroke="%2337474f" stroke-width="2"/><rect x="27" y="56" width="10" height="4" rx="2" fill="%23546e7a" stroke="%2337474f" stroke-width="2"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            filter: drop-shadow(0 0 8px rgba(255, 220, 50, 0.95));
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .bulb-hotspot:hover {
+            transform: scale(1.18);
+            filter: drop-shadow(0 0 14px rgba(255, 235, 59, 1));
+        }
+
+        .custom-move-icon {
+            width: 36px;
+            height: 36px;
+            margin-left: -18px;
+            margin-top: -18px;
+            background-color: rgba(0, 123, 255, 0.85);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .custom-move-icon:hover {
+            transform: scale(1.2);
+            background-color: rgba(0, 150, 255, 1);
+        }
+
+        .right-arrow-icon {
+            width: 44px;
+            height: 44px;
+            margin-left: -22px;
+            margin-top: -22px;
+            background-color: rgba(40, 167, 69, 0.9);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .right-arrow-icon::after {
+            content: "";
+            display: block;
+            width: 10px;
+            height: 10px;
+            border-top: 3px solid #ffffff;
+            border-right: 3px solid #ffffff;
+            transform: rotate(45deg);
+            margin-left: -3px;
+        }
+
+        .right-arrow-icon:hover {
+            transform: scale(1.2);
+            background-color: rgba(33, 136, 56, 1);
+        }
+
+        .left-arrow-icon {
+            width: 44px;
+            height: 44px;
+            margin-left: -22px;
+            margin-top: -22px;
+            background-color: rgba(255, 152, 0, 0.92);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .left-arrow-icon::after {
+            content: "";
+            display: block;
+            width: 10px;
+            height: 10px;
+            border-bottom: 3px solid #ffffff;
+            border-left: 3px solid #ffffff;
+            transform: rotate(45deg);
+            margin-right: -3px;
+        }
+
+        .left-arrow-icon:hover {
+            transform: scale(1.2);
+            background-color: rgba(245, 124, 0, 1);
+        }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
     </style>
 </head>
 <body>
 
-<!-- ゲーム開始画面 -->
-<div id="start-screen" class="fullscreen-overlay">
-    <h1 style="margin-bottom: 10px;">脱炭素クイズツアー</h1>
-    <p style="margin-bottom: 24px;">どこから始まるかはお楽しみ！朝・昼・夜で変わる場面を巡りながら問題を探そう！</p>
-    <button type="button" class="start-btn" onclick="startGame()">ゲーム開始</button>
+<div id="start-screen">
+    <h1>360度パノラマ 脱炭素クイズゲーム</h1>
+    <p>
+        360度パノラマ空間を移動しながら、各地点に隠れた「電球アイコン」を探して脱炭素クイズに挑戦しましょう！<br>
+        開始地点や時間帯はランダムに変化し、朝・昼・夜で見た目や出題が変わる問題もあります。<br>
+        正解すると1ポイント獲得でき、正解した問題（および同テーマの問題）はマップ上から消えていきます。全問正解を目指しましょう！
+    </p>
+    <button id="start-btn" onclick="startGame()">ゲームスタート</button>
 </div>
 
-<!-- ゲーム終了画面 -->
-<div id="end-screen" class="fullscreen-overlay">
-    <h1 style="margin-bottom: 10px;">ツアー終了！</h1>
-    <p style="margin-bottom: 30px;">すべてのテーマに解答しました。</p>
-    <div class="final-score-box">
-        最終スコア<br>
-        <span id="final-score-value" style="font-size: 48px; color: #ffc107;">0</span> / <span id="max-score-value">75</span> 点
-    </div>
-    <button type="button" class="start-btn" onclick="location.reload()">最初からやり直す</button>
+<div id="end-screen">
+    <h2>全問クリアおめでとうございます！</h2>
+    <p>最終スコア：<span id="final-score-value">0</span> ポイント</p>
+    <button id="restart-btn" onclick="startGame()">もう一度遊ぶ</button>
 </div>
 
-<!-- スコアボード -->
-<div id="score-board">現在のポイント: <span id="score-value" class="score-highlight">0</span> 点</div>
+<div id="score-board">
+    スコア: <span class="score-num" id="score-value">0</span> / <span id="max-score-value">0</span> pt
+</div>
 
-<!-- 時間帯表示＆ランダム変更ボタン -->
-<div id="time-controls">
-    <span>現在の場面: <span id="current-time-label">昼</span></span>
-    <button type="button" class="time-random-btn" onclick="randomizeTimeOfDay()">場面をランダム変更</button>
+<div id="time-controls" aria-label="時間帯切り替え">
+    <button id="btn-time-morning" class="time-btn" onclick="applyTimeOfDay('morning')">朝</button>
+    <button id="btn-time-day" class="time-btn active" onclick="applyTimeOfDay('day')">昼</button>
+    <button id="btn-time-night" class="time-btn" onclick="applyTimeOfDay('night')">夜</button>
 </div>
 
 <div id="panorama"></div>
+<div id="time-tint-overlay" class="day"></div>
 
-<!-- クイズ出題画面 -->
 <div id="quiz-overlay">
-    <div class="quiz-box">
-        <h3 style="margin-top: 0; text-align: left;">問題（<span id="quiz-time-badge">昼</span>）：</h3>
-        <p id="quiz-text" style="text-align: left;"></p>
-
-        <div id="quiz-choices">
-            <button type="button" class="quiz-btn" id="btn-A" onclick="answerQuiz('A')"></button>
-            <button type="button" class="quiz-btn" id="btn-B" onclick="answerQuiz('B')"></button>
-            <button type="button" class="quiz-btn" id="btn-C" onclick="answerQuiz('C')"></button>
+    <div id="quiz-modal" class="clearfix">
+        <div id="quiz-header-row">
+            <div id="quiz-title">脱炭素クイズ</div>
+            <div id="quiz-time-badge">昼</div>
         </div>
-
+        <div id="quiz-text">問題文がここに表示されます</div>
+        <div id="quiz-choices">
+            <button class="quiz-choice-btn" id="btn-A" onclick="answerQuiz('A')"></button>
+            <button class="quiz-choice-btn" id="btn-B" onclick="answerQuiz('B')"></button>
+            <button class="quiz-choice-btn" id="btn-C" onclick="answerQuiz('C')"></button>
+        </div>
         <div id="quiz-result"></div>
-        <button type="button" class="close-btn" onclick="closeQuiz()">閉じる</button>
+        <button id="quiz-close-btn" onclick="closeQuiz()">閉じる</button>
     </div>
 </div>
 
 <script>
-const TOTAL_UNIQUE_QUIZZES = 75;
+let viewer;
 let score = 0;
 let isGameStarted = false;
-let answeredIds = new Set();
-let answeredGroups = new Set();
-let viewer = null;
+let currentTimeOfDay = 'day';
+
+const answeredIds = new Set();
+const answeredGroups = new Set();
+
+const TIME_MODES = ['morning', 'day', 'night'];
+const TIME_LABELS = {
+    morning: '朝',
+    day: '昼',
+    night: '夜'
+};
 
 const SPAWN_SCENES = [
     "scene1", "scene2", "scene3", "scene4", "scene5",
-    "out147", "out149", "out151", "out153", "out155", "out157", "out159",
-    "out161", "out163", "out165", "out167", "out169", "out171", "out173", "out175",
-    "out177", "out179", "out181", "out183", "out185", "out187", "out189",
-    "out191", "out193", "out195", "out197", "out199", "out201", "out202",
-    "out203", "out205", "out207", "out209", "out211", "out213",
-    "out215", "out217", "out219", "out221", "out223", "out225", "out227", "out229", "out231",
-    "out233", "out235", "out237", "out239", "out241", "out243", "out245", "out247", "out249", "out251",
-    "out253", "out255", "out257", "out259", "out261", "out263", "out265",
-    "out267", "out269", "out271", "out273", "out275", "out277", "out279", "out280",
-    "out281", "out283", "out285", "out287", "out289", "out291", "out293", "out294",
-    "out295", "out296", "out297", "out299", "out301", "out302", "out303", "out305",
-    "out307", "out309", "out311", "out313", "out315", "out317", "out319",
-    "out320", "out322", "out324", "out326", "out330", "out332", "out334"
+    "out147", "out153", "out159", "out165", "out171", "out177", "out183", "out189",
+    "out191", "out197", "out202",
+    "out203", "out209", "out215", "out221", "out227", "out233", "out239", "out245", "out251",
+    "out253", "out259", "out265",
+    "out267", "out273", "out279", "out280",
+    "out281", "out285", "out289", "out293", "out294",
+    "out295", "out297", "out301", "out303", "out305",
+    "out307", "out311", "out315", "out319",
+    "out320", "out324", "out330", "out334"
 ];
-
-function pickRandomSpawnScene() {
-    const idx = Math.floor(Math.random() * SPAWN_SCENES.length);
-    return SPAWN_SCENES[idx];
-}
-
-const TIME_MODES = ["morning", "day", "night"];
-const TIME_LABELS = {
-    "morning": "朝",
-    "day": "昼",
-    "night": "夜"
-};
-let currentTimeOfDay = "day";
 
 function pickRandomTimeOfDay() {
     const idx = Math.floor(Math.random() * TIME_MODES.length);
     return TIME_MODES[idx];
 }
 
-function applyTimeOfDay(mode, refreshHotspots = true) {
-    currentTimeOfDay = TIME_MODES.includes(mode) ? mode : "day";
-    const panoEl = document.getElementById("panorama");
-    panoEl.classList.remove("time-morning", "time-day", "time-night");
-    panoEl.classList.add("time-" + currentTimeOfDay);
-
-    const labelEl = document.getElementById("current-time-label");
-    if (labelEl) {
-        labelEl.innerText = TIME_LABELS[currentTimeOfDay];
-    }
-
-    if (refreshHotspots && viewer) {
-        refreshSceneQuizHotspots(viewer.getScene());
-    }
+function pickRandomSpawnScene() {
+    const idx = Math.floor(Math.random() * SPAWN_SCENES.length);
+    return SPAWN_SCENES[idx];
 }
 
-function randomizeTimeOfDay() {
-    const candidates = TIME_MODES.filter(m => m !== currentTimeOfDay);
-    const nextMode = candidates[Math.floor(Math.random() * candidates.length)];
-    applyTimeOfDay(nextMode, true);
+function applyTimeOfDay(mode, isInitialRandom = false) {
+    if (!TIME_MODES.includes(mode)) mode = 'day';
+    currentTimeOfDay = mode;
+
+    const panoEl = document.getElementById('panorama');
+    const tintEl = document.getElementById('time-tint-overlay');
+
+    panoEl.classList.remove('time-morning', 'time-day', 'time-night');
+    panoEl.classList.add('time-' + mode);
+
+    tintEl.classList.remove('morning', 'day', 'night');
+    tintEl.classList.add(mode);
+
+    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('btn-time-' + mode);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const badgeEl = document.getElementById('quiz-time-badge');
+    if (badgeEl) badgeEl.innerText = TIME_LABELS[mode];
+
+    if (isInitialRandom) {
+        console.log('ランダム選択された時間帯:', TIME_LABELS[mode]);
+    }
 }
 
 function getQuizDataForCurrentTime(quizArgs) {
-    const base = {
-        quizId: quizArgs.quizId,
-        quizGroup: quizArgs.quizGroup,
-        question: quizArgs.question,
-        choiceA: quizArgs.choiceA,
-        choiceB: quizArgs.choiceB,
-        choiceC: quizArgs.choiceC,
-        correctAnswer: quizArgs.correctAnswer,
-        explanation: quizArgs.explanation
-    };
-
-    if (quizArgs.variants && typeof quizArgs.variants === "object") {
-        const chosen = quizArgs.variants[currentTimeOfDay] || quizArgs.variants["day"];
-        if (chosen) {
-            return { ...base, ...chosen };
-        }
+    if (quizArgs && quizArgs.variants && quizArgs.variants[currentTimeOfDay]) {
+        const v = quizArgs.variants[currentTimeOfDay];
+        return {
+            quizId: quizArgs.quizId,
+            quizGroup: quizArgs.quizGroup,
+            question: v.question,
+            choiceA: v.choiceA,
+            choiceB: v.choiceB,
+            choiceC: v.choiceC,
+            correctAnswer: v.correctAnswer,
+            explanation: v.explanation
+        };
     }
-    return base;
+    return quizArgs;
 }
 
 const sceneQuizHotspots = {
-    "scene2": [
+    "scene1": [
         {
-            "id": "hs_water", "pitch": 0, "yaw": 160, "cssClass": "bulb-hotspot",
+            "id": "hs1", "pitch": 5, "yaw": 0, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_water",
-                "quizGroup": "group_water",
+                "quizId": "quiz1",
+                "quizGroup": "group_led",
                 "variants": {
                     "morning": {
-                        "question": "【朝の身支度】水の無駄を減らす行動として、適切なのはどれでしょう？",
-                        "choiceA": "A．顔を洗うときも水を出しっぱなしにする",
-                        "choiceB": "B．歯磨きや洗顔の間は蛇口を閉めて水を止める",
-                        "choiceC": "C．次の人が使うまで流しておく",
-                        "correctAnswer": "B",
-                        "explanation": "朝の身支度でこまめに水を止めることで使用水量を減らせます。節水は、水の供給や処理に伴うエネルギー削減にもつながります。"
+                        "question": "【朝の教室・ゼミ室】朝起きて部屋に入ったとき、照明に関して脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．窓からの朝の自然光を活かし、必要な場所だけLED照明を点灯する",
+                        "choiceB": "B．朝日が差し込んでいても部屋中の照明をすべて最大出力でつける",
+                        "choiceC": "C．誰もいない部屋でも照明をつけたまま外出する",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活では「高効率な照明（LED）への交換」や自然光の活用、こまめな消灯が推奨されています。朝の光を活かすことで電力消費とCO2を減らせます。"
                     },
                     "day": {
-                        "question": "水の無駄を減らす行動として、適切なのはどれでしょう？",
-                        "choiceA": "A．少しだけ水が出る状態にする",
-                        "choiceB": "B．次の人が使うまで流しておく",
-                        "choiceC": "C．蛇口を閉めて水を止める",
-                        "correctAnswer": "C",
-                        "explanation": "水を使っていないときに止めることで、使用水量を減らせます。節水は、水の供給や処理に伴うエネルギーの削減にもつながります。"
+                        "question": "照明を従来の白熱電球や蛍光灯からLEDに変えると、脱炭素にどのような効果があるでしょう？",
+                        "choiceA": "A．消費電力が大きく減り、発電に伴うCO2排出量を削減できる",
+                        "choiceB": "B．CO2排出量は変わらないが、電球の見た目が明るくなる",
+                        "choiceC": "C．消費電力が増えてCO2排出量が増える",
+                        "correctAnswer": "A",
+                        "explanation": "LED照明は消費電力が少なく寿命も長いため、省エネとCO2削減に効果的です（デコ活推奨アクション）。"
                     },
                     "night": {
-                        "question": "【夜の片付け】一日の終わりに水の無駄を減らす行動として適切なのはどれでしょう？",
-                        "choiceA": "A．水漏れの有無を確認し、使っていない蛇口をしっかり閉める",
-                        "choiceB": "B．少しだけ水を流したままにする",
-                        "choiceC": "C．洗い物をためて水を出しっぱなしにする",
+                        "question": "【夜の教室・ゼミ室】夜間に部屋を使うときや退出するとき、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．手元や必要なエリアだけLED照明を使い、退出時は必ず消灯する",
+                        "choiceB": "B．使わない部屋や帰り際も照明をつけたままにする",
+                        "choiceC": "C．古い白熱電球を長時間つけっぱなしにする",
                         "correctAnswer": "A",
-                        "explanation": "夜間に蛇口をしっかり閉めて水漏れを防ぐことで、無駄な水と給水・処理エネルギーを抑えられます。"
+                        "explanation": "夜間の必要な場所だけの点灯と退出時の消灯を徹底することで、無駄な電力とCO2排出を抑えられます。"
+                    }
+                }
+            }
+        }
+    ],
+    "scene2": [
+        {
+            "id": "hs2", "pitch": 2, "yaw": 45, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz2",
+                "quizGroup": "group_aircon",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の室温管理】朝のひんやりした時間帯、暖房を使うときの省エネ・脱炭素の工夫はどれでしょう？",
+                        "choiceA": "A．ウォームビズなど暖かい服装を取り入れ、暖房設定温度の目安（20℃前後）を意識して使う",
+                        "choiceB": "B．薄着のまま暖房の設定温度を極端に高くする",
+                        "choiceC": "C．窓やドアを開けたまま暖房をつける",
+                        "correctAnswer": "A",
+                        "explanation": "服装の工夫と適切な設定温度（暖房目安20℃・冷房目安28℃）を組み合わせることで、快適さを保ちながらCO2を減らせます。"
+                    },
+                    "day": {
+                        "question": "エアコンのフィルターをこまめに掃除すると、どのようなメリットがあるでしょう？",
+                        "choiceA": "A．空気の流れが良くなり、冷暖房効率が上がってCO2削減につながる",
+                        "choiceB": "B．電気代が高くなる",
+                        "choiceC": "C．冷房や暖房が効かなくなる",
+                        "correctAnswer": "A",
+                        "explanation": "フィルターの目詰まりを防ぎ、冷房は28℃・暖房は20℃を目安に使うことで消費電力を抑えられます。"
+                    },
+                    "night": {
+                        "question": "【夜の室温管理】夜間に冷暖房を使う際、脱炭素につながる工夫はどれでしょう？",
+                        "choiceA": "A．カーテンを閉めて断熱性を高め、在室状況に合わせてタイマーや適温設定を活用する",
+                        "choiceB": "B．誰もいない部屋でも冷暖房を一晩中つけっぱなしにする",
+                        "choiceC": "C．窓を開けたまま冷暖房を稼働させる",
+                        "correctAnswer": "A",
+                        "explanation": "夜は窓からの熱の出入りが増えるため、カーテンの活用や不要時のオフで冷暖房効率とCO2削減を高められます。"
                     }
                 }
             }
@@ -297,85 +642,51 @@ const sceneQuizHotspots = {
     ],
     "scene3": [
         {
-            "id": "hs_ac", "pitch": 0, "yaw": -65, "cssClass": "bulb-hotspot",
+            "id": "hs3", "pitch": 0, "yaw": -60, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_ac",
-                "quizGroup": "group_ac",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の教室】登校直後や朝の冷え込み・暑さの中で、冷暖房エネルギーを抑える行動はどれでしょう？",
-                        "choiceA": "A．誰もいない部屋でも朝からエアコンを強運転にする",
-                        "choiceB": "B．服装で調整しつつ、人がいる時間帯だけ適切な温度設定でエアコンを使う",
-                        "choiceC": "C．窓を開けたまま暖房を最大にする",
-                        "correctAnswer": "B",
-                        "explanation": "朝は上着や重ね着などの服装工夫と適切な室温設定を組み合わせることで、暖房・冷房のエネルギー消費を抑えられます。"
-                    },
-                    "day": {
-                        "question": "誰もいない教室でエアコンが動いています。この後は使用予定がなく、利用者が停止してよい設備です。<br><br>冷暖房に使うエネルギーを減らすために、どうしますか？",
-                        "choiceA": "A．エアコンを停止する",
-                        "choiceB": "B．翌日まで運転を続ける",
-                        "choiceC": "C．窓を開けて運転を続ける",
-                        "correctAnswer": "A",
-                        "explanation": "使用していない時間のエアコンを停止することで、運転時間を短縮し、エネルギー消費を減らせます。"
-                    },
-                    "night": {
-                        "question": "【夜の退出時】誰もいない教室でエアコンが動いています。この後は使用予定がありません。<br><br>夜間や翌朝までの無駄なエネルギー消費を防ぐために、どうしますか？",
-                        "choiceA": "A．エアコンを停止して退出する",
-                        "choiceB": "B．翌朝までつけっぱなしにする",
-                        "choiceC": "C．設定温度を極端に上げて放置する",
-                        "correctAnswer": "A",
-                        "explanation": "夜間の退出時にエアコンを停止することで、長時間の無駄な電力消費とCO2排出を防げます。"
-                    }
-                }
-            }
-        },
-        {
-            "id": "hs_garbage", "pitch": -30, "yaw": -125, "cssClass": "bulb-hotspot",
-            "clickHandlerFunc": showQuiz,
-            "clickHandlerArgs": {
-                "quizId": "quiz_garbage",
-                "quizGroup": "group_garbage",
-                "question": "ごみの分別に関する問題です。<br><br>プラスチック容器をごみとして捨てる際、リサイクルしやすくするための行動として適切なのはどれでしょう？",
-                "choiceA": "A．汚れたまま捨てる",
-                "choiceB": "B．軽く水ですすいで汚れを落としてから捨てる",
-                "choiceC": "C．細かくハサミで切って捨てる",
-                "correctAnswer": "B",
-                "explanation": "プラスチック容器に汚れが残っているとリサイクルの妨げになり、焼却処理されてしまうことがあります。汚れを落とすことで質の高いリサイクルにつながり、CO2排出量の削減に貢献します。"
+                "quizId": "quiz3",
+                "quizGroup": "group_food_loss",
+                "question": "食品ロス（まだ食べられるのに捨てられる食品）を減らすことは、なぜ脱炭素につながるのでしょうか？",
+                "choiceA": "A．食品の生産・輸送・廃棄処理にかかるエネルギーやCO2を減らせるから",
+                "choiceB": "B．食品を燃やすとCO2が吸収されるから",
+                "choiceC": "C．食品ロスは地球温暖化と関係がないから",
+                "correctAnswer": "A",
+                "explanation": "食べ残しや買いすぎ・期限切れによる廃棄を減らすことで、農作業や輸送、焼却処理に伴うCO2排出を抑えられます。"
             }
         }
     ],
     "scene4": [
         {
-            "id": "hs_monitor", "pitch": -5, "yaw": 0, "cssClass": "bulb-hotspot",
+            "id": "hs4", "pitch": 4, "yaw": 120, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_monitor",
-                "quizGroup": "group_monitor",
+                "quizId": "quiz4",
+                "quizGroup": "group_transport",
                 "variants": {
                     "morning": {
-                        "question": "【朝のゼミ室】まだゼミが始まっていない朝の時間帯、モニター（テレビ）に関して適切な行動はどれでしょう？",
-                        "choiceA": "A．使う時間になるまで主電源を切っておく",
-                        "choiceB": "B．朝から夕方まで画面を表示し続ける",
-                        "choiceC": "C．画面の明るさを常に最大にしておく",
+                        "question": "【朝の通学・通勤】朝の移動手段を選ぶとき、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．徒歩・自転車や電車・バスなどの公共交通機関を利用する",
+                        "choiceB": "B．近い距離でも毎回1人乗りの自動車を使う",
+                        "choiceC": "C．エンジンをかけたまま長時間停車する",
                         "correctAnswer": "A",
-                        "explanation": "使用開始前の無駄な点灯や待機電力を減らすことで、朝の節電と脱炭素につながります。"
+                        "explanation": "デコ活の「移動は徒歩・自転車・公共交通で」を実践することで、朝の移動に伴うCO2排出量を大きく減らせます。"
                     },
                     "day": {
-                        "question": "ゼミ室のモニター（テレビ）に関する行動で、脱炭素につながる実践として適切なのはどれでしょう？",
-                        "choiceA": "A．休憩中もスクリーンセーバーを表示したままにする",
-                        "choiceB": "B．使わないときはこまめに主電源を切る",
-                        "choiceC": "C．常に明るさを最大にしておく",
-                        "correctAnswer": "B",
-                        "explanation": "ゼミ室を使わないときや長時間の休憩時は、モニターの主電源を切る（またはコンセントを抜く）ことで待機電力を削減できます。日々の節電の積み重ねが脱炭素につながります。"
+                        "question": "近距離の移動で、自動車の代わりに徒歩や自転車、公共交通機関を選ぶこと（デコ活アクション）の効果はどれでしょう？",
+                        "choiceA": "A．走行時のCO2排出を減らし、健康づくりにもつながる",
+                        "choiceB": "B．渋滞が悪化する",
+                        "choiceC": "C．CO2排出量は変わらない",
+                        "correctAnswer": "A",
+                        "explanation": "移動手段を徒歩・自転車・公共交通に切り替えることは、身近で効果の高い脱炭素アクションです。"
                     },
                     "night": {
-                        "question": "【夜の帰宅前】夜にゼミ室から退出する際、モニター（テレビ）に関して適切な行動はどれでしょう？",
-                        "choiceA": "A．主電源を切る（またはコンセントを抜く）",
-                        "choiceB": "B．スクリーンセーバーのまま一晩おく",
-                        "choiceC": "C．音量と明るさを上げたままにする",
+                        "question": "【夜の帰宅・移動】夜間に移動して帰宅するとき、脱炭素と安全につながる行動はどれでしょう？",
+                        "choiceA": "A．公共交通や自転車・徒歩を活用し、ライトや反射材で安全を確保して移動する",
+                        "choiceB": "B．夜間の待ち時間に車のエンジンをかけっぱなしにする",
+                        "choiceC": "C．すぐ近くの移動でも毎回車を使う",
                         "correctAnswer": "A",
-                        "explanation": "夜間の退出時に主電源を切ることで、一晩中の無駄な電力消費を抑えられます。"
+                        "explanation": "夜間のアイドリング防止や公共交通・徒歩・自転車の活用は、CO2削減と安全な帰宅につながります。"
                     }
                 }
             }
@@ -383,301 +694,391 @@ const sceneQuizHotspots = {
     ],
     "scene5": [
         {
-            "id": "hs_copy", "pitch": -10, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs5", "pitch": -2, "yaw": -120, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_copy",
-                "quizGroup": "group_copy",
-                "question": "印刷をしていないコピー機が、スリープモードに入らず待機しています。<br><br>使用していない時間の電力消費を抑えるには、どの設定がよいでしょう？",
-                "choiceA": "A．操作画面を常に点灯させる",
-                "choiceB": "B．一定時間使わないとスリープモードになる設定",
-                "choiceC": "C．省電力機能を解除する設定",
-                "correctAnswer": "B",
-                "explanation": "コピー機のスリープ機能を活用すると、待機中の電力消費を抑えられます。共用機の設定は管理者に確認します。"
+                "quizId": "quiz5",
+                "quizGroup": "group_3r_action",
+                "question": "「デコ活」で推奨されている、ごみ削減や資源循環につながる身近な行動はどれでしょう？",
+                "choiceA": "A．マイバッグやマイボトルを持ち歩き、プラスチックごみや使い捨てを減らす",
+                "choiceB": "B．毎回新しいレジ袋やペットボトルを購入してすぐ捨てる",
+                "choiceC": "C．燃えるごみとプラスチックごみを混ぜて出す",
+                "correctAnswer": "A",
+                "explanation": "リユースできるマイボトル・マイバッグの活用や適切な分別は、焼却時のCO2削減や資源の有効活用につながります。"
             }
         }
     ],
 
-    // --- 屋外クイズ（147〜169） ---
+    // --- 屋外クイズ（147〜189） ---
     "out147": [
         {
-            "id": "hs_out1", "pitch": -15, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs_out1", "pitch": 2, "yaw": 70, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out1",
-                "quizGroup": "group_walk_bike",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の通学・移動】朝のキャンパス内や近隣の移動において、脱炭素に最もつながる移動手段はどれでしょう？",
-                        "choiceA": "A．1km程度の近い距離でも自家用車で移動する",
-                        "choiceB": "B．徒歩や自転車（シェアサイクル含む）で移動する",
-                        "choiceC": "C．朝の混雑時にアイドリングしたまま車で待機する",
-                        "correctAnswer": "B",
-                        "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、朝の近距離移動を徒歩や自転車にすることでCO2排出を抑えられます。"
-                    },
-                    "day": {
-                        "question": "（歩道・広場）<br><br>大学のキャンパス内や近隣の移動において、脱炭素（CO2排出削減）に最もつながる移動手段はどれでしょう？",
-                        "choiceA": "A．1km程度の近い距離でも自家用車で移動する",
-                        "choiceB": "B．徒歩や自転車（シェアサイクル含む）で移動する",
-                        "choiceC": "C．アイドリング状態のまま車で待機する",
-                        "correctAnswer": "B",
-                        "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、近距離の移動を自動車から徒歩や自転車に切り替えることで、走行時のCO2排出量をゼロにでき、健康増進にもつながります。"
-                    },
-                    "night": {
-                        "question": "【夜の帰宅・移動】夜の移動において、安全性と脱炭素の両立につながる行動はどれでしょう？",
-                        "choiceA": "A．反射材やライトを活用しつつ、徒歩・自転車・公共交通機関を無理のない範囲で選ぶ",
-                        "choiceB": "B．近距離でもエンジンをかけたまま長時間待機する",
-                        "choiceC": "C．無灯火のまま自転車で走る",
-                        "correctAnswer": "A",
-                        "explanation": "夜間の移動では安全確保（ライトや反射材）を優先しつつ、公共交通やエコな移動手段を活用することが大切です。"
-                    }
-                }
+                "quizGroup": "group_3r_action",
+                "question": "（屋外の通路・147付近）<br><br>屋外を歩くとき、マイボトルを持ち歩くことにはどのような脱炭素効果があるでしょう？",
+                "choiceA": "A．ペットボトルの製造・輸送・焼却に伴うCO2排出を減らせる",
+                "choiceB": "B．CO2排出量は増えるが、荷物が重くなる",
+                "choiceC": "C．環境への影響はまったくない",
+                "correctAnswer": "A",
+                "explanation": "使い捨て容器を減らしマイボトルを使うことは、プラスチックごみ削減とCO2排出抑制につながるデコ活アクションです。"
             }
         }
     ],
     "out149": [
         {
-            "id": "hs_out2", "pitch": 10, "yaw": 120, "cssClass": "bulb-hotspot",
+            "id": "hs_out2", "pitch": 5, "yaw": 50, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out2",
-                "quizGroup": "group_led",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の屋外照明】夜が明けて周囲が明るくなってきた朝の時間帯、街灯や屋外照明に関して適切なのはどれでしょう？",
-                        "choiceA": "A．明るさセンサーやタイマーで不要な点灯を自動で抑え、高効率なLED照明を活用する",
-                        "choiceB": "B．真昼になっても街灯を最大出力でつけっぱなしにする",
-                        "choiceC": "C．従来の非効率な照明のまま管理しない",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活アクション「高効率な照明（LED）への交換」やセンサー制御により、朝〜昼の不要な点灯を減らし省エネにつながります。"
-                    },
-                    "day": {
-                        "question": "（街灯・屋外照明）<br><br>キャンパス内の街灯や屋外照明に関する設備・行動のうち、脱炭素に大きく貢献するのはどれでしょう？",
-                        "choiceA": "A．従来の水銀灯や白熱灯を使い続ける",
-                        "choiceB": "B．昼間も常に最大照度で点灯させ続ける",
-                        "choiceC": "C．高効率なLED照明へ切り替え、人感センサーやタイマーで最適に制御する",
-                        "correctAnswer": "C",
-                        "explanation": "デコ活アクション「高効率な照明（LED）への交換」に基づき、屋外照明をLED化し、必要な時間帯だけ点灯させることで消費電力を大幅に削減できます。"
-                    },
-                    "night": {
-                        "question": "【夜の屋外照明】夜のキャンパスや歩道で安全を確保しつつ脱炭素につながる照明の工夫はどれでしょう？",
-                        "choiceA": "A．高効率なLED照明を使い、人感センサーや時間帯制御で必要な場所・時間を最適に照らす",
-                        "choiceB": "B．人がまったくいない場所も常に最大照度で点灯し続ける",
-                        "choiceC": "C．照明をすべて消して足元を見えなくする",
-                        "correctAnswer": "A",
-                        "explanation": "夜の安全性を守りながら、LED化とセンサー・調光制御を組み合わせることで、電力消費とCO2排出を効率よく減らせます。"
-                    }
-                }
+                "quizGroup": "group_eco_drive",
+                "question": "（屋外の通路・149付近）<br><br>自動車を運転するとき、「ふんわりアクセル（穏やかな発進）」を心がけるとどうなるでしょう？",
+                "choiceA": "A．燃費が改善し、CO2排出量を減らせる",
+                "choiceB": "B．燃料を多く消費してCO2が増える",
+                "choiceC": "C．CO2排出量は変わらない",
+                "correctAnswer": "A",
+                "explanation": "最初の5秒で時速20km程度を目安に穏やかに発進することで、燃費が向上しCO2排出を減らせます。"
             }
         }
     ],
     "out151": [
         {
-            "id": "hs_out3", "pitch": 5, "yaw": 10, "cssClass": "bulb-hotspot",
+            "id": "hs_out3", "pitch": 3, "yaw": 85, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
                 "quizId": "quiz_out3",
-                "quizGroup": "group_solar",
-                "question": "（建物・屋根）<br><br>日当たりの良い大学の建物や屋根を活用した、脱炭素につながる取り組みはどれでしょう？",
-                "choiceA": "A．太陽光パネルを設置し、再生可能エネルギーの電力を自家消費する",
-                "choiceB": "B．屋根を黒く塗り、建物内の冷房負荷を増やす",
-                "choiceC": "C．窓の断熱対策をせず、冷暖房のエネルギーを外へ逃がす",
+                "quizGroup": "group_renewable",
+                "question": "（屋外の通路・151付近）<br><br>太陽光発電などの「再生可能エネルギー」を利用する大きな利点は何でしょう？",
+                "choiceA": "A．発電時にCO2をほとんど排出せず、国内で繰り返し活用できる",
+                "choiceB": "B．化石燃料よりも多くのCO2を排出する",
+                "choiceC": "C．天候や設備に関わらずCO2を大量に発生する",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「太陽光発電の導入・再エネ電力の利用」に基づき、建物の屋根に太陽光発電を導入して発電した電力を施設内で使うことで、化石燃料由来の電力消費とCO2排出を削減できます。"
+                "explanation": "再生可能エネルギーは脱炭素社会の実現に欠かせないエネルギー源です。"
+            }
+        }
+    ],
+    "out153": [
+        {
+            "id": "hs_out4", "pitch": 6, "yaw": 65, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out4",
+                "quizGroup": "group_food_loss",
+                "question": "（屋外の通路・153付近）<br><br>買い物で「手前どり（販売期限や消費期限が迫った商品を棚の手前から選ぶこと）」をする目的は何でしょう？",
+                "choiceA": "A．食べきれる分を選んで購入し、売れ残りや家庭での食品ロスを減らすため",
+                "choiceB": "B．商品の値段を上げるため",
+                "choiceC": "C．プラスチックごみを増やすため",
+                "correctAnswer": "A",
+                "explanation": "すぐ食べる・使う分を手前から選ぶことで、食品廃棄とそれに伴うCO2排出を減らすことができます。"
             }
         }
     ],
     "out155": [
         {
-            "id": "hs_out4", "pitch": 12, "yaw": -20, "cssClass": "bulb-hotspot",
+            "id": "hs_out5", "pitch": 1, "yaw": 75, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out4",
-                "quizGroup": "group_corridor_eco",
-                "question": "（屋根付き通路）<br><br>キャンパス内の屋根付き通路や渡り廊下において、脱炭素につながる設備・工夫はどれでしょう？",
-                "choiceA": "A．照明をすべて白熱電球にする",
-                "choiceB": "B．屋根に太陽光発電パネルを設置し、昼間は自然光を取り入れて照明を消灯する",
-                "choiceC": "C．昼間も通路の照明を最大照度で点灯し続ける",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「再エネ導入・こまめな消灯」に基づき、日中は自然光を活用して不要な照明を消し、屋根スペースで太陽光発電を行うことで施設の消費電力を大幅に減らせます。"
+                "quizId": "quiz_out5",
+                "quizGroup": "group_standby",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の外出前】朝出かけるとき、使わない家電のコンセントや主電源に関して適切な行動はどれでしょう？",
+                        "choiceA": "A．外出中に使わない機器の待機電力や電源を減らす工夫をする",
+                        "choiceB": "B．すべての家電を最大出力のまま放置して出かける",
+                        "choiceC": "C．待機電力はゼロなので何もしなくてよい",
+                        "correctAnswer": "A",
+                        "explanation": "家庭の消費電力の中で待機電力は一定の割合を占めるため、使わない時間帯の節電がCO2削減につながります。"
+                    },
+                    "day": {
+                        "question": "（屋外の通路・155付近）<br><br>長期間使わない家電製品のプラグを抜いたり、節電タップを活用したりすることの効果はどれでしょう？",
+                        "choiceA": "A．待機時消費電力を減らし、家庭のCO2排出を抑えられる",
+                        "choiceB": "B．CO2排出量が増える",
+                        "choiceC": "C．家電が必ず壊れる",
+                        "correctAnswer": "A",
+                        "explanation": "使わない機器の待機電力を減らすことは、無理なく続けられる省エネ・脱炭素アクションです。"
+                    },
+                    "night": {
+                        "question": "【夜の就寝・退出前】夜に部屋を出たり寝たりするとき、家電や電源に関して適切な行動はどれでしょう？",
+                        "choiceA": "A．使わない機器の電源や節電タップをオフにして無駄な待機電力を減らす",
+                        "choiceB": "B．使わない機器もすべてつけたまま寝る",
+                        "choiceC": "C．照明もエアコンも全開のまま放置する",
+                        "correctAnswer": "A",
+                        "explanation": "就寝時や退出時のこまめなオフ習慣が、日々の電力消費とCO2排出を抑えます。"
+                    }
+                }
             }
         }
     ],
     "out157": [
         {
-            "id": "hs_out5", "pitch": 5, "yaw": -35, "cssClass": "bulb-hotspot",
+            "id": "hs_out6", "pitch": 4, "yaw": 60, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out5",
-                "quizGroup": "group_greenery",
-                "question": "（植栽・芝生エリア）<br><br>キャンパス内の緑地や植栽（樹木・芝生）の保全・活用が脱炭素に貢献する理由として、適切なのはどれでしょう？",
-                "choiceA": "A．植物が光合成によって大気中のCO2を吸収・固定し、ヒートアイランド現象も緩和するため",
-                "choiceB": "B．落ち葉をすべてその場で野焼きして処理できるため",
-                "choiceC": "C．地面をすべてアスファルトで舗装するより照り返しが強くなるため",
+                "quizId": "quiz_out6",
+                "quizGroup": "group_green_curtain",
+                "question": "（屋外の通路・157付近）<br><br>夏の暑い日に、窓の外にゴーヤやアサガオなどで「緑のカーテン」をつくるメリットはどれでしょう？",
+                "choiceA": "A．日差しを遮り葉の蒸散で涼しくなり、冷房によるCO2排出を減らせる",
+                "choiceB": "B．室内の気温がさらに上がって冷房が効かなくなる",
+                "choiceC": "C．CO2排出量が急増する",
                 "correctAnswer": "A",
-                "explanation": "樹木や緑地はCO2の吸収源として機能するだけでなく、蒸散作用や日陰づくりによって周囲の温度上昇を抑え、周辺建物の冷房エネルギー削減にも寄与します。"
+                "explanation": "自然の力を活かして室温上昇を抑える工夫は、省エネと快適さの両立に役立ちます。"
+            }
+        }
+    ],
+    "out159": [
+        {
+            "id": "hs_out7", "pitch": 2, "yaw": 80, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out7",
+                "quizGroup": "group_local_food",
+                "question": "（屋外の通路・159付近）<br><br>地元でとれた旬の食材を選ぶ「地産地消」が脱炭素につながる理由として正しいものはどれでしょう？",
+                "choiceA": "A．輸送にかかる燃料やCO2を減らし、新鮮でおいしい食材を楽しめるから",
+                "choiceB": "B．遠くから飛行機で運ぶよりCO2が増えるから",
+                "choiceC": "C．旬の食材はCO2を多く排出するから",
+                "correctAnswer": "A",
+                "explanation": "輸送距離が短くなることで輸送時のCO2排出を抑えられ、地域の活性化にもつながります。"
             }
         }
     ],
     "out161": [
         {
-            "id": "hs_out6", "pitch": -5, "yaw": 10, "cssClass": "bulb-hotspot",
+            "id": "hs_out8", "pitch": 5, "yaw": 65, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out6",
-                "quizGroup": "group_car",
-                "question": "（駐車場案内・自動車）<br><br>自動車を利用せざるを得ない場面において、デコ活で推奨されている脱炭素につながる選択・行動はどれでしょう？",
-                "choiceA": "A．急発進・急加速を繰り返し、タイヤの空気圧は点検しない",
-                "choiceB": "B．電気自動車（EV）・燃料電池車（FCV）などの次世代自動車を選ぶ、またはエコドライブを実践する",
-                "choiceC": "C．トランクに不要な重い荷物を常に積んだまま走行する",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「次世代自動車（EV等）の選択」「エコドライブの実践」に基づき、電動車への転換や、やさしい発進・適正なタイヤ空気圧の維持によって燃料消費とCO2排出を抑えられます。"
+                "quizId": "quiz_out8",
+                "quizGroup": "group_eco_drive",
+                "question": "（屋外の通路・161付近）<br><br>駐車や待ち時間のときにエンジンを止める「アイドリングストップ」の効果として正しいものはどれでしょう？",
+                "choiceA": "A．燃料の無駄遣いを防ぎ、CO2や排出ガスを減らせる",
+                "choiceB": "B．ガソリンを余分に消費する",
+                "choiceC": "C．CO2排出量は変わらない",
+                "correctAnswer": "A",
+                "explanation": "不要なアイドリングをやめることは、手軽で効果的なエコドライブの基本です。"
             }
         }
     ],
     "out163": [
         {
-            "id": "hs_out7", "pitch": -18, "yaw": -10, "cssClass": "bulb-hotspot",
+            "id": "hs_out9", "pitch": 3, "yaw": 75, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out7",
-                "quizGroup": "group_coolshare",
-                "question": "（木陰のベンチ・緑地）<br><br>暑い日の昼休みや空きコマにおいて、木陰のベンチや学内の涼しい共有スペースを活用する「デコ活」の行動はどれでしょう？",
-                "choiceA": "A．各自が個別の部屋でエアコンを強冷房にして過ごす",
-                "choiceB": "B．木陰の自然の風や学内の共有スペース（クールシェアスポット）を利用し、個別の空調稼働を減らす",
-                "choiceC": "C．屋外のベンチ付近に冷風機を何台も設置して冷やす",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「クールシェア」に基づき、涼しい木陰や共有スペースをみんなで利用することで、建物全体のエアコン稼働台数を減らし消費電力を削減できます。"
+                "quizId": "quiz_out9",
+                "quizGroup": "group_decarbon_meaning",
+                "question": "（屋外の通路・163付近）<br><br>「脱炭素社会」を目指すうえで大切な考え方として最も適切なものはどれでしょう？",
+                "choiceA": "A．一人ひとりができる省エネ・エコな選択を日常に取り入れ、社会全体でCO2排出を減らすこと",
+                "choiceB": "B．CO2は増え続けても問題ないと考え、対策をしないこと",
+                "choiceC": "C．電気やモノをこれまで以上に大量に使い続けること",
+                "correctAnswer": "A",
+                "explanation": "暮らし方や選び方を少しずつ脱炭素型へシフトしていく「デコ活」の積み重ねが重要です。"
             }
         }
     ],
     "out165": [
         {
-            "id": "hs_out8", "pitch": -5, "yaw": 135, "cssClass": "bulb-hotspot",
+            "id": "hs_out10", "pitch": 4, "yaw": 55, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out8",
-                "quizGroup": "group_transit",
-                "question": "（道路・通学路）<br><br>通学や遠出の移動において、自家用車（1人乗車）から公共交通機関（電車・バス）へ利用を切り替えるメリットとして正しいのはどれでしょう？",
-                "choiceA": "A．1人あたりの移動に伴うCO2排出量を大幅に削減でき、道路の渋滞緩和にもつながる",
-                "choiceB": "B．1人あたりのエネルギー消費量が自家用車より増える",
-                "choiceC": "C．移動中のCO2排出量は自家用車とまったく変わらない",
+                "quizId": "quiz_out10",
+                "quizGroup": "group_forest",
+                "question": "（屋外の通路・165付近）<br><br>森林や木々を守り、適切に手入れして育てることが脱炭素に役立つ理由は何でしょう？",
+                "choiceA": "A．樹木が光合成によってCO2を吸収し、炭素として蓄える働きがあるから",
+                "choiceB": "B．木が増えるとCO2が大量に作られるから",
+                "choiceC": "C．森林はCO2と関係がないから",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「公共交通機関の利用」に基づき、鉄道やバスは一度に多くの人を運べるため、マイカー利用に比べて輸送量あたりのCO2排出量が大幅に少なくなります。"
+                "explanation": "健全な森林の保全と適切な間伐・木材利用は、CO2の吸収・固定に重要な役割を果たします。"
             }
         }
     ],
     "out167": [
         {
-            "id": "hs_out9", "pitch": -5, "yaw": 140, "cssClass": "bulb-hotspot",
+            "id": "hs_out11", "pitch": 2, "yaw": 70, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out9",
-                "quizGroup": "group_car",
-                "question": "（周辺道路・車）<br><br>キャンパス周辺の道路や駐車場で車を利用する際、燃料消費とCO2排出を抑える「エコドライブ」の行動はどれでしょう？",
-                "choiceA": "A．発進時は最初の5秒で時速20km程度を目安にふんわりアクセルを踏み、駐停車時はアイドリングストップをする",
-                "choiceB": "B．常に急発進・急加速を行い、車間距離を詰めて加減速を繰り返す",
-                "choiceC": "C．待ち合わせ中はエアコンをつけたままエンジンをかけ続ける",
+                "quizId": "quiz_out11",
+                "quizGroup": "group_fridge",
+                "question": "（屋外の通路・167付近）<br><br>冷蔵庫の省エネにつながる正しい使い方はどれでしょう？",
+                "choiceA": "A．食品を詰め込みすぎず、ドアの開閉は短時間で済ませる",
+                "choiceB": "B．冷気の吹き出し口をふさぐほどぎっしり詰め込む",
+                "choiceC": "C．熱い鍋を冷まさずにそのまま入れる",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「エコドライブの実践」に基づき、やさしい発進（ふんわりアクセル）とアイドリングストップを心がけることで、燃料消費量を約10％程度削減できます。"
+                "explanation": "庫内にゆとりを持たせて冷気を循環させ、開閉を減らすことで消費電力とCO2を抑えられます。"
             }
         }
     ],
     "out169": [
         {
-            "id": "hs_out10", "pitch": 20, "yaw": 150, "cssClass": "bulb-hotspot",
+            "id": "hs_out12", "pitch": 6, "yaw": 60, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out10",
-                "quizGroup": "group_solar",
-                "question": "（晴天の空・太陽光）<br><br>晴天の日に降り注ぐ太陽の光を活かした、脱炭素につながる取り組みはどれでしょう？",
-                "choiceA": "A．太陽光発電や太陽熱利用を導入し、化石燃料に頼らないエネルギーを活用する",
-                "choiceB": "B．昼間も建物のブラインドをすべて閉め切り、室内照明だけで過ごす",
-                "choiceC": "C．発電効率の悪い古い機器を点検せずに放置する",
+                "quizId": "quiz_out12",
+                "quizGroup": "group_eco_mark",
+                "question": "（屋外の通路・169付近）<br><br>商品を選ぶときに「省エネラベル」や「エコマーク」などを参考にすることの意義は何でしょう？",
+                "choiceA": "A．環境負荷が少なく省エネ性能の高い製品を見分けやすくなる",
+                "choiceB": "B．製品の価格が必ず2倍になる",
+                "choiceC": "C．リサイクルができなくなる",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「太陽光発電の導入・再エネ電力の利用」に基づき、太陽の光エネルギーを電気や熱として有効活用することで、CO2を排出しないクリーンなエネルギー利用が進みます。"
+                "explanation": "環境ラベルや省エネ性能を確認して選ぶことは、日々の暮らしでできる脱炭素アクションです。"
             }
         }
     ],
-
-    // --- 屋外クイズ（177〜189） ---
-    "out177": [
+    "out171": [
         {
-            "id": "hs_out11", "pitch": 0, "yaw": 25, "cssClass": "bulb-hotspot",
+            "id": "hs_out13", "pitch": 3, "yaw": 80, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out11",
-                "quizGroup": "group_greenery",
-                "question": "（芝生の法面と落葉樹）<br><br>斜面の芝生や街路樹・落葉樹を植えたまま維持管理する際、CO2吸収や土壌炭素の維持に役立つ工夫はどれでしょう？",
-                "choiceA": "A．芝生や草地をすべて剥がしてコンクリートで固める",
-                "choiceB": "B．過度の耕起や除草剤乱用を避け、植物の根や土壌有機物を守る管理を行う",
-                "choiceC": "C．剪定した枝や落ち葉を毎回焼却処分する",
-                "correctAnswer": "B",
-                "explanation": "デコ活で重視される自然共生・炭素貯留の視点では、草地や樹木の根系・土壌中の炭素を壊さず保全することが、大気中CO2の固定と生物多様性の維持につながります。"
+                "quizId": "quiz_out13",
+                "quizGroup": "group_shower",
+                "question": "（屋外の通路・171付近）<br><br>シャワーのお湯を出しっぱなしにせず、こまめに止めることにはどのような効果があるでしょう？",
+                "choiceA": "A．お湯を沸かすエネルギー（ガスや電気）が減り、CO2排出量を抑えられる",
+                "choiceB": "B．水道代もCO2も必ず増える",
+                "choiceC": "C．地球温暖化が加速する",
+                "correctAnswer": "A",
+                "explanation": "給湯は家庭のエネルギー消費の中でも大きな割合を占めるため、節湯はCO2削減に効果的です。"
+            }
+        }
+    ],
+    "out173": [
+        {
+            "id": "hs_out14", "pitch": 5, "yaw": 65, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out14",
+                "quizGroup": "group_recycle",
+                "question": "（屋外の通路・173付近）<br><br>アルミ缶やスチール缶、ペットボトルなどを正しく分別してリサイクルするメリットは何でしょう？",
+                "choiceA": "A．資源を新しく採掘・製造するよりも少ないエネルギーで製品を作れ、CO2を減らせる",
+                "choiceB": "B．ごみの分別をしない方がCO2が減る",
+                "choiceC": "C．リサイクルするとCO2が必ず増える",
+                "correctAnswer": "A",
+                "explanation": "特にアルミのリサイクルは、ボーキサイトから新地金を作る場合に比べて大幅な省エネ・CO2削減になります。"
+            }
+        }
+    ],
+    "out175": [
+        {
+            "id": "hs_out15", "pitch": 2, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out15",
+                "quizGroup": "group_transport",
+                "question": "（屋外の通路・175付近）<br><br>駅や学校までの移動で、自転車や徒歩を活用する「デコ活」の取り組みとして適切なのはどれでしょう？",
+                "choiceA": "A．天候や距離に合わせて徒歩・自転車・公共交通を上手に組み合わせる",
+                "choiceB": "B．100m先へ行くときも必ず車を使う",
+                "choiceC": "C．自転車の空気圧が抜けていても気にせず重くして走る",
+                "correctAnswer": "A",
+                "explanation": "徒歩や自転車、公共交通機関の利用はCO2削減に直結する基本アクションです。"
+            }
+        }
+    ],
+    "out177": [
+        {
+            "id": "hs_out16", "pitch": 4, "yaw": -35, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out16",
+                "quizGroup": "group_curtain",
+                "question": "（屋外の通路・177付近）<br><br>窓に「断熱カーテン」や「断熱シート」を取り入れると、どのようなメリットがあるでしょう？",
+                "choiceA": "A．室内の熱が外へ逃げるのを防ぎ（冬）、外の熱が入るのを抑えて（夏）冷暖房効率を高める",
+                "choiceB": "B．窓ガラスが割れてしまう",
+                "choiceC": "C．冷暖房の効率が下がる",
+                "correctAnswer": "A",
+                "explanation": "熱の出入りが最も大きい「窓」の断熱対策は、省エネ・CO2削減にとても効果的です。"
             }
         }
     ],
     "out179": [
         {
-            "id": "hs_out12", "pitch": 5, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs_out17", "pitch": 1, "yaw": -20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out12",
-                "quizGroup": "group_led",
-                "question": "（歩道沿いの街灯ポール）<br><br>夕暮れから夜にかけて街灯を運用する際、デコ活の「省エネ・高効率機器の活用」に沿った工夫はどれでしょう？",
-                "choiceA": "A．明るさセンサーや調光機能を使い、周囲の明るさや時間帯に応じて無駄な点灯を抑える",
-                "choiceB": "B．日没前から翌朝まで常にフル出力で点灯し続ける",
-                "choiceC": "C．ランプが切れても交換せず、周囲の建物の照明を明るくして代用する",
+                "quizId": "quiz_out17",
+                "quizGroup": "group_eco_drive",
+                "question": "（屋外の通路・179付近）<br><br>車のタイヤの空気圧を適正に保つことには、どのような効果があるでしょう？",
+                "choiceA": "A．転がり抵抗が減って燃費が良くなり、CO2排出量やタイヤの偏摩耗を抑えられる",
+                "choiceB": "B．燃費が悪化してCO2が増える",
+                "choiceC": "C．安全性が下がる",
                 "correctAnswer": "A",
-                "explanation": "センサーや調光制御と高効率照明を組み合わせることで、安全性を保ちながら夜間の電力消費とCO2排出を効率よく削減できます。"
+                "explanation": "空気圧が不足すると燃費が悪化するため、定期的な点検・補充がエコドライブにつながります。"
             }
         }
     ],
     "out181": [
         {
-            "id": "hs_out13", "pitch": -10, "yaw": 10, "cssClass": "bulb-hotspot",
+            "id": "hs_out18", "pitch": 5, "yaw": -30, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out13",
-                "quizGroup": "group_car",
-                "question": "（二股に分かれる車道）<br><br>交差点や分岐路を走行する際、燃費悪化やCO2排出の増加を防ぐ運転の工夫はどれでしょう？",
-                "choiceA": "A．車間距離を十分にとり、先の信号や道路状況を見て減速・加速の回数を減らす",
-                "choiceB": "B．分岐の直前までスピードを出し、急ブレーキと急加速を繰り返す",
-                "choiceC": "C．タイヤの空気圧が下がっていてもそのまま高速で走り続ける",
+                "quizId": "quiz_out18",
+                "quizGroup": "group_paperless",
+                "question": "（屋外の通路・181付近）<br><br>資料の共有をペーパーレス化したり、両面印刷・裏紙活用を心がけたりすることの効果はどれでしょう？",
+                "choiceA": "A．紙の消費を減らすことで、製紙や輸送・廃棄に伴うエネルギーやCO2を削減できる",
+                "choiceB": "B．紙を大量に印刷して捨てる方がCO2が減る",
+                "choiceC": "C．CO2排出量にはまったく影響しない",
                 "correctAnswer": "A",
-                "explanation": "デコ活のエコドライブ指針では、車間距離にゆとりを持ち、加減速の少ないスムーズな運転をすることで、燃料消費とCO2排出を抑えられることが示されています。"
+                "explanation": "必要な分だけ印刷する、データで確認するといった工夫が資源節約とCO2削減につながります。"
+            }
+        }
+    ],
+    "out183": [
+        {
+            "id": "hs_out19", "pitch": 3, "yaw": -15, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out19",
+                "quizGroup": "group_food_loss",
+                "question": "（屋外の通路・183付近）<br><br>飲食店で料理を注文するとき、食品ロスを減らすためにできる工夫はどれでしょう？",
+                "choiceA": "A．自分が食べられる量を考えて注文し、残さずおいしくいただく",
+                "choiceB": "B．食べきれないと分かっていても大量に注文して残す",
+                "choiceC": "C．注文した料理を一口も食べずに廃棄する",
+                "correctAnswer": "A",
+                "explanation": "「食べられる分だけ注文する・残さず食べる」ことは、誰でもすぐ実践できる食品ロス削減アクションです。"
             }
         }
     ],
     "out185": [
         {
-            "id": "hs_out14", "pitch": 2, "yaw": 35, "cssClass": "bulb-hotspot",
+            "id": "hs_out20", "pitch": 6, "yaw": -40, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out14",
-                "quizGroup": "group_building",
-                "question": "（低層の建物と屋根）<br><br>キャンパス内の建物で冷暖房効率を高める「デコ活（断熱・省エネ建築）」の取り組みとして適切なのはどれでしょう？",
-                "choiceA": "A．窓の断熱性能を高めたり、遮熱対策を行ったりして室温の変化を抑える",
-                "choiceB": "B．冷房中に建物のドアや窓を開け放しにする",
-                "choiceC": "C．建物の隙間風対策をせず、冷暖房の熱を外部へ逃がす",
+                "quizId": "quiz_out20",
+                "quizGroup": "group_decarbon_meaning",
+                "question": "（屋外の通路・185付近）<br><br>地球温暖化対策として、温室効果ガス（CO2など）の排出を減らすことが重要な理由は何でしょう？",
+                "choiceA": "A．気温上昇による異常気象や豪雨、生態系への悪影響を抑えるため",
+                "choiceB": "B．地球の気温をできるだけ高くするため",
+                "choiceC": "C．温室効果ガスは増やすほど安全だから",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「断熱省エネ住宅・建築物の活用」に基づき、熱の出入りを抑える工夫をすることで、空調にかかるエネルギーとCO2排出量を減らせます。"
+                "explanation": "CO2などの温室効果ガス排出を抑えることは、私たちの暮らしや未来の自然環境を守るために不可欠です。"
             }
         }
     ],
     "out187": [
         {
-            "id": "hs_out15", "pitch": 3, "yaw": 40, "cssClass": "bulb-hotspot",
+            "id": "hs_out21", "pitch": 2, "yaw": -25, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out15",
-                "quizGroup": "group_building",
-                "question": "（並んだ窓のある建物）<br><br>日中の建物内で照明や空調のエネルギーを節約する「デコ活」の工夫として適切なのはどれでしょう？",
-                "choiceA": "A．窓際の席では昼間の自然光を活かして照明を消し、日射が強いときはブラインドやひさしで日差しを調整する",
-                "choiceB": "B．昼間でもすべての照明を点け、カーテンも閉め切ったままにする",
-                "choiceC": "C．誰もいない部屋の照明や空調を点けっぱなしにする",
+                "quizId": "quiz_out21",
+                "quizGroup": "group_3r_action",
+                "question": "（屋外の通路・187付近）<br><br>買い物袋や容器を選ぶとき、環境に配慮した選択として適切なものはどれでしょう？",
+                "choiceA": "A．繰り返し使えるマイバッグを選び、不要な包装や使い捨て容器を断る",
+                "choiceB": "B．毎回使い捨て容器を多くもらってすぐ捨てる",
+                "choiceC": "C．分別せずにすべて燃えるごみに出す",
                 "correctAnswer": "A",
-                "explanation": "自然光の活用と日射調整、こまめな消灯を組み合わせることで、照明電力と冷房負荷の両方を抑え、脱炭素につながります。"
+                "explanation": "リデュース・リユースを意識した買い物は、ごみ削減とCO2排出抑制につながります。"
+            }
+        }
+    ],
+    "out189": [
+        {
+            "id": "hs_out22", "pitch": 4, "yaw": -70, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out22",
+                "quizGroup": "group_branch_choice",
+                "question": "（屋外の分岐地点・189付近）<br><br>道が分かれる地点です。日々の生活でも「より環境負荷の少ない選択」を積み重ねることを何と呼ぶでしょう？",
+                "choiceA": "A．脱炭素につながる豊かな暮らし創り（デコ活）などのエコアクション",
+                "choiceB": "B．エネルギー浪費アクション",
+                "choiceC": "C．ごみ増加キャンペーン",
+                "correctAnswer": "A",
+                "explanation": "一人ひとりの行動変容（デコ活）が、脱炭素社会をつくる大きな力になります。"
             }
         }
     ],
@@ -685,445 +1086,307 @@ const sceneQuizHotspots = {
     // --- 屋外クイズ（191〜202） ---
     "out191": [
         {
-            "id": "hs_out16", "pitch": -12, "yaw": -25, "cssClass": "bulb-hotspot",
+            "id": "hs_out23", "pitch": 4, "yaw": -110, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out16",
-                "quizGroup": "group_walk_bike",
-                "question": "（左右に分かれる歩道）<br><br>キャンパス内の歩道や散策路を歩く際、デコ活の健康・脱炭素アクションとしておすすめの行動はどれでしょう？",
-                "choiceA": "A．近い場所への移動でも車を使い、歩道はまったく使わない",
-                "choiceB": "B．日常のちょっとした移動は徒歩や自転車を積極的に選び、CO2排出を減らしながら運動習慣をつくる",
-                "choiceC": "C．不要な物品を乗せたまま車やバイクで何度も往復する",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」では、身近な移動を徒歩や自転車に置き換えることで、CO2削減と心身の健康づくりを同時に実現できます。"
-            }
-        },
-        {
-            "id": "hs_out17", "pitch": 4, "yaw": 25, "cssClass": "bulb-hotspot",
-            "clickHandlerFunc": showQuiz,
-            "clickHandlerArgs": {
-                "quizId": "quiz_out17",
-                "quizGroup": "group_season_food",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の食事・朝食】朝の食事を選ぶとき、私たちが実践できるデコ活の食行動はどれでしょう？",
-                        "choiceA": "A．食べきれない量を盛って残す",
-                        "choiceB": "B．旬や地元産の食材を活かし、食べきれる量を準備して食品ロスを減らす",
-                        "choiceC": "C．季節や産地を問わず大量廃棄する",
-                        "correctAnswer": "B",
-                        "explanation": "旬・地元食材の活用や食品ロスの削減は、輸送・生産・廃棄にかかるCO2を減らす大切なデコ活アクションです。"
-                    },
-                    "day": {
-                        "question": "（色づき始めた木々と自然の風景）<br><br>季節の移ろいを感じる自然環境の中で、私たちが食生活からできるデコ活アクションはどれでしょう？",
-                        "choiceA": "A．季節や地域と関係なく、遠方から空輸された食材ばかりを選ぶ",
-                        "choiceB": "B．旬の食材や地元でとれた食材（地産地消）を選び、輸送や栽培・保管にかかるCO2を抑える",
-                        "choiceC": "C．食べられる分以上に大量に買い込んで廃棄する",
-                        "correctAnswer": "B",
-                        "explanation": "デコ活アクション「地産地消・旬の食材の活用」や「食品ロスの削減」により、輸送エネルギーや廃棄に伴うCO2排出量を減らすことができます。"
-                    },
-                    "night": {
-                        "question": "【夜の夕食・買い出し】夜の食事や買い物において、食品ロスとCO2を減らす行動はどれでしょう？",
-                        "choiceA": "A．冷蔵庫の在庫や食べきれる量を確認してから買い・作る",
-                        "choiceB": "B．賞味期限が近いものから順に避け、大量に買い込む",
-                        "choiceC": "C．残った料理を計画なくすぐ捨てる",
-                        "correctAnswer": "A",
-                        "explanation": "必要な分を無駄なく使い切ることで、食品廃棄に伴うCO2排出量を減らせます。"
-                    }
-                }
+                "quizId": "quiz_out23",
+                "quizGroup": "group_transport",
+                "question": "（191付近）<br><br>通学や買い物で公共交通機関を利用することの環境メリットはどれでしょう？",
+                "choiceA": "A．一人あたりのCO2排出量を抑えられ、道路の混雑緩和にもつながる",
+                "choiceB": "B．一人あたりのCO2排出量が必ず最大になる",
+                "choiceC": "C．環境への効果はない",
+                "correctAnswer": "A",
+                "explanation": "バスや電車などの公共交通機関は、自動車単体よりも一人あたりのCO2排出量を抑えられます。"
             }
         }
     ],
     "out193": [
         {
-            "id": "hs_out18", "pitch": -8, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs_out24", "pitch": 2, "yaw": -125, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out18",
-                "quizGroup": "group_greenery",
-                "question": "（中央の樹木と草地の斜面）<br><br>キャンパス内の緑地や樹木を守るために、私たちが日常で心がけたい行動はどれでしょう？",
-                "choiceA": "A．植栽エリアにゴミや空き缶を捨て、緑地を傷める",
-                "choiceB": "B．緑地や樹木を大切にし、地域の植樹や緑化・保全活動にも関心を持って参加する",
-                "choiceC": "C．緑地の役割を意識せず、踏み荒らして草木を枯らす",
-                "correctAnswer": "B",
-                "explanation": "緑地や樹木の保全・緑化は、CO2吸収源の確保や夏の暑さ緩和（ヒートアイランド対策）に役立つ大切なデコ活の取り組みです。"
+                "quizId": "quiz_out24",
+                "quizGroup": "group_led",
+                "question": "（193付近）<br><br>LED照明が従来の白熱電球と比べて優れている点として正しいものはどれでしょう？",
+                "choiceA": "A．消費電力が少なく長寿命であるため、交換の手間やCO2排出を減らせる",
+                "choiceB": "B．すぐに切れて消費電力が大きい",
+                "choiceC": "C．CO2排出量は変わらない",
+                "correctAnswer": "A",
+                "explanation": "LED化は家庭やオフィス・街灯などで手軽にできる代表的な省エネ・脱炭素対策です。"
             }
         }
     ],
     "out195": [
         {
-            "id": "hs_out19", "pitch": 6, "yaw": 55, "cssClass": "bulb-hotspot",
+            "id": "hs_out25", "pitch": 5, "yaw": -105, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out19",
-                "quizGroup": "group_sun_power",
-                "question": "（澄んだ青空と日差し）<br><br>晴れた日に強い日差しが降り注ぐ中、家庭や学校でできる「再エネ・省エネ」の行動として適切なのはどれでしょう？",
-                "choiceA": "A．再生可能エネルギー由来の電気メニューを選んだり、太陽光発電を活用したりする",
-                "choiceB": "B．昼間も不要な照明や家電をつけっぱなしにする",
-                "choiceC": "C．省エネ性能を確認せず、古い機器をそのまま使い続ける",
+                "quizId": "quiz_out25",
+                "quizGroup": "group_aircon",
+                "question": "（195付近）<br><br>エアコンを使うとき、扇風機やサーキュレーターを併用するとどうなるでしょう？",
+                "choiceA": "A．室内の空気循環が良くなり、設定温度を無理のない範囲に保ちやすくなって省エネにつながる",
+                "choiceB": "B．冷暖房効率が落ちて電気代が高くなる",
+                "choiceC": "C．CO2排出量が大きく増える",
                 "correctAnswer": "A",
-                "explanation": "デコ活では「再エネ電気への切り替え・太陽光発電の活用」や「省エネ製品への買い替え・使い方工夫」が呼びかけられています。"
+                "explanation": "冷気や暖気を部屋全体に行き渡らせることで、体感温度を快適に保ちつつ消費電力を抑えられます。"
             }
         }
     ],
     "out197": [
         {
-            "id": "hs_out20", "pitch": -6, "yaw": 45, "cssClass": "bulb-hotspot",
+            "id": "hs_out26", "pitch": 3, "yaw": -115, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out20",
-                "quizGroup": "group_eco_product",
-                "question": "（右手の建物と舗装された道）<br><br>買い物や備品を選ぶとき、脱炭素につながる製品を選ぶ「デコ活」の行動はどれでしょう？",
-                "choiceA": "A．使い捨てのプラスチック製品を毎回新しく購入する",
-                "choiceB": "B．マイバッグ・マイボトルを持ち歩き、長く使える製品や環境ラベル付きの製品を選ぶ",
-                "choiceC": "C．包装が過剰な商品を深く考えずに選ぶ",
-                "correctAnswer": "B",
-                "explanation": "デコ活アクション「マイバッグ・マイボトルの利用」「環境にやさしい製品の選択」により、プラスチックごみ削減と製造・廃棄時のCO2削減につながります。"
-            }
-        },
-        {
-            "id": "hs_out21", "pitch": -14, "yaw": 30, "cssClass": "bulb-hotspot",
-            "clickHandlerFunc": showQuiz,
-            "clickHandlerArgs": {
-                "quizId": "quiz_out21",
-                "quizGroup": "group_car",
-                "question": "（舗装された構内道路）<br><br>構内や周辺道路で車に乗る際、私たちが実践すべき脱炭素の運転行動はどれでしょう？",
-                "choiceA": "A．急加速・急ブレーキを控え、ふんわりアクセルとアイドリングストップを心がける",
-                "choiceB": "B．エンジンをかけたまま長時間停車する",
-                "choiceC": "C．不要な荷物を載せたまま走る",
+                "quizId": "quiz_out26",
+                "quizGroup": "group_food_loss",
+                "question": "（197付近）<br><br>冷蔵庫の食材を無駄にしないための工夫として適切なものはどれでしょう？",
+                "choiceA": "A．買い物前に冷蔵庫の中身を確認し、使い切れる量を買う",
+                "choiceB": "B．賞味期限を気にせず大量に買い込む",
+                "choiceC": "C．奥に入れた食材を放置して傷ませる",
                 "correctAnswer": "A",
-                "explanation": "エコドライブの実践は、燃料消費量とCO2排出量を減らす手軽で効果的な行動です。"
+                "explanation": "買い物前の在庫確認と計画的な購入は、食品ロスとCO2削減に直結します。"
             }
         }
     ],
     "out199": [
         {
-            "id": "hs_out22", "pitch": 4, "yaw": 40, "cssClass": "bulb-hotspot",
+            "id": "hs_out27", "pitch": 6, "yaw": -120, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out22",
-                "quizGroup": "group_building",
-                "question": "（右側の大きな建物とガラス窓）<br><br>建物の中で過ごすとき、冷暖房や照明のエネルギーをムダにしない行動はどれでしょう？",
-                "choiceA": "A．季節に合った服装（クールビズ・ウォームビズ）を工夫し、無理のない室温設定で空調を使う",
-                "choiceB": "B．冷房中に窓を開けたままにする",
-                "choiceC": "C．誰もいない部屋の照明を点けたままにする",
+                "quizId": "quiz_out27",
+                "quizGroup": "group_renewable",
+                "question": "（199付近）<br><br>自然の力を利用して発電するエネルギーとして、正しい組み合わせはどれでしょう？",
+                "choiceA": "A．太陽光発電・風力発電・水力発電",
+                "choiceB": "B．石炭火力・石油火力・天然ガス火力",
+                "choiceC": "C．使い捨て乾電池のみ",
                 "correctAnswer": "A",
-                "explanation": "デコ活の「快適な室温管理（冷房目安28℃・暖房目安20℃など）や服装の工夫」は、快適さを保ちながらエネルギー消費を抑える基本のアクションです。"
+                "explanation": "太陽光・風力・水力・地熱・バイオマスなどは再生可能エネルギーとして脱炭素に貢献します。"
             }
         }
     ],
     "out201": [
         {
-            "id": "hs_out23", "pitch": 5, "yaw": -35, "cssClass": "bulb-hotspot",
+            "id": "hs_out28", "pitch": 2, "yaw": -110, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out23",
-                "quizGroup": "group_corridor_eco",
-                "question": "（左手の屋根付き通路と建物）<br><br>屋根付き通路や渡り廊下を通行する際、私たちが意識したい脱炭素の工夫はどれでしょう？",
-                "choiceA": "A．明るい時間帯は通路の照明を消す工夫をし、必要な場所だけ明かりを使う",
-                "choiceB": "B．昼間もすべての照明を常に点けっぱなしにする",
-                "choiceC": "C．通路の設備を壊したり汚したりする",
-                "correctAnswer": "A",
-                "explanation": "自然光が入る場所や使われていないエリアの照明を適切にコントロールすることで、ムダな電力消費とCO2排出を減らせます。"
-            }
-        },
-        {
-            "id": "hs_out24", "pitch": -12, "yaw": -10, "cssClass": "bulb-hotspot",
-            "clickHandlerFunc": showQuiz,
-            "clickHandlerArgs": {
-                "quizId": "quiz_out24",
+                "quizId": "quiz_out28",
                 "quizGroup": "group_3r_action",
-                "question": "（ブロック舗装の広場）<br><br>飲み物や軽食をとったあとのゴミ処理において、脱炭素につながる行動はどれでしょう？",
-                "choiceA": "A．分別せずに可燃ごみやポイ捨てとして出す",
-                "choiceB": "B．リユース容器を使い、出たごみは地域のルールに従って正しく分別・リサイクルする",
-                "choiceC": "C．ペットボトルや缶をすすがずにそのまま混ぜて捨てる",
-                "correctAnswer": "B",
-                "explanation": "ごみの減量（リデュース・リユース）と正しい分別・リサイクルは、焼却時のCO2削減や資源循環につながる重要な行動です。"
+                "question": "（201付近）<br><br>まだ使えるものを捨てずに譲ったり修理したりして使い続ける行動は何にあたるでしょう？",
+                "choiceA": "A．リユース・長く使う工夫（3R・デコ活アクション）",
+                "choiceB": "B．資源の浪費",
+                "choiceC": "C．不法投棄",
+                "correctAnswer": "A",
+                "explanation": "モノを大切に長く使うことは、新しい製品を作る際や廃棄する際のCO2削減につながります。"
             }
         }
     ],
     "out202": [
         {
-            "id": "hs_out25", "pitch": 8, "yaw": 0, "cssClass": "bulb-hotspot",
+            "id": "hs_out29", "pitch": 4, "yaw": -90, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out25",
-                "quizGroup": "group_corridor_eco",
-                "question": "（アーチ状の屋根付き通路）<br><br>大きな屋根に覆われた通路スペースで、脱炭素につながる建築・設備の活用法はどれでしょう？",
-                "choiceA": "A．広い屋根面を活かして太陽光発電を設置したり、日差しや雨風を遮る工夫で快適な動線をつくったりする",
-                "choiceB": "B．屋根スペースをまったく活用せず、空調エネルギーを大量に使う",
-                "choiceC": "C．昼夜問わず不要な照明を点灯し続ける",
+                "quizId": "quiz_out29",
+                "quizGroup": "group_decarbon_meaning",
+                "question": "（202付近・ルート終点）<br><br>脱炭素社会に向けて、私たちが今日から続けられる最も大切なことは何でしょう？",
+                "choiceA": "A．無理のないエコアクションを楽しく継続し、周囲にも広げていくこと",
+                "choiceB": "B．一度だけ試してあとは何もしないこと",
+                "choiceC": "C．環境問題を他人事として放置すること",
                 "correctAnswer": "A",
-                "explanation": "屋根空間の活用や自然環境の工夫を取り入れることで、エネルギー効率を高めながら脱炭素につながる空間づくりができます。"
+                "explanation": "日々の小さな選択をコツコツ続けることが、持続可能な脱炭素社会につながります。"
             }
         }
     ],
 
-    // --- 屋外クイズ（203〜213） ---
+    // --- 屋外クイズ（203〜231） ---
     "out203": [
         {
-            "id": "hs_out26", "pitch": 4, "yaw": 35, "cssClass": "bulb-hotspot",
+            "id": "hs_out30", "pitch": 6, "yaw": -15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out26",
+                "quizId": "quiz_out30",
                 "quizGroup": "group_building",
-                "question": "（瓦屋根の細長い建物）<br><br>細長い建物や屋根のある施設で、冷暖房のエネルギー消費を抑えるために有効な工夫はどれでしょう？",
-                "choiceA": "A．断熱や日射調整を工夫し、室内が過度に暑く・寒くなりすぎないようにする",
-                "choiceB": "B．冷暖房を使っている最中に窓や出入口を開けっぱなしにする",
-                "choiceC": "C．建物内の使われていない部屋も常に強く冷暖房する",
+                "question": "（建物の壁面と屋根のライン・203付近）<br><br>建物の屋根や壁面・窓などの断熱性能を高めると、どのような脱炭素効果があるでしょう？",
+                "choiceA": "A．冷暖房でつくった室内の快適さを保ちやすくなり、空調エネルギーとCO2排出を減らせる",
+                "choiceB": "B．外気の影響を強く受けて冷暖房の効率が下がる",
+                "choiceC": "C．CO2排出量は必ず増える",
                 "correctAnswer": "A",
-                "explanation": "デコ活の省エネ建築・室温管理の考え方では、熱の出入りを抑えつつ必要な範囲で空調を使うことで、CO2排出量を減らせます。"
+                "explanation": "断熱性能を高めることは、冷暖房のエネルギー消費を抑え、快適で脱炭素な暮らしを実現する基本です。"
             }
         }
     ],
     "out205": [
         {
-            "id": "hs_out27", "pitch": 6, "yaw": -65, "cssClass": "bulb-hotspot",
+            "id": "hs_out31", "pitch": 4, "yaw": 10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out27",
-                "quizGroup": "group_greenery",
-                "question": "（草地の斜面と分かれ道）<br><br>道路わきの草地や緑の斜面を守るために、私たちが日常でできる行動はどれでしょう？",
-                "choiceA": "A．草地にゴミや空き缶を捨てず、植物の生育環境を保つ",
-                "choiceB": "B．草地を踏み荒らしたり、不要な物を置いたりする",
-                "choiceC": "C．枯れ草や落ち葉を勝手に燃やす",
+                "quizId": "quiz_out31",
+                "quizGroup": "group_building",
+                "question": "（左右が建物に挟まれた通路・205付近）<br><br>建物に囲まれた通路や室内で、日中の照明や空調を使う際の省エネの工夫として適切なのはどれでしょう？",
+                "choiceA": "A．自然光や通風を活かしつつ、使わない場所の照明や空調はこまめに切る",
+                "choiceB": "B．誰もいない部屋や通路でも照明や空調をつけっぱなしにする",
+                "choiceC": "C．冷房中に窓を大きく開け放す",
                 "correctAnswer": "A",
-                "explanation": "緑地や草地をきれいに保ち、植物が育つ環境を守ることは、CO2吸収や周囲の環境保全につながります。"
+                "explanation": "「こまめな消灯」や「使わない部屋の冷暖房オフ」は、建物全体の電力消費とCO2削減につながります。"
             }
         }
     ],
     "out207": [
         {
-            "id": "hs_out28", "pitch": -8, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs_out32", "pitch": 12, "yaw": 35, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out28",
-                "quizGroup": "group_car",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の構内道路】朝の通学時間帯に構内や周辺道路で車に乗る際、脱炭素につながる行動はどれでしょう？",
-                        "choiceA": "A．ふんわりアクセルでやさしく発進し、停車時はアイドリングストップを心がける",
-                        "choiceB": "B．急発進や急ブレーキを繰り返し、エンジンをかけたまま待つ",
-                        "choiceC": "C．タイヤの空気圧不足を放置して走る",
-                        "correctAnswer": "A",
-                        "explanation": "朝のエコドライブ（やさしい発進・アイドリングストップ）は、燃料消費とCO2排出を抑える基本の行動です。"
-                    },
-                    "day": {
-                        "question": "（分かれ道と構内道路）<br><br>分かれ道や構内道路を車で走行する際、CO2排出を減らす運転として適切なのはどれでしょう？",
-                        "choiceA": "A．車間距離にゆとりを持ち、加減速の少ないスムーズな運転をする",
-                        "choiceB": "B．不必要な急加速や急減速を繰り返す",
-                        "choiceC": "C．使わない荷物を載せたまま走り続ける",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活アクション「エコドライブの実践」に基づき、スムーズな運転と不要な荷物の削減で燃費とCO2排出を改善できます。"
-                    },
-                    "night": {
-                        "question": "【夜の構内道路】夜間に車で移動する際、安全と脱炭素の両立につながる行動はどれでしょう？",
-                        "choiceA": "A．前照灯で安全を確認しつつ、駐停車中のアイドリングを避け、穏やかな速度で走る",
-                        "choiceB": "B．夜間の待ち時間にエアコンをつけたままエンジンをかけ続ける",
-                        "choiceC": "C．急発進・急加速を頻繁に行う",
-                        "correctAnswer": "A",
-                        "explanation": "夜間のアイドリングを減らし、落ち着いた運転を心がけることで、無駄な燃料消費とCO2排出を抑えられます。"
-                    }
-                }
+                "quizId": "quiz_out32",
+                "quizGroup": "group_renewable",
+                "question": "（建物の屋上設備と空・207付近）<br><br>建物の屋上や屋根スペースを活用して太陽光発電設備を導入するメリットは何でしょう？",
+                "choiceA": "A．使う場所の近くで再生可能エネルギーを作れ、電力系統のCO2排出削減に貢献できる",
+                "choiceB": "B．屋上を使うと建物のCO2排出が必ず増える",
+                "choiceC": "C．発電した電気はまったく使えない",
+                "correctAnswer": "A",
+                "explanation": "屋根や屋上などの未利用スペースを活用した太陽光発電は、分散型エネルギーとして脱炭素に役立ちます。"
             }
         }
     ],
     "out209": [
         {
-            "id": "hs_out29", "pitch": 5, "yaw": 25, "cssClass": "bulb-hotspot",
+            "id": "hs_out33", "pitch": 5, "yaw": -20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out29",
-                "quizGroup": "group_led",
-                "question": "（道路沿いの街灯ポール）<br><br>道路や歩道に設置された照明を活用する際、脱炭素につながる工夫として適切なのはどれでしょう？",
-                "choiceA": "A．高効率なLED照明へ切り替え、必要な時間帯や明るさに合わせて無駄な点灯を減らす",
-                "choiceB": "B．昼間も明るさに関係なく照明をつけっぱなしにする",
-                "choiceC": "C．省エネ性能を意識せず、古い設備をそのまま使い続ける",
+                "quizId": "quiz_out33",
+                "quizGroup": "group_car",
+                "question": "（構内の車道・209付近）<br><br>構内や道路を車で走るとき、無駄な燃料消費やCO2排出を減らす運転の工夫はどれでしょう？",
+                "choiceA": "A．車間距離にゆとりを持ち、加速・減速の少ない一定速度での走行を心がける",
+                "choiceB": "B．急発進や急ブレーキを頻繁に繰り返す",
+                "choiceC": "C．不要な荷物を載せたまま走る",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「高効率な照明（LED）への交換」や適切な点灯管理により、消費電力とCO2排出を効率よく削減できます。"
+                "explanation": "一定速度でのスムーズな走行は、エコドライブの重要なポイントでありCO2削減につながります。"
             }
         }
     ],
     "out211": [
         {
-            "id": "hs_out30", "pitch": -8, "yaw": 20, "cssClass": "bulb-hotspot",
+            "id": "hs_out34", "pitch": 8, "yaw": 15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out30",
-                "quizGroup": "group_walk_bike",
-                "question": "（車止め・ポールの並ぶエリア）<br><br>車両の進入や駐車が整理されたエリアやキャンパス内を移動するとき、おすすめのデコ活行動はどれでしょう？",
-                "choiceA": "A．近い距離なら徒歩や自転車を選び、CO2削減と健康づくりにつなげる",
-                "choiceB": "B．すぐ近くでも車に乗り、短距離の移動を繰り返す",
-                "choiceC": "C．ルールを守らずに通行を妨げる",
+                "quizId": "quiz_out34",
+                "quizGroup": "group_transport",
+                "question": "（建物の並びと通路・211付近）<br><br>建物が立ち並ぶエリアを移動するとき、脱炭素につながる移動方法として適切なのはどれでしょう？",
+                "choiceA": "A．徒歩や自転車、公共交通機関を積極的に利用する",
+                "choiceB": "B．すぐ近くの建物へ行くときも毎回自動車を使う",
+                "choiceC": "C．通路や出入口付近で車をアイドリングさせたまま止める",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」に基づき、身近な移動を徒歩や自転車にすることでCO2を減らせます。"
+                "explanation": "デコ活の「移動は徒歩・自転車・公共交通で」を実践することで、身近な移動のCO2を減らせます。"
             }
         }
     ],
     "out213": [
         {
-            "id": "hs_out31", "pitch": 4, "yaw": 30, "cssClass": "bulb-hotspot",
+            "id": "hs_out35", "pitch": 6, "yaw": -30, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out31",
-                "quizGroup": "group_sun_power",
-                "question": "（青空と日差し・木々のある風景）<br><br>日差しや自然エネルギーを活かした脱炭素の取り組みとして、適切なのはどれでしょう？",
-                "choiceA": "A．太陽光発電の導入や再生可能エネルギー由来の電力選択など、クリーンなエネルギーを活用する",
-                "choiceB": "B．昼間も不要な照明や機器を点けっぱなしにする",
-                "choiceC": "C．エネルギーの使い道や省エネを意識せず過ごす",
-                "correctAnswer": "A",
-                "explanation": "デコ活では「再エネ電気への切り替え・太陽光発電の活用」など、CO2排出の少ないエネルギーを選ぶ行動が推奨されています。"
-            }
-        },
-        {
-            "id": "hs_out32", "pitch": -10, "yaw": -15, "cssClass": "bulb-hotspot",
-            "clickHandlerFunc": showQuiz,
-            "clickHandlerArgs": {
-                "quizId": "quiz_out32",
+                "quizId": "quiz_out35",
                 "quizGroup": "group_3r_action",
-                "question": "（屋外の移動・休憩時）<br><br>屋外で飲み物や買い物を楽しんだあと、ごみと脱炭素に関して心がけたい行動はどれでしょう？",
-                "choiceA": "A．マイボトルやマイバッグを活用し、出たごみは分別ルールに従って正しく処理する",
-                "choiceB": "B．屋外にそのまま置き去りにする",
-                "choiceC": "C．分別せずにすべて同じ袋へ混ぜて捨てる",
+                "question": "（分かれ道の手前・213付近）<br><br>外出先で飲み物や買い物をする際、ごみ削減と脱炭素につながる行動はどれでしょう？",
+                "choiceA": "A．マイボトルやマイバッグを活用し、使い捨て容器やごみを減らす",
+                "choiceB": "B．使い捨て容器を毎回受け取ってポイ捨てする",
+                "choiceC": "C．ごみの分別ルールを守らずに捨てる",
                 "correctAnswer": "A",
-                "explanation": "リユースの活用と正しい分別・リサイクルは、ごみ削減とCO2排出抑制につながる大切な行動です。"
+                "explanation": "マイボトル・マイバッグの持参とごみの適正分別は、ごみ焼却時のCO2削減につながります。"
             }
         }
     ],
-
-    // --- 屋外クイズ（215〜231） ---
     "out215": [
         {
-            "id": "hs_out33", "pitch": 8, "yaw": 10, "cssClass": "bulb-hotspot",
+            "id": "hs_out36", "pitch": 7, "yaw": 20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out33",
-                "quizGroup": "group_greenery",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の落ち葉と樹木】朝の冷え込みや自然の中で落ち葉・枝葉が見られるとき、環境保全につながる行動はどれでしょう？",
-                        "choiceA": "A．落ち葉や剪定枝を勝手に焼却せず、適切な管理や緑地保全につなげる",
-                        "choiceB": "B．落ち葉や草木を踏み荒らして緑地を傷める",
-                        "choiceC": "C．ゴミを落ち葉の中に隠して捨てる",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活では自然共生やCO2吸収源・土壌環境の保全が重視されており、植物や緑地を守ることが脱炭素につながります。"
-                    },
-                    "day": {
-                        "question": "（枝葉が色づき始めた木々と落ち葉）<br><br>落葉樹の枝葉や落ち葉が見られる自然環境の中で、脱炭素や環境保全につながる行動はどれでしょう？",
-                        "choiceA": "A．落ち葉や剪定枝をその場で勝手に焼却せず、適切な管理や堆肥化・緑地保全につなげる",
-                        "choiceB": "B．落ち葉や草木を踏み荒らして緑地を傷める",
-                        "choiceC": "C．ゴミを落ち葉の中に隠して捨てる",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活では自然共生やCO2吸収源・土壌環境の保全が大切にされており、緑地や植物を適切に守ることが環境負荷の低減につながります。"
-                    },
-                    "night": {
-                        "question": "【夜の樹木と散策】夜間に樹木や緑地周辺を通行する際、環境や安全に配慮した行動はどれでしょう？",
-                        "choiceA": "A．植栽や落ち葉を傷つけず、ゴミを捨てずに持ち帰る",
-                        "choiceB": "B．空き缶やゴミを茂みに捨てていく",
-                        "choiceC": "C．枝を折ったり草木を踏み荒らしたりする",
-                        "correctAnswer": "A",
-                        "explanation": "夜間でも緑地や周囲の環境を汚さず守ることが、自然環境の維持と脱炭素につながります。"
-                    }
-                }
+                "quizId": "quiz_out36",
+                "quizGroup": "group_car",
+                "question": "（交差・分岐する道路・215付近）<br><br>道路の合流や交差点・分岐付近で車で減速するとき、CO2削減につながる運転はどれでしょう？",
+                "choiceA": "A．早めにアクセルを離し、エンジンブレーキを活用して穏やかに減速する",
+                "choiceB": "B．直前まで加速してから急ブレーキをかける",
+                "choiceC": "C．不要な停車中にエンジンをかけ続ける",
+                "correctAnswer": "A",
+                "explanation": "早めのアクセルオフは燃料消費を抑え、CO2削減と安全運転の両立につながります。"
             }
         }
     ],
     "out217": [
         {
-            "id": "hs_out34", "pitch": -2, "yaw": -20, "cssClass": "bulb-hotspot",
+            "id": "hs_out37", "pitch": 10, "yaw": -15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out34",
-                "quizGroup": "group_walk_bike",
-                "question": "（落ち葉のある舗装路と分かれ道）<br><br>キャンパス内の舗装路や分かれ道を移動するとき、デコ活でおすすめされている移動手段はどれでしょう？",
-                "choiceA": "A．近い距離なら徒歩や自転車を選び、CO2排出を減らしながら健康にもつなげる",
-                "choiceB": "B．すぐ近くの目的地でも毎回自家用車で移動する",
-                "choiceC": "C．不要な移動を車で何度も繰り返す",
+                "quizId": "quiz_out37",
+                "quizGroup": "group_forest",
+                "question": "（緑の木々・植栽と道路・217付近）<br><br>道路沿いや敷地の木々・緑地を大切にすることには、どのような脱炭素・環境効果があるでしょう？",
+                "choiceA": "A．CO2の吸収や木陰による暑さ緩和（ヒートアイランド対策）に役立つ",
+                "choiceB": "B．緑地があるとCO2排出量が必ず急増する",
+                "choiceC": "C．夏の暑さが必ず強くなる",
                 "correctAnswer": "A",
-                "explanation": "デコ活アクション「移動は徒歩・自転車・公共交通で」により、近距離の移動を徒歩や自転車にすることでCO2削減と健康増進を両立できます。"
+                "explanation": "緑地や樹木の保全は、CO2吸収源の確保や周辺環境の快適さ向上につながります。"
             }
         }
     ],
     "out219": [
         {
-            "id": "hs_out35", "pitch": 10, "yaw": -15, "cssClass": "bulb-hotspot",
+            "id": "hs_out38", "pitch": 12, "yaw": 25, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out35",
-                "quizGroup": "group_greenery",
-                "question": "（紅葉・緑の茂みと二股の道）<br><br>緑豊かな木々や茂みがあるエリアで、CO2吸収や夏の暑さ対策に役立つ工夫はどれでしょう？",
-                "choiceA": "A．樹木や緑地を大切に保全し、日陰や植物の働きを活かして周囲の温度上昇を抑える",
-                "choiceB": "B．緑地をすべて切り開いてアスファルトで覆う",
-                "choiceC": "C．植栽エリアに空き缶やゴミを捨てる",
+                "quizId": "quiz_out38",
+                "quizGroup": "group_aircon",
+                "question": "（建物と空が開けた場所・219付近）<br><br>室内で快適に過ごしながら冷暖房や照明のエネルギーを抑える工夫として適切なのはどれでしょう？",
+                "choiceA": "A．服装（クールビズ・ウォームビズ）を工夫し、無理のない室温設定で空調を使う",
+                "choiceB": "B．冷房中に窓やドアを開け放しにする",
+                "choiceC": "C．誰もいない部屋の照明や空調をつけっぱなしにする",
                 "correctAnswer": "A",
-                "explanation": "緑地や樹木の保全は、大気中のCO2吸収やヒートアイランド現象の緩和につながる重要なデコ活アクションです。"
+                "explanation": "デコ活の「快適な室温管理や服装の工夫」により、快適さを保ちながら空調・照明のエネルギー消費を抑えられます。"
             }
         }
     ],
     "out221": [
         {
-            "id": "hs_out36", "pitch": 12, "yaw": 15, "cssClass": "bulb-hotspot",
+            "id": "hs_out38_2", "pitch": 6, "yaw": 10, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out36",
-                "quizGroup": "group_sun_power",
-                "question": "（晴天の空と日差し・木々）<br><br>日差しが明るく差し込む屋外環境において、エネルギーの脱炭素につながる取り組みはどれでしょう？",
-                "choiceA": "A．太陽光発電の導入や再生可能エネルギー由来の電気メニューの選択など、再エネを活用する",
-                "choiceB": "B．昼間も使っていない照明や機器をつけっぱなしにする",
-                "choiceC": "C．省エネや再エネを意識せずエネルギーを多く使う",
+                "quizId": "quiz_out38_2",
+                "quizGroup": "group_transport",
+                "question": "（構内道路・221付近）<br><br>キャンパス内や近隣の移動で、CO2排出を減らすために心がけたい行動はどれでしょう？",
+                "choiceA": "A．徒歩・自転車やバス・電車などの公共交通機関を活用する",
+                "choiceB": "B．近い場所でも毎回1人乗りの車で移動する",
+                "choiceC": "C．不要なアイドリングを続ける",
                 "correctAnswer": "A",
-                "explanation": "デコ活では「太陽光発電の導入・再エネ電力の利用」や「省エネ製品の活用」が呼びかけられており、CO2排出の少ないエネルギー利用につながります。"
+                "explanation": "徒歩・自転車・公共交通を選ぶことで、移動に伴うCO2排出量を減らせます。"
             }
         }
     ],
     "out223": [
         {
-            "id": "hs_out37", "pitch": 8, "yaw": 5, "cssClass": "bulb-hotspot",
+            "id": "hs_out38_3", "pitch": 7, "yaw": -15, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out37",
-                "quizGroup": "group_car",
-                "variants": {
-                    "morning": {
-                        "question": "【朝の分かれ道と走行】朝の通学・通勤時間帯に車で走行する際、CO2を減らす運転はどれでしょう？",
-                        "choiceA": "A．ふんわりアクセルでやさしく発進し、停車時はアイドリングストップを心がける",
-                        "choiceB": "B．急発進・急ブレーキを繰り返し、エンジンをかけたまま待つ",
-                        "choiceC": "C．タイヤの空気圧不足を確認せずに走る",
-                        "correctAnswer": "A",
-                        "explanation": "朝のエコドライブ（やさしい発進・アイドリングストップ）は、燃料消費とCO2排出を抑える効果的な行動です。"
-                    },
-                    "day": {
-                        "question": "（分かれ道と道路）<br><br>分かれ道や構内道路を車で走るとき、燃費とCO2排出を抑える「エコドライブ」はどれでしょう？",
-                        "choiceA": "A．車間距離にゆとりを持ち、加減速の少ないスムーズな運転をする",
-                        "choiceB": "B．不必要な急加速や急減速を繰り返す",
-                        "choiceC": "C．不要な荷物を常に積んだまま走る",
-                        "correctAnswer": "A",
-                        "explanation": "デコ活アクション「エコドライブの実践」に基づき、スムーズな運転と不要な荷物の削減でCO2排出を減らせます。"
-                    },
-                    "night": {
-                        "question": "【夜の分かれ道と走行】夜間に車で移動する際、安全と脱炭素の両立につながる行動はどれでしょう？",
-                        "choiceA": "A．前照灯で安全を確認しつつ、駐停車中のアイドリングを避け、穏やかな速度で走る",
-                        "choiceB": "B．夜間の待ち時間にエアコンをつけたままエンジンをかけ続ける",
-                        "choiceC": "C．急発進・急加速を頻繁に行う",
-                        "correctAnswer": "A",
-                        "explanation": "夜間のアイドリングを減らし、落ち着いた運転を心がけることで、無駄な燃料消費とCO2排出を抑えられます。"
-                    }
-                }
+                "quizId": "quiz_out38_3",
+                "quizGroup": "group_food_loss",
+                "question": "（構内通路・223付近）<br><br>食事や買い物で食品ロスを減らすためにできる行動はどれでしょう？",
+                "choiceA": "A．必要な分だけ買い・注文し、食べ残しや期限切れ廃棄を減らす",
+                "choiceB": "B．食べきれない量を買ってそのまま捨てる",
+                "choiceC": "C．消費期限や賞味期限をまったく確認しない",
+                "correctAnswer": "A",
+                "explanation": "食品ロスを減らすことで、生産・輸送・廃棄にかかるCO2排出を抑えられます。"
             }
         }
     ],
     "out225": [
         {
-            "id": "hs_out38", "pitch": 10, "yaw": 20, "cssClass": "bulb-hotspot",
+            "id": "hs_out38_4", "pitch": 5, "yaw": 20, "cssClass": "bulb-hotspot",
             "clickHandlerFunc": showQuiz,
             "clickHandlerArgs": {
-                "quizId": "quiz_out38",
-                "quizGroup": "group_building",
-                "question": "（右手の曲線を描く建物）<br><br>建物の中で過ごすとき、冷暖房や照明のエネルギーを節約するデコ活の行動はどれでしょう？",
-                "choiceA": "A．季節に合った服装（クールビズ・ウォームビズ）を工夫し、無理のない室温設定で空調を使う",
-                "choiceB": "B．冷房中に窓やドアを開け放しにする",
-                "choiceC": "C．誰もいない部屋の照明や空調をつけっぱなしにする",
+                "quizId": "quiz_out38_4",
+                "quizGroup": "group_renewable",
+                "question": "（構内通路・225付近）<br><br>再生可能エネルギーの活用が脱炭素社会づくりに役立つ理由として適切なのはどれでしょう？",
+                "choiceA": "A．発電時のCO2排出を抑えられ、持続可能なエネルギー供給につながるから",
+                "choiceB": "B．化石燃料よりもCO2を多く排出するから",
+                "choiceC": "C．資源がすぐに枯渇するから",
                 "correctAnswer": "A",
-                "explanation": "デコ活の「快適な室温管理や服装の工夫」により、快適さを保ちながら空調・照明のエネルギー消費を抑えられます。"
+                "explanation": "太陽光や風力などの再生可能エネルギーは、CO2排出削減の柱となるエネルギーです。"
             }
         }
     ],
@@ -1176,7 +1439,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（233〜251：デコ活アクション・データベース視点の10問） ---
+    // --- 屋外クイズ（233〜251） ---
     "out233": [
         {
             "id": "hs_out42", "pitch": 8, "yaw": 10, "cssClass": "bulb-hotspot",
@@ -1526,7 +1789,7 @@ const sceneQuizHotspots = {
                     "night": {
                         "question": "【夜の路面表示と通行】夜間に「学内」「進行」表示のある構内道路を通行する際、脱炭素と安全につながる行動はどれでしょう？",
                         "choiceA": "A．ライトで路面表示や周囲をしっかり確認し、穏やかな速度で走り、停車時はアイドリングを控える",
-                        "choiceB": "B．夜間の待ち時間にエンジンをかけっぱなしにする",
+                        "choiceB": "B．夜間の待ち時間にエアコンをつけたままエンジンをかけ続ける",
                         "choiceC": "C．急加速や急ハンドルで分岐を通過する",
                         "correctAnswer": "A",
                         "explanation": "夜間の安全確認とアイドリングストップを心がけることで、無駄な燃料消費とCO2排出を抑えられます。"
@@ -1552,7 +1815,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（267〜280：各画像の風景に合わせた三択問題） ---
+    // --- 屋外クイズ（267〜280） ---
     "out267": [
         {
             "id": "hs_out59", "pitch": 2, "yaw": 85, "cssClass": "bulb-hotspot",
@@ -2062,7 +2325,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（307〜319：各画像の風景に合わせた三択問題） ---
+    // --- 屋外クイズ（307〜319） ---
     "out307": [
         {
             "id": "hs_out83", "pitch": -2, "yaw": -25, "cssClass": "bulb-hotspot",
@@ -2216,7 +2479,7 @@ const sceneQuizHotspots = {
         }
     ],
 
-    // --- 屋外クイズ（320〜334：各画像の風景に合わせた三択問題） ---
+    // --- 屋外クイズ（320〜334） ---
     "out320": [
         {
             "id": "hs_out90", "pitch": 4, "yaw": 5, "cssClass": "bulb-hotspot",
@@ -2371,6 +2634,18 @@ const sceneQuizHotspots = {
     ]
 };
 
+const TOTAL_UNIQUE_QUIZZES = (() => {
+    const groups = new Set();
+    Object.values(sceneQuizHotspots).forEach(list => {
+        list.forEach(hs => {
+            if (hs.clickHandlerArgs && hs.clickHandlerArgs.quizGroup) {
+                groups.add(hs.clickHandlerArgs.quizGroup);
+            }
+        });
+    });
+    return groups.size;
+})();
+
 function startGame() {
     isGameStarted = true;
     score = 0;
@@ -2379,6 +2654,7 @@ function startGame() {
     document.getElementById('score-value').innerText = score;
     document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
     document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'none';
     document.getElementById('score-board').style.display = 'block';
     document.getElementById('time-controls').style.display = 'flex';
 
@@ -3159,7 +3435,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 281〜294（進むアイコン：中央から右に70度 = yaw: 70） ---
+        // --- 281〜294 ---
         "out281": {
             "title": "外 281",
             "type": "equirectangular",
@@ -3233,7 +3509,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 295〜305（295〜303の移動アイコンは左に10度移動、305は307へ80度・320へ-100度） ---
+        // --- 295〜305 ---
         "out295": {
             "title": "外 295",
             "type": "equirectangular",
@@ -3303,12 +3579,12 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0305.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": -10, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 307〜319（移動アイコンは左に30度移動、319と279を接続） ---
+        // --- 307〜319 ---
         "out307": {
             "title": "外 307",
             "type": "equirectangular",
@@ -3373,7 +3649,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 320〜334（移動アイコンを右に170度移動） ---
+        // --- 320〜334 ---
         "out320": {
             "title": "外 320",
             "type": "equirectangular",
