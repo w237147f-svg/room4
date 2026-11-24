@@ -512,7 +512,8 @@ const SPAWN_SCENES = [
     "out281", "out285", "out289", "out293", "out294",
     "out295", "out297", "out301", "out303", "out305",
     "out307", "out311", "out315", "out319",
-    "out320", "out324", "out330", "out334"
+    "out320", "out324", "out330", "out334",
+    "out335", "out337", "out339", "out341", "out343", "out344"
 ];
 
 function pickRandomTimeOfDay() {
@@ -2631,6 +2632,144 @@ const sceneQuizHotspots = {
                 "explanation": "歩行者優先のスムーズな運転と、徒歩・自転車・公共交通の活用は、安全性とCO2排出削減の両立につながります。"
             }
         }
+    ],
+
+    // --- 屋外クイズ（335〜344） ---
+    "out335": [
+        {
+            "id": "hs_out97", "pitch": 6, "yaw": -5, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out97",
+                "quizGroup": "group_tiered_steps_shrubs_335",
+                "question": "（段差の階段・レンガ歩道と植栽・落葉樹・335付近）<br><br>階段やレンガ歩道と低木植栽が並ぶエリアで、脱炭素につながる緑地管理・移動の工夫はどれでしょう？",
+                "choiceA": "A．植栽や低木を傷つけず大切に守りつつ、近い移動は徒歩や自転車を選んでCO2排出を減らす",
+                "choiceB": "B．植栽の中に空き缶やごみを捨てたり、枝を折ったりする",
+                "choiceC": "C．すぐ近くの移動でも毎回自家用車で走る",
+                "correctAnswer": "A",
+                "explanation": "植栽や緑地の保全と徒歩・自転車での移動を組み合わせることで、身近なCO2削減と環境保全につながります。"
+            }
+        }
+    ],
+    "out337": [
+        {
+            "id": "hs_out98", "pitch": 7, "yaw": -15, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out98",
+                "quizGroup": "group_deciduous_trees_courtyard_337",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の落葉樹と中庭】朝の光が差し込む落葉樹や低木植栽がある中庭・通路で、省エネと脱炭素につながる工夫はどれでしょう？",
+                        "choiceA": "A．朝の自然光を活かして照明を控え、使われていない部屋の空調や照明はこまめにオフにする",
+                        "choiceB": "B．朝日が差し込んでいても隣接する部屋の照明・空調を強くつけ続ける",
+                        "choiceC": "C．通路や植栽周辺にごみを放置する",
+                        "correctAnswer": "A",
+                        "explanation": "自然光の活用とこまめな消灯・空調管理により、朝の時間帯の電力消費とCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（枝を広げた落葉樹と低木・歩道・337付近）<br><br>落葉樹と植栽に囲まれた歩道・中庭空間において、季節に応じた脱炭素の工夫はどれでしょう？",
+                        "choiceA": "A．夏は木陰や日射遮蔽を活かし、冬は日差しを取り入れながら建物内の空調温度を適切に保つ",
+                        "choiceB": "B．季節や日差しに関係なく、建物内の冷暖房を常に強く稼働させる",
+                        "choiceC": "C．植栽や落ち葉を適切に管理せずごみを混ぜて捨てる",
+                        "correctAnswer": "A",
+                        "explanation": "落葉樹の季節ごとの日射調整と適切な空調設定を組み合わせることで、冷暖房エネルギーを削減できます。"
+                    },
+                    "night": {
+                        "question": "【夜の落葉樹と中庭】夜間に落葉樹や植栽のそばを通って帰宅する際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．教室や部屋の消灯・機器オフを確認し、ごみは持ち帰って安全に帰宅する",
+                        "choiceB": "B．無人部屋の照明や空調をつけたまま帰宅する",
+                        "choiceC": "C．植栽や歩道にごみを残していく",
+                        "correctAnswer": "A",
+                        "explanation": "帰宅時の消し忘れ確認とごみの持ち帰りを徹底することで、無駄な電力消費と環境負荷を防げます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out339": [
+        {
+            "id": "hs_out99", "pitch": 8, "yaw": 10, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out99",
+                "quizGroup": "group_red_foliage_branch_339",
+                "question": "（紅葉した木々と広場の通路・339付近）<br><br>色づいた木々や植栽が見られるキャンパス通路で、CO2吸収源や資源循環を守る行動はどれでしょう？",
+                "choiceA": "A．樹木や植栽を大切に保全し、剪定枝や落ち葉は適切に処理して緑地環境を維持する",
+                "choiceB": "B．枝を折ったり、落ち葉の中にプラスチックごみを捨てたりする",
+                "choiceC": "C．樹木や草地を踏み荒らして荒廃させる",
+                "correctAnswer": "A",
+                "explanation": "樹木や緑地を健全に保つことは、CO2の吸収・固定や地域の緑豊かな環境維持につながるデコ活アクションです。"
+            }
+        }
+    ],
+    "out341": [
+        {
+            "id": "hs_out100", "pitch": 4, "yaw": 15, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out100",
+                "quizGroup": "group_stone_retaining_wall_341",
+                "question": "（石積みの花壇・低木と歩道・341付近）<br><br>石積みの花壇や低木植栽が整備された歩道周辺で、脱炭素と環境保全につながる行動はどれでしょう？",
+                "choiceA": "A．マイボトルやマイバッグを活用してごみを減らし、花壇や歩道を清潔に保って徒歩・自転車移動を楽しむ",
+                "choiceB": "B．使い捨て容器を毎回買って花壇や歩道に捨てる",
+                "choiceC": "C．近い距離でも毎回自家用車で移動する",
+                "correctAnswer": "A",
+                "explanation": "使い捨てごみの削減と徒歩・自転車での移動は、日常で続けやすい代表的なデコ活アクションです。"
+            }
+        }
+    ],
+    "out343": [
+        {
+            "id": "hs_out101", "pitch": 7, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out101",
+                "quizGroup": "group_covered_walkway_guide_343",
+                "question": "（屋根付きの連絡通路と案内サイン・343付近）<br><br>屋根付きの連絡通路や案内サインが設置されたキャンパスエリアで、省エネ・脱炭素につながる行動はどれでしょう？",
+                "choiceA": "A．屋根付き通路を活かして雨や日差しを避けながら徒歩移動を増やし、建物内の不要な照明や空調は切る",
+                "choiceB": "B．屋根付き通路があるのに隣の建物へ行くときも毎回車を使う",
+                "choiceC": "C．使われていない部屋の照明や空調をつけっぱなしにする",
+                "correctAnswer": "A",
+                "explanation": "歩きやすい屋根付き通路の活用と使わない部屋の照明・空調オフにより、移動と建物双方のCO2を減らせます。"
+            }
+        }
+    ],
+    "out344": [
+        {
+            "id": "hs_out102", "pitch": 8, "yaw": -30, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out102",
+                "quizGroup": "group_arch_corridor_canopy_344",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の連絡通路と校舎】朝の光が差し込む連絡通路や校舎エリアで、一日の省エネ・脱炭素につなげる行動はどれでしょう？",
+                        "choiceA": "A．自然光を活かし、使わない教室や部屋の照明・空調はこまめに切って過ごす",
+                        "choiceB": "B．朝から使わない部屋の照明や空調をすべて稼働させ続ける",
+                        "choiceC": "C．使い捨て容器やごみを通路に放置する",
+                        "correctAnswer": "A",
+                        "explanation": "自然光の活用とこまめなオフを習慣にすることで、朝からの電力消費とCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（アーチ状の校舎と屋根付き連絡通路・344付近）<br><br>屋根付きの連絡通路や建物が連なるエリアで、デコ活の視点から適切な行動はどれでしょう？",
+                        "choiceA": "A．徒歩・自転車・公共交通の活用やマイボトル持参、使わない照明・空調のオフなどできることから実践する",
+                        "choiceB": "B．省エネやごみ削減を意識せず、使い捨てや過剰な冷暖房を続ける",
+                        "choiceC": "C．分別せずにすべて同じごみ袋に出す",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活では「移動・住まい・モノの選び方」など身近な行動を少しずつ脱炭素型へ変えていくことが推奨されています。"
+                    },
+                    "night": {
+                        "question": "【夜の連絡通路と校舎】夜間に連絡通路を通って退出する際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．退出時に教室や部屋の照明・空調・機器のオフを確認し、安全に気をつけて帰宅する",
+                        "choiceB": "B．無人部屋の照明や空調をつけたまま帰宅する",
+                        "choiceC": "C．ごみを残したまま帰る",
+                        "correctAnswer": "A",
+                        "explanation": "退出時の消し忘れ確認を徹底することで、夜間の無駄な電力消費とCO2排出を防げます。"
+                    }
+                }
+            }
+        }
     ]
 };
 
@@ -3295,7 +3434,7 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → … → 280 → 281 → … → 294 → 295 → … → 305 → 320 → … → 334） ---
+        // --- 屋外続きルート（253 → … → 265 → 267 → … → 280 → 281 → … → 294 → 295 → … → 305 → 320 → … → 334 → 335 → 337 → 339 → 341 → 343 → 344） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
@@ -3709,15 +3848,79 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0334.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 0, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 335〜344（335へは中央0、337以降は左へ20度移動した-20に配置） ---
+        "out335": {
+            "title": "外 335",
+            "type": "equirectangular",
+            "panorama": "GS__0335.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 180, "type": "scene", "text": "334へ戻る", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "337へ進む", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out337": {
+            "title": "外 337",
+            "type": "equirectangular",
+            "panorama": "GS__0337.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "335へ戻る", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "339へ進む", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out339": {
+            "title": "外 339",
+            "type": "equirectangular",
+            "panorama": "GS__0339.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "337へ戻る", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "341へ進む", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out341": {
+            "title": "外 341",
+            "type": "equirectangular",
+            "panorama": "GS__0341.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "339へ戻る", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "343へ進む", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out343": {
+            "title": "外 343",
+            "type": "equirectangular",
+            "panorama": "GS__0343.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "341へ戻る", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -20, "type": "scene", "text": "344へ進む", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out344": {
+            "title": "外 344",
+            "type": "equirectangular",
+            "panorama": "GS__0344.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": 160, "type": "scene", "text": "343へ戻る", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         }
     }
 });
 
+viewer.on('scenechange', function(sceneId) {
+    refreshSceneQuizHotspots(sceneId);
+});
+
 viewer.on('load', function() {
     refreshSceneQuizHotspots(viewer.getScene());
 });
+
+document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
+applyTimeOfDay('day');
+refreshSceneQuizHotspots('scene1');
 </script>
 
 </body>
