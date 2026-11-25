@@ -546,7 +546,8 @@ const SPAWN_SCENES = [
     "out320", "out324", "out330", "out334",
     "out335", "out337", "out339", "out341", "out343", "out344",
     "out345", "out348", "out350", "out352", "out355", "out357", "out359",
-    "out360", "out362", "out364", "out366", "out368"
+    "out360", "out362", "out364", "out366", "out368",
+    "out369", "out371", "out373", "out375", "out377", "out379"
 ];
 
 function pickRandomTimeOfDay() {
@@ -3131,6 +3132,164 @@ const sceneQuizHotspots = {
                 }
             }
         }
+    ],
+
+    // --- 新規追加：屋外クイズ（369〜379：画像に沿った問題＆類似問題グループ連動非表示） ---
+    "out369": [
+        {
+            "id": "hs_out117", "pitch": 7, "yaw": -25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out117",
+                "quizGroup": "group_arched_arcade_steps_369_373",
+                "variants": {
+                    "morning": {
+                        "question": "【朝のアーチ回廊と円弧状の階段・369付近】コンクリートアーチの屋根と円弧状のレンガ階段・緑の芝生が広がる朝のキャンパスで、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．エレベーターに頼りすぎず階段と歩行者回廊を歩いて移動し、屋根付き日陰空間も活かして建物の空調負荷を減らす",
+                        "choiceB": "B．1階分の段差でも毎回エレベーターを使い、無人部屋の空調も朝から全開にする",
+                        "choiceC": "C．アーチ回廊や植え込みに飲み終えたペットボトルを置き去りにする",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活で推奨される「階段利用・歩く暮らし」と「日射遮蔽・パッシブ空間の活用」を組み合わせることで、電力消費とCO2排出を抑えられます。"
+                    },
+                    "day": {
+                        "question": "（コンクリートアーチの回廊・円弧状のレンガ階段・芝生広場・369付近）<br><br>大きなアーチ屋根が日差しを和らげ、階段と歩道で広場と校舎をつなぐこの空間において、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．日陰や自然の風を活かして屋外・半屋外の共有空間で過ごし、階移動には階段を積極的に使って電力消費を抑える",
+                        "choiceB": "B．各自が個別の部屋で冷房を強運転にし、1階分の移動でも常にエレベーターを使う",
+                        "choiceC": "C．植え込みや階段周辺にごみを捨てて緑地環境を傷める",
+                        "correctAnswer": "A",
+                        "explanation": "日射を遮るアーチ空間でのクールシェアや階段利用・徒歩移動は、建物の空調・昇降エネルギー削減につながる実践的なデコ活アクションです。"
+                    },
+                    "night": {
+                        "question": "【夜のアーチ回廊と階段・369付近】柱に設置された屋外照明が足元を照らす夜間のアーチ回廊で、省エネと安全を両立する工夫はどれでしょう？",
+                        "choiceA": "A．高効率なLED照明とセンサー・タイマー制御で必要な場所だけ照らし、足元に注意して階段・歩道を安全に通行する",
+                        "choiceB": "B．人が通らない深夜も全館・全通路の照明を最大出力で点灯し続ける",
+                        "choiceC": "C．消費電力の大きい古い白熱灯を使い続け、退出時の消灯も確認しない",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活アクション「高効率な照明（LED）への交換」や適切な点灯制御により、夜間の安全性を保ちながら無駄な電力とCO2排出を抑えられます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out371": [
+        {
+            "id": "hs_out118", "pitch": 6, "yaw": -65, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out118",
+                "quizGroup": "group_lawn_terraces_arcade_371_379",
+                "question": "（アーチ回廊の左手に広がる段状の芝生広場と落葉樹・371付近）<br><br>コンクリートアーチの回廊に沿って広い芝生広場と落葉樹が整備されたキャンパス環境で、脱炭素につながる緑地と過ごし方の工夫はどれでしょう？",
+                "choiceA": "A．芝生や樹木の緑地を大切に保ってCO2吸収と夏の暑さ緩和に活かし、マイボトル持参で徒歩移動を楽しむ",
+                "choiceB": "B．芝生広場を踏み荒らしたり、使い捨て飲料容器を毎回買って草地に放置したりする",
+                "choiceC": "C．緑地をすべて舗装して日陰や保水機能をなくす方が省エネになる",
+                "correctAnswer": "A",
+                "explanation": "緑地・樹木の保全によるCO2吸収源の維持やヒートアイランド緩和と、マイボトル利用・歩く暮らしを組み合わせることで脱炭素に貢献できます。"
+            }
+        }
+    ],
+    "out373": [
+        {
+            "id": "hs_out119", "pitch": 6, "yaw": -20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out119",
+                "quizGroup": "group_arched_arcade_steps_369_373",
+                "question": "（高窓付きの壁面とアーチ回廊・レンガ階段の連続空間・373付近）<br><br>回廊の壁面上部に設けられた高窓（ハイサイドライト）と連続するアーチ屋根には、どのような省エネ・脱炭素メリットがあるでしょう？",
+                "choiceA": "A．高窓から自然光や風の抜けを確保しつつ屋根で直射日光を和らげることで、照明と空調のエネルギー消費を抑えられる",
+                "choiceB": "B．昼間もすべての照明を最大照度で点け続け、空調を強運転にする必要がある",
+                "choiceC": "C．高窓やアーチ屋根を塞いで自然光と風通しを完全に遮断する方が省エネになる",
+                "correctAnswer": "A",
+                "explanation": "自然採光（昼光利用）と通風・日射遮蔽を組み合わせた建築の工夫（パッシブデザイン）は、建物の電力消費とCO2排出削減に役立ちます。"
+            }
+        }
+    ],
+    "out375": [
+        {
+            "id": "hs_out120", "pitch": 7, "yaw": 25, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out120",
+                "quizGroup": "group_curved_glass_arcade_375_377",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の大きなガラス面とアーチ回廊・375付近】朝の光が差し込む大きなガラス窓の部屋と回廊で、省エネにつながる行動はどれでしょう？",
+                        "choiceA": "A．大きなガラス面から入る朝の自然光を活かして照明を控え、在室人数や室温に合わせて空調を適切に設定する",
+                        "choiceB": "B．朝日が差し込んでいても室内外の照明と空調をすべて最大出力で点け続ける",
+                        "choiceC": "C．出入口のガラス扉を開け放したまま冷暖房を稼働させる",
+                        "correctAnswer": "A",
+                        "explanation": "自然採光とこまめな消灯・適温管理を実践することで、朝の立ち上がり時間帯の電力消費とCO2排出を大きく抑えられます。"
+                    },
+                    "day": {
+                        "question": "（曲線を描く大きなガラス窓の部屋とアーチ回廊・375付近）<br><br>大きなガラス面を備えた施設と屋根付き回廊の組み合わせにおいて、快適さと脱炭素を両立する工夫はどれでしょう？",
+                        "choiceA": "A．昼間の自然光で照明電力を抑えつつ、複層ガラス・断熱や日射調整で冷暖房の熱ロスを防ぐ",
+                        "choiceB": "B．断熱や日射対策を行わず、窓際でエアコンを常に強運転にし続ける",
+                        "choiceC": "C．無人部屋の照明や空調、PC電源を入れっぱなしにする",
+                        "correctAnswer": "A",
+                        "explanation": "デコ活の「断熱・省エネ建築物の活用」や自然光活用・こまめなオフにより、明るい空間とCO2削減を両立できます。"
+                    },
+                    "night": {
+                        "question": "【夜のガラス張り施設とアーチ回廊・375付近】夜間にガラス張りの施設や回廊から帰宅する際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．利用した部屋の消灯・空調・機器のオフを確認し、マイボトルを持ち帰って安全に帰宅する",
+                        "choiceB": "B．無人部屋の照明やエアコンをつけたまま翌朝まで放置する",
+                        "choiceC": "C．使い捨て容器やごみを回廊の隅に残していく",
+                        "correctAnswer": "A",
+                        "explanation": "退出時の消し忘れ防止とごみの持ち帰りを習慣にすることで、無駄な電力消費と環境負荷を防げます。"
+                    }
+                }
+            }
+        }
+    ],
+    "out377": [
+        {
+            "id": "hs_out121", "pitch": 6, "yaw": 20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out121",
+                "quizGroup": "group_curved_glass_arcade_375_377",
+                "question": "（建物入口のガラス扉・点字ブロック・アーチ回廊・377付近）<br><br>建物の出入口やガラス扉付近で、室内の冷暖房効率を保ちCO2排出を抑えるために大切な行動はどれでしょう？",
+                "choiceA": "A．出入りしたあとは扉をしっかり閉めて冷気・暖気の逃げを防ぎ、使わない部屋の照明や空調はこまめに切る",
+                "choiceB": "B．冷暖房が効いた部屋のガラス扉を開けっ放しにしておく",
+                "choiceC": "C．建物入口のすぐ前まで毎回自家用車で乗りつけてアイドリングする",
+                "correctAnswer": "A",
+                "explanation": "出入口の開閉管理による熱ロスの防止とこまめな消灯・空調オフは、建物全体のエネルギー消費を減らす重要な行動です。"
+            }
+        }
+    ],
+    "out379": [
+        {
+            "id": "hs_out122", "pitch": 7, "yaw": -20, "cssClass": "bulb-hotspot",
+            "clickHandlerFunc": showQuiz,
+            "clickHandlerArgs": {
+                "quizId": "quiz_out122",
+                "quizGroup": "group_lawn_terraces_arcade_371_379",
+                "variants": {
+                    "morning": {
+                        "question": "【朝の芝生広場と直線アーチ回廊・379付近】緑の芝生とガラス張り棟を望む長いアーチ回廊から一日を始めるとき、実践したいデコ活アクションはどれでしょう？",
+                        "choiceA": "A．徒歩・自転車・公共交通での通学、マイボトル・マイバッグの活用、使わない照明・空調のこまめなオフを心がける",
+                        "choiceB": "B．朝は忙しいので省エネやごみ分別は一切意識せず過ごす",
+                        "choiceC": "C．使い捨て飲料容器を毎回買ってすぐ捨てる",
+                        "correctAnswer": "A",
+                        "explanation": "移動・買い物・施設利用のすべてで少しずつ脱炭素な選択を積み重ねることが「デコ活」の基本です。"
+                    },
+                    "day": {
+                        "question": "（芝生広場・樹木とガラス張り棟を望む直線アーチ回廊・379付近）<br><br>長い歩行者回廊と緑豊かなキャンパス空間を巡りながら学んだ「デコ活」を、日常で活かす姿勢として最も適切なのはどれでしょう？",
+                        "choiceA": "A．無理なく楽しく続けられるエコアクションを自分の暮らしに合わせて選び、周囲とも共有して継続する",
+                        "choiceB": "B．特別な日だけ意識し、普段の生活や大学ではまったく実践しない",
+                        "choiceC": "C．個人の小さな行動では意味がないと考えて何もしない",
+                        "correctAnswer": "A",
+                        "explanation": "一人ひとりの継続的な行動変容と周囲への広がりこそが、脱炭素社会を実現する大きな原動力になります。"
+                    },
+                    "night": {
+                        "question": "【夜の芝生広場と直線アーチ回廊・379付近】一日の活動を終えてアーチ回廊から帰路につく際、脱炭素につながる行動はどれでしょう？",
+                        "choiceA": "A．教室や部屋の消灯・空調・機器のオフを確認し、公共交通や安全な徒歩・自転車で帰宅する",
+                        "choiceB": "B．無人部屋の照明やエアコンをつけたまま帰宅する",
+                        "choiceC": "C．迎えの車に長時間アイドリングさせて待機させる",
+                        "correctAnswer": "A",
+                        "explanation": "退出時の消し忘れ確認とエコな移動を習慣にすることで、毎日のCO2排出量を着実に減らせます。"
+                    }
+                }
+            }
+        }
     ]
 };
 
@@ -3348,7 +3507,8 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0155.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 250, "type": "scene", "text": "153へ戻る", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "157へ進む", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 60, "type": "scene", "text": "157へ進む", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "379へ戻る", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         },
         "out157": {
@@ -3565,7 +3725,8 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0202.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 60, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "368へ戻る", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "368へ戻る", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
@@ -3796,14 +3957,15 @@ viewer = pannellum.viewer('panorama', {
             ]
         },
 
-        // --- 屋外続きルート（253 → … → 265 → 267 → … → 359 → 294 ／ 345 → 360 → … → 368 → 202） ---
+        // --- 屋外ルート（253 → … → 265 → [267へ進む:-140] 267 → … → 280） ---
         "out253": {
             "title": "外 253",
             "type": "equirectangular",
             "panorama": "GS__0253.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "251へ戻る", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "255へ進む", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -110, "type": "scene", "text": "255へ進む", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" },
+                { "pitch": -5, "yaw": -30, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out255": {
@@ -3811,8 +3973,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0255.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "257へ進む", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "257へ進む", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out257": {
@@ -3821,7 +3983,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0257.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "255へ戻る", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "259へ進む", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "259へ進む", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out259": {
@@ -3830,7 +3992,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0259.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "257へ戻る", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "261へ進む", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "261へ進む", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out261": {
@@ -3839,7 +4001,7 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0261.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "259へ戻る", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "263へ進む", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "263へ進む", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out263": {
@@ -3848,7 +4010,8 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0263.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "261へ戻る", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "265へ進む", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "265へ進む", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out265": {
@@ -3857,18 +4020,18 @@ viewer = pannellum.viewer('panorama', {
             "panorama": "GS__0265.jpg",
             "hotSpots": [
                 { "pitch": -5, "yaw": 70, "type": "scene", "text": "263へ戻る", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "267へ進む", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "267へ進む", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 267〜280（269→280は右100度、280→271は右180度） ---
+        // --- 屋外ルート（267 → 269 → 271 → 273 → 275 → 277 → 279 → 280） ---
         "out267": {
             "title": "外 267",
             "type": "equirectangular",
             "panorama": "GS__0267.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "265へ戻る", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "269へ進む", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "265へ戻る", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "269へ進む", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out269": {
@@ -3876,8 +4039,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0269.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "267へ戻る", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 100, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "267へ戻る", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "271へ進む", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out271": {
@@ -3885,8 +4048,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0271.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "273へ進む", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "273へ進む", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out273": {
@@ -3894,8 +4057,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0273.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "271へ戻る", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "275へ進む", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "271へ戻る", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "275へ進む", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out275": {
@@ -3903,8 +4066,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0275.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "273へ戻る", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "277へ進む", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "273へ戻る", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "277へ進む", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out277": {
@@ -3912,8 +4075,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0277.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -140, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out279": {
@@ -3921,9 +4084,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0279.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 130, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out280": {
@@ -3931,20 +4093,19 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0280.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "271へ進む", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "279へ戻る", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 281〜294（進行アイコンは右90度） ---
+        // --- 屋外分岐ルート（263 → 281 → 283 → 285 → 287 → 289 → 291 → 293 → 294 → 295 → … → 305） ---
         "out281": {
             "title": "外 281",
             "type": "equirectangular",
             "panorama": "GS__0281.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "283へ進む", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "263へ戻る", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "283へ進む", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out283": {
@@ -3952,8 +4113,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0283.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "281へ戻る", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "285へ進む", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "281へ戻る", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "285へ進む", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out285": {
@@ -3961,8 +4122,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0285.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "283へ戻る", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "287へ進む", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "283へ戻る", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "287へ進む", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out287": {
@@ -3970,8 +4131,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0287.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "285へ戻る", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "289へ進む", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "285へ戻る", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "289へ進む", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out289": {
@@ -3979,8 +4140,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0289.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "287へ戻る", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "291へ進む", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "287へ戻る", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "291へ進む", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out291": {
@@ -3988,8 +4149,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0291.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "289へ戻る", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "293へ進む", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "289へ戻る", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "293へ進む", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out293": {
@@ -3997,8 +4158,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0293.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "291へ戻る", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "291へ戻る", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out294": {
@@ -4006,28 +4167,29 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0294.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "293へ戻る", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "295へ進む", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "293へ戻る", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "295へ進む", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "359へ戻る", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         },
 
-        // --- 295〜305（進行アイコンは右160度） ---
+        // --- 屋外延長ルート（294 → 295 → 296 → 297 → 299 → 301 → 302 → 303 → 305） ---
         "out295": {
             "title": "外 295",
             "type": "equirectangular",
             "panorama": "GS__0295.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out296": {
             "title": "外 296",
             "type": "equirectangular",
-            "panorama": "GS__0296.jpg",
+            "panorama": "GS__0296.JPG",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out297": {
@@ -4035,8 +4197,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0297.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out299": {
@@ -4044,8 +4206,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0299.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out301": {
@@ -4053,8 +4215,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0301.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out302": {
@@ -4062,8 +4224,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0302.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out303": {
@@ -4071,8 +4233,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0303.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out305": {
@@ -4080,20 +4242,19 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0305.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 307〜319（進行アイコンは右200度、319→279は左50度） ---
+        // --- 屋外外周ルート（305 → 307 → 309 → 311 → 313 → 315 → 317 → 319） ---
         "out307": {
             "title": "外 307",
             "type": "equirectangular",
             "panorama": "GS__0307.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out309": {
@@ -4101,8 +4262,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0309.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out311": {
@@ -4110,8 +4271,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0311.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out313": {
@@ -4119,8 +4280,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0313.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out315": {
@@ -4128,8 +4289,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0315.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out317": {
@@ -4137,8 +4298,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0317.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 200, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out319": {
@@ -4146,19 +4307,18 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0319.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
             ]
         },
 
-        // --- 320〜334（進行アイコンは右70度） ---
+        // --- 屋外周回ルート（280 → 320 → 322 → 324 → 326 → 330 → 332 → 334 → 281） ---
         "out320": {
             "title": "外 320",
             "type": "equirectangular",
             "panorama": "GS__0320.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "322へ進む", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "322へ進む", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out322": {
@@ -4166,8 +4326,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0322.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "320へ戻る", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "324へ進む", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "320へ戻る", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "324へ進む", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out324": {
@@ -4175,8 +4335,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0324.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "322へ戻る", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "326へ進む", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "322へ戻る", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "326へ進む", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out326": {
@@ -4184,8 +4344,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0326.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "324へ戻る", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "330へ進む", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "324へ戻る", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "330へ進む", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out330": {
@@ -4193,8 +4353,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0330.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "326へ戻る", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "332へ進む", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "326へ戻る", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "332へ進む", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out332": {
@@ -4202,8 +4362,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0332.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "330へ戻る", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "330へ戻る", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out334": {
@@ -4211,19 +4371,19 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0334.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 335〜344（344の進行は345へ） ---
+        // --- 屋外分岐ルート（253 → 335 → 337 → 339 → 341 → 343 → 344） ---
         "out335": {
             "title": "外 335",
             "type": "equirectangular",
             "panorama": "GS__0335.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "334へ戻る", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "337へ進む", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -50, "type": "scene", "text": "337へ進む", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out337": {
@@ -4231,8 +4391,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0337.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "335へ戻る", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "339へ進む", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "335へ戻る", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -50, "type": "scene", "text": "339へ進む", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out339": {
@@ -4240,8 +4400,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0339.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "337へ戻る", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "341へ進む", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "337へ戻る", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -50, "type": "scene", "text": "341へ進む", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out341": {
@@ -4249,8 +4409,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0341.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "339へ戻る", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "343へ進む", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "339へ戻る", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -50, "type": "scene", "text": "343へ進む", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out343": {
@@ -4258,8 +4418,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0343.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "341へ戻る", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "344へ進む", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "341へ戻る", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -50, "type": "scene", "text": "344へ進む", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out344": {
@@ -4267,20 +4427,20 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0344.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "343へ戻る", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "345へ進む", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 120, "type": "scene", "text": "343へ戻る", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "345へ進む", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "360へ進む", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 345〜359（359は294へ合流、345は360へ進む） ---
+        // --- 屋外分岐ルート（344 → [左80度: -80] 345 → 346 → 348 → 350 → 352 → 354 → 355 → 357 → 359 → [左80度: -80] 294） ---
         "out345": {
             "title": "外 345",
             "type": "equirectangular",
             "panorama": "GS__0345.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "346へ進む", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "360へ進む", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "346へ進む", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out346": {
@@ -4288,8 +4448,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0346.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "345へ戻る", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "348へ進む", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "345へ戻る", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "348へ進む", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out348": {
@@ -4297,8 +4457,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0348.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "346へ戻る", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "350へ進む", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "346へ戻る", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "350へ進む", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out350": {
@@ -4306,8 +4466,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0350.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "348へ戻る", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "352へ進む", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "348へ戻る", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "352へ進む", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out352": {
@@ -4315,8 +4475,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0352.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "350へ戻る", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "354へ進む", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "350へ戻る", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "354へ進む", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out354": {
@@ -4324,8 +4484,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0354.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "352へ戻る", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "355へ進む", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "352へ戻る", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "355へ進む", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out355": {
@@ -4333,8 +4493,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0355.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "354へ戻る", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "357へ進む", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "354へ戻る", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "357へ進む", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out357": {
@@ -4342,8 +4502,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0357.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "355へ戻る", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "359へ進む", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "355へ戻る", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "359へ進む", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out359": {
@@ -4351,19 +4511,19 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0359.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "357へ戻る", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": 100, "type": "scene", "text": "357へ戻る", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": -80, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
 
-        // --- 360〜368（368は202へ戻る・合流） ---
+        // --- 屋外分岐ルート（344 → [右80度: 80] 360 → [右90度: 90] 362 → 364 → 366 → 368 → [右80度: 80] 202） ---
         "out360": {
             "title": "外 360",
             "type": "equirectangular",
             "panorama": "GS__0360.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "345へ戻る", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "362へ進む", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -100, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "362へ進む", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out362": {
@@ -4371,8 +4531,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0362.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "360へ戻る", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "364へ進む", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "360へ戻る", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "364へ進む", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out364": {
@@ -4380,8 +4540,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0364.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "362へ戻る", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "366へ進む", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "362へ戻る", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "366へ進む", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out366": {
@@ -4389,8 +4549,8 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0366.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "364へ戻る", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "368へ進む", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "364へ戻る", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 90, "type": "scene", "text": "368へ進む", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         },
         "out368": {
@@ -4398,17 +4558,78 @@ viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "GS__0368.jpg",
             "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "366へ戻る", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+                { "pitch": -5, "yaw": -90, "type": "scene", "text": "366へ戻る", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 80, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+
+        // --- 新規追加：屋外回廊ルート（202 → [右170度: 170] 369 → 371 → 373 → 375 → 377 → 379 → [右170度: 170] 155） ---
+        "out369": {
+            "title": "外 369",
+            "type": "equirectangular",
+            "panorama": "GS__0369.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "202へ戻る", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "371へ進む", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out371": {
+            "title": "外 371",
+            "type": "equirectangular",
+            "panorama": "GS__0371.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "369へ戻る", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "373へ進む", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out373": {
+            "title": "外 373",
+            "type": "equirectangular",
+            "panorama": "GS__0373.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "371へ戻る", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "375へ進む", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out375": {
+            "title": "外 375",
+            "type": "equirectangular",
+            "panorama": "GS__0375.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "373へ戻る", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "377へ進む", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out377": {
+            "title": "外 377",
+            "type": "equirectangular",
+            "panorama": "GS__0377.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "375へ戻る", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "379へ進む", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            ]
+        },
+        "out379": {
+            "title": "外 379",
+            "type": "equirectangular",
+            "panorama": "GS__0379.jpg",
+            "hotSpots": [
+                { "pitch": -5, "yaw": -10, "type": "scene", "text": "377へ戻る", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+                { "pitch": -5, "yaw": 170, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
             ]
         }
     }
 });
 
-viewer.on('load', function () {
-    const currentScene = viewer.getScene();
-    refreshSceneQuizHotspots(currentScene);
+viewer.on('load', function() {
+    refreshSceneQuizHotspots(viewer.getScene());
 });
+
+viewer.on('scenechange', function(sceneId) {
+    refreshSceneQuizHotspots(sceneId);
+});
+
+refreshSceneQuizHotspots("scene1");
 </script>
 
 </body>
