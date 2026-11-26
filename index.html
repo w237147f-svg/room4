@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360度パノラマ 脱炭素クイズゲーム（アイコンドラッグ固定対応）</title>
+    <title>360度パノラマ 脱炭素クイズゲーム（ドラッグ固定修正版）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
@@ -14,6 +14,8 @@
             height: 100%;
             overflow: hidden;
             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #panorama {
@@ -508,12 +510,14 @@
             outline: 2px dashed #ffeb3b;
             outline-offset: 2px;
             cursor: grab !important;
+            touch-action: none;
         }
 
         body.edit-mode-active .pnlm-hotspot.dragging-hotspot {
             outline: 3px solid #00e676;
             cursor: grabbing !important;
             z-index: 999 !important;
+            transition: none !important;
         }
 
         .clearfix::after {
@@ -579,7 +583,7 @@
 
 <script>
 const TARGET_CLEAR_COUNT = 20;
-const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v1";
+const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v2";
 
 let viewer;
 let score = 0;
@@ -589,7 +593,9 @@ let isEditMode = false;
 let isGlobalDragBound = false;
 let lastCoordSnippet = "";
 
-let draggingTarget = null; // { sceneId, source, index, pitch, yaw, el }
+// 現在シーンに描画中のホットスポット管理用
+const activeSceneHotspots = []; // { source, index, data, pnlmId }
+let draggingTarget = null;      // { item, pitch, yaw, el }
 let didDragMove = false;
 let suppressClickUntil = 0;
 
@@ -2026,6 +2032,121 @@ function updateCoordBar(sceneId, hsObj, copyToClipboard = false) {
     }
 }
 
+function getHotspotDomElement(pnlmId, hsData) {
+    if (!viewer) return null;
+    const container = viewer.getContainer();
+    if (!container) return null;
+
+    if (pnlmId) {
+        const byId = container.querySelector('[data-hotspot-id="' + pnlmId + '"]');
+        if (byId) return byId;
+    }
+
+    const spots = Array.from(container.querySelectorAll('.pnlm-hotspot'));
+    if (hsData && hsData.cssClass) {
+        const classes = hsData.cssClass.split(/\s+/).filter(Boolean);
+        const match = spots.find(el => !el.dataset.boundItem && classes.every(c => el.classList.contains(c)));
+        if (match) return match;
+    }
+    return spots.find(el => !el.dataset.boundItem) || null;
+}
+
+function attachDragToItem(item, sceneId) {
+    const el = getHotspotDomElement(item.pnlmId, item.data);
+    if (!el) return;
+
+    item.el = el;
+    el.dataset.boundItem = "1";
+
+    const onDown = function (e) {
+        if (!isEditMode || !isGameStarted || !viewer) return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        draggingTarget = {
+            sceneId: sceneId,
+            item: item,
+            pitch: round1(item.data.pitch),
+            yaw: round1(item.data.yaw),
+            el: el
+        };
+        didDragMove = false;
+        el.classList.add("dragging-hotspot");
+    };
+
+    el.addEventListener("mousedown", onDown, true);
+    el.addEventListener("pointerdown", onDown, true);
+
+    el.addEventListener("click", function (e) {
+        if (isEditMode || didDragMove || performance.now() < suppressClickUntil) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }, true);
+}
+
+// シーン再読み込みなしで現在シーンのホットスポットだけを差し替える
+function populateSceneHotspotsWithoutReload(sceneId) {
+    if (!viewer || !sceneId) return;
+
+    // 既存の追加/管理ホットスポットを削除
+    activeSceneHotspots.forEach(item => {
+        if (item.pnlmId) {
+            try {
+                viewer.removeHotSpot(item.pnlmId, sceneId);
+            } catch (e) {}
+        }
+    });
+    activeSceneHotspots.length = 0;
+
+    // config上の初期ホットスポットも一旦クリア（シーン再読み込みせずに消す）
+    const container = viewer.getContainer();
+    if (container) {
+        container.querySelectorAll('.pnlm-hotspot').forEach(node => node.remove());
+    }
+
+    const sceneSpots = (scenesConfig[sceneId] && Array.isArray(scenesConfig[sceneId].hotSpots))
+        ? scenesConfig[sceneId].hotSpots
+        : [];
+    const quizSpots = Array.isArray(sceneQuizHotspots[sceneId])
+        ? sceneQuizHotspots[sceneId]
+        : [];
+
+    const combined = [
+        ...sceneSpots.map((hs, idx) => ({ source: "scene", index: idx, data: hs })),
+        ...quizSpots.map((hs, idx) => ({ source: "quiz", index: idx, data: hs }))
+    ];
+
+    combined.forEach((entry, i) => {
+        const customId = "hs_" + sceneId + "_" + entry.source + "_" + entry.index + "_" + i + "_" + Date.now();
+        const hsConfig = Object.assign({}, entry.data, { id: customId });
+
+        if (isEditMode) {
+            delete hsConfig.type;
+            delete hsConfig.sceneId;
+            hsConfig.clickHandlerFunc = function (e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+            };
+        }
+
+        try {
+            viewer.addHotSpot(hsConfig, sceneId);
+            const item = {
+                source: entry.source,
+                index: entry.index,
+                data: entry.data,
+                pnlmId: customId,
+                el: null
+            };
+            activeSceneHotspots.push(item);
+        } catch (e) {}
+    });
+
+    setTimeout(() => {
+        activeSceneHotspots.forEach(item => attachDragToItem(item, sceneId));
+    }, 30);
+}
+
 function setEditMode(enabled) {
     isEditMode = Boolean(enabled);
     document.body.classList.toggle('edit-mode-active', isEditMode);
@@ -2043,7 +2164,7 @@ function setEditMode(enabled) {
     }
 
     if (viewer && isGameStarted) {
-        renderSceneHotspots(viewer.getScene());
+        populateSceneHotspotsWithoutReload(viewer.getScene());
     }
 }
 
@@ -2065,172 +2186,82 @@ function copyLastCoordSnippet() {
     }
 }
 
-function attachDragBehaviorToHotspotDom(el, sceneId, source, index, hsData) {
-    if (!el || el.dataset.dragBound === "1") return;
-    el.dataset.dragBound = "1";
+function moveHotspotLive(target, pitch, yaw) {
+    target.pitch = round1(pitch);
+    target.yaw = round1(yaw);
 
-    el.addEventListener("pointerdown", function (e) {
-        if (!isEditMode || !isGameStarted || !viewer) return;
-        e.stopPropagation();
-        e.preventDefault();
+    target.item.data.pitch = target.pitch;
+    target.item.data.yaw = target.yaw;
 
-        draggingTarget = {
-            sceneId: sceneId,
-            source: source,
-            index: index,
-            pitch: round1(hsData.pitch),
-            yaw: round1(hsData.yaw),
-            el: el
-        };
-        didDragMove = false;
-        el.classList.add("dragging-hotspot");
-    }, true);
+    if (target.item.source === "scene" && scenesConfig[target.sceneId] && scenesConfig[target.sceneId].hotSpots[target.item.index]) {
+        scenesConfig[target.sceneId].hotSpots[target.item.index].pitch = target.pitch;
+        scenesConfig[target.sceneId].hotSpots[target.item.index].yaw = target.yaw;
+    } else if (target.item.source === "quiz" && sceneQuizHotspots[target.sceneId] && sceneQuizHotspots[target.sceneId][target.item.index]) {
+        sceneQuizHotspots[target.sceneId][target.item.index].pitch = target.pitch;
+        sceneQuizHotspots[target.sceneId][target.item.index].yaw = target.yaw;
+    }
 
-    el.addEventListener("click", function (e) {
-        if (isEditMode || didDragMove || performance.now() < suppressClickUntil) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-    }, true);
-}
-
-function bindDraggableHotspotsForScene(sceneId) {
-    if (!viewer || !sceneId) return;
-    const container = viewer.getContainer();
-    if (!container) return;
-
-    const sceneSpots = (scenesConfig[sceneId] && Array.isArray(scenesConfig[sceneId].hotSpots))
-        ? scenesConfig[sceneId].hotSpots
-        : [];
-    const quizSpots = Array.isArray(sceneQuizHotspots[sceneId])
-        ? sceneQuizHotspots[sceneId]
-        : [];
-
-    const domEls = Array.from(container.querySelectorAll('.pnlm-hotspot'));
-
-    sceneSpots.forEach((hs, idx) => {
-        const matched = domEls.find(el => {
-            if (el.dataset.dragBound === "1") return false;
-            if (hs.cssClass) {
-                const classes = hs.cssClass.split(/\s+/).filter(Boolean);
-                return classes.every(c => el.classList.contains(c));
-            }
-            return true;
-        });
-        if (matched) {
-            attachDragBehaviorToHotspotDom(matched, sceneId, "scene", idx, hs);
-        }
-    });
-
-    quizSpots.forEach((hs, idx) => {
-        const matched = domEls.find(el => {
-            if (el.dataset.dragBound === "1") return false;
-            if (hs.cssClass) {
-                const classes = hs.cssClass.split(/\s+/).filter(Boolean);
-                return classes.every(c => el.classList.contains(c));
-            }
-            return true;
-        });
-        if (matched) {
-            attachDragBehaviorToHotspotDom(matched, sceneId, "quiz", idx, hs);
-        }
-    });
-}
-
-function renderSceneHotspots(sceneId) {
-    if (!viewer || !sceneId) return;
-
-    const sceneSpots = (scenesConfig[sceneId] && Array.isArray(scenesConfig[sceneId].hotSpots))
-        ? scenesConfig[sceneId].hotSpots
-        : [];
-    const quizSpots = Array.isArray(sceneQuizHotspots[sceneId])
-        ? sceneQuizHotspots[sceneId]
-        : [];
-
-    const allSpots = [
-        ...sceneSpots.map(hs => {
-            const copy = Object.assign({}, hs);
-            if (isEditMode) {
-                delete copy.type;
-                delete copy.sceneId;
-                copy.clickHandlerFunc = function (e) {
+    // ドラッグ中もPannellum側のホットスポット座標を更新して即座に見た目を動かす
+    if (viewer && target.item.pnlmId) {
+        try {
+            viewer.removeHotSpot(target.item.pnlmId, target.sceneId);
+            const updatedConfig = Object.assign({}, target.item.data, {
+                id: target.item.pnlmId,
+                pitch: target.pitch,
+                yaw: target.yaw,
+                clickHandlerFunc: function (e) {
                     if (e && e.stopPropagation) e.stopPropagation();
-                };
-            }
-            return copy;
-        }),
-        ...quizSpots.map(hs => {
-            const copy = Object.assign({}, hs);
-            if (isEditMode) {
-                copy.clickHandlerFunc = function (e) {
-                    if (e && e.stopPropagation) e.stopPropagation();
-                };
-            }
-            return copy;
-        })
-    ];
+                }
+            });
+            delete updatedConfig.type;
+            delete updatedConfig.sceneId;
+            viewer.addHotSpot(updatedConfig, target.sceneId);
 
-    try {
-        viewer.loadScene(sceneId, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
-    } catch (e) {}
-
-    setTimeout(() => {
-        allSpots.forEach(hs => {
-            try {
-                viewer.addHotSpot(hs, sceneId);
-            } catch (e) {}
-        });
-        bindDraggableHotspotsForScene(sceneId);
-    }, 60);
+            const newEl = getHotspotDomElement(target.item.pnlmId, target.item.data);
+            if (newEl) {
+                target.el = newEl;
+                target.item.el = newEl;
+                newEl.classList.add("dragging-hotspot");
+            }
+        } catch (e) {}
+    }
 }
 
 function bindGlobalDragListeners() {
     if (isGlobalDragBound) return;
     isGlobalDragBound = true;
 
-    window.addEventListener("pointermove", function (e) {
+    const handleMove = function (e) {
         if (!draggingTarget || !isEditMode || !isGameStarted || !viewer) return;
         const coords = viewer.mouseEventToCoords(e);
         if (!coords || !Array.isArray(coords)) return;
 
         didDragMove = true;
-        draggingTarget.pitch = round1(coords[0]);
-        draggingTarget.yaw = round1(coords[1]);
+        moveHotspotLive(draggingTarget, coords[0], coords[1]);
+    };
 
-        if (draggingTarget.source === "scene" && scenesConfig[draggingTarget.sceneId] && scenesConfig[draggingTarget.sceneId].hotSpots[draggingTarget.index]) {
-            scenesConfig[draggingTarget.sceneId].hotSpots[draggingTarget.index].pitch = draggingTarget.pitch;
-            scenesConfig[draggingTarget.sceneId].hotSpots[draggingTarget.index].yaw = draggingTarget.yaw;
-        } else if (draggingTarget.source === "quiz" && sceneQuizHotspots[draggingTarget.sceneId] && sceneQuizHotspots[draggingTarget.sceneId][draggingTarget.index]) {
-            sceneQuizHotspots[draggingTarget.sceneId][draggingTarget.index].pitch = draggingTarget.pitch;
-            sceneQuizHotspots[draggingTarget.sceneId][draggingTarget.index].yaw = draggingTarget.yaw;
-        }
-    });
-
-    window.addEventListener("pointerup", function () {
+    const handleUp = function () {
         if (!draggingTarget) return;
 
         const finished = draggingTarget;
         draggingTarget = null;
+
         if (finished.el) {
             finished.el.classList.remove("dragging-hotspot");
         }
 
         if (didDragMove) {
             suppressClickUntil = performance.now() + 250;
-            saveFixedCoord(finished.sceneId, finished.source, finished.index, finished.pitch, finished.yaw);
-
-            const targetObj = (finished.source === "scene")
-                ? scenesConfig[finished.sceneId].hotSpots[finished.index]
-                : sceneQuizHotspots[finished.sceneId][finished.index];
-
-            if (targetObj) {
-                updateCoordBar(finished.sceneId, targetObj, true);
-            }
-
-            // ドラッグした位置（pitch / yaw）で固定再描画
-            renderSceneHotspots(finished.sceneId);
+            saveFixedCoord(finished.sceneId, finished.item.source, finished.item.index, finished.pitch, finished.yaw);
+            updateCoordBar(finished.sceneId, finished.item.data, true);
+            populateSceneHotspotsWithoutReload(finished.sceneId);
         }
-    });
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    window.addEventListener("pointerup", handleUp);
 }
 
 let currentQuiz = null;
@@ -2312,35 +2343,11 @@ function startGame() {
 
     viewer.on('load', function () {
         const sceneId = viewer.getScene();
-        const extraHotspots = sceneQuizHotspots[sceneId] || [];
-        extraHotspots.forEach(hs => {
-            const copy = Object.assign({}, hs);
-            if (isEditMode) {
-                copy.clickHandlerFunc = function (e) {
-                    if (e && e.stopPropagation) e.stopPropagation();
-                };
-            }
-            try {
-                viewer.addHotSpot(copy, sceneId);
-            } catch (e) {}
-        });
-        bindDraggableHotspotsForScene(sceneId);
+        populateSceneHotspotsWithoutReload(sceneId);
     });
 
     viewer.on('scenechange', function (newSceneId) {
-        const extraHotspots = sceneQuizHotspots[newSceneId] || [];
-        extraHotspots.forEach(hs => {
-            const copy = Object.assign({}, hs);
-            if (isEditMode) {
-                copy.clickHandlerFunc = function (e) {
-                    if (e && e.stopPropagation) e.stopPropagation();
-                };
-            }
-            try {
-                viewer.addHotSpot(copy, newSceneId);
-            } catch (e) {}
-        });
-        bindDraggableHotspotsForScene(newSceneId);
+        populateSceneHotspotsWithoutReload(newSceneId);
     });
 }
 
