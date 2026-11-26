@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360度パノラマ 脱炭素クイズゲーム（ドラッグ固定修正版）</title>
+    <title>360度パノラマ 脱炭素クイズゲーム（タップ移動＆ボタン固定対応）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
@@ -14,8 +14,6 @@
             height: 100%;
             overflow: hidden;
             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
         }
 
         #panorama {
@@ -237,7 +235,7 @@
             bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(20, 24, 30, 0.95);
+            background-color: rgba(20, 24, 30, 0.96);
             color: #fff;
             padding: 10px 14px;
             border-radius: 10px;
@@ -254,15 +252,15 @@
             font-family: Consolas, Monaco, monospace;
             white-space: nowrap;
             overflow-x: auto;
-            max-width: 72vw;
-            color: #a5d6a7;
+            max-width: 68vw;
+            color: #ffe082;
         }
 
         #coord-copy-btn {
             border: none;
             background-color: #2e7d32;
             color: #fff;
-            padding: 6px 12px;
+            padding: 7px 14px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
@@ -509,15 +507,12 @@
         body.edit-mode-active .pnlm-hotspot {
             outline: 2px dashed #ffeb3b;
             outline-offset: 2px;
-            cursor: grab !important;
-            touch-action: none;
+            cursor: pointer !important;
         }
 
-        body.edit-mode-active .pnlm-hotspot.dragging-hotspot {
-            outline: 3px solid #00e676;
-            cursor: grabbing !important;
-            z-index: 999 !important;
-            transition: none !important;
+        body.edit-mode-active .pnlm-hotspot.selected-edit-hotspot {
+            outline: 3px solid #00e676 !important;
+            box-shadow: 0 0 18px rgba(0, 230, 118, 0.95) !important;
         }
 
         .clearfix::after {
@@ -557,8 +552,8 @@
 </div>
 
 <div id="coord-output-bar">
-    <span id="coord-output-text">編集モードON：アイコンをドラッグして移動し、離すとその場に固定されます</span>
-    <button id="coord-copy-btn" onclick="copyLastCoordSnippet()">JSONコピー</button>
+    <span id="coord-output-text">編集モードON：動かしたいアイコンをタップして選択してください</span>
+    <button id="coord-copy-btn" onclick="fixAndCopySelectedHotspot()">位置を固定＆JSONコピー</button>
 </div>
 
 <div id="panorama"></div>
@@ -583,21 +578,18 @@
 
 <script>
 const TARGET_CLEAR_COUNT = 20;
-const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v2";
+const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v3";
 
 let viewer;
 let score = 0;
 let isGameStarted = false;
 let currentTimeOfDay = 'day';
 let isEditMode = false;
-let isGlobalDragBound = false;
-let lastCoordSnippet = "";
+let isPanoTapBound = false;
 
-// 現在シーンに描画中のホットスポット管理用
-const activeSceneHotspots = []; // { source, index, data, pnlmId }
-let draggingTarget = null;      // { item, pitch, yaw, el }
-let didDragMove = false;
-let suppressClickUntil = 0;
+// 編集用状態: { sceneId, source, index, data, pnlmId, tempPitch, tempYaw }
+let selectedHotspotEdit = null;
+const activeSceneHotspots = [];
 
 const answeredIds = new Set();
 const answeredGroups = new Set();
@@ -2003,10 +1995,12 @@ function applySavedCoordsToScenes(scenesObj) {
 const scenesConfig = buildScenesConfig(rawScenesConfig);
 applySavedCoordsToScenes(scenesConfig);
 
-function formatHotspotJson(hsObj) {
+function formatHotspotJson(hsObj, pitchOverride, yawOverride) {
+    const p = (pitchOverride !== undefined) ? round1(pitchOverride) : round1(hsObj.pitch);
+    const y = (yawOverride !== undefined) ? round1(yawOverride) : round1(hsObj.yaw);
     return JSON.stringify({
-        pitch: round1(hsObj.pitch),
-        yaw: round1(hsObj.yaw),
+        pitch: p,
+        yaw: y,
         type: hsObj.type || "scene",
         text: hsObj.text || "次へ進む",
         sceneId: hsObj.sceneId || "outXXX",
@@ -2016,20 +2010,11 @@ function formatHotspotJson(hsObj) {
     });
 }
 
-function updateCoordBar(sceneId, hsObj, copyToClipboard = false) {
-    const p = round1(hsObj.pitch);
-    const y = round1(hsObj.yaw);
-    const snippet = formatHotspotJson(hsObj);
-    lastCoordSnippet = snippet;
-
+function setCoordBarMessage(msg, isFixed = false) {
     const textEl = document.getElementById('coord-output-text');
-    if (textEl) {
-        textEl.innerText = `[${sceneId}] 固定完了 pitch:${p}, yaw:${y} → ${snippet}`;
-    }
-
-    if (copyToClipboard && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(snippet).catch(() => {});
-    }
+    if (!textEl) return;
+    textEl.innerText = msg;
+    textEl.style.color = isFixed ? '#a5d6a7' : '#ffe082';
 }
 
 function getHotspotDomElement(pnlmId, hsData) {
@@ -2045,51 +2030,117 @@ function getHotspotDomElement(pnlmId, hsData) {
     const spots = Array.from(container.querySelectorAll('.pnlm-hotspot'));
     if (hsData && hsData.cssClass) {
         const classes = hsData.cssClass.split(/\s+/).filter(Boolean);
-        const match = spots.find(el => !el.dataset.boundItem && classes.every(c => el.classList.contains(c)));
+        const match = spots.find(el => !el.dataset.boundTapItem && classes.every(c => el.classList.contains(c)));
         if (match) return match;
     }
-    return spots.find(el => !el.dataset.boundItem) || null;
+    return spots.find(el => !el.dataset.boundTapItem) || null;
 }
 
-function attachDragToItem(item, sceneId) {
-    const el = getHotspotDomElement(item.pnlmId, item.data);
-    if (!el) return;
+function highlightSelectedHotspotDom() {
+    if (!viewer) return;
+    const container = viewer.getContainer();
+    if (!container) return;
 
-    item.el = el;
-    el.dataset.boundItem = "1";
+    container.querySelectorAll('.pnlm-hotspot').forEach(el => {
+        el.classList.remove('selected-edit-hotspot');
+    });
 
-    const onDown = function (e) {
-        if (!isEditMode || !isGameStarted || !viewer) return;
-        e.stopPropagation();
-        e.preventDefault();
+    if (!isEditMode || !selectedHotspotEdit) return;
+    const targetItem = activeSceneHotspots.find(
+        x => x.source === selectedHotspotEdit.source && x.index === selectedHotspotEdit.index
+    );
+    if (targetItem && targetItem.el) {
+        targetItem.el.classList.add('selected-edit-hotspot');
+    }
+}
 
-        draggingTarget = {
-            sceneId: sceneId,
-            item: item,
-            pitch: round1(item.data.pitch),
-            yaw: round1(item.data.yaw),
-            el: el
-        };
-        didDragMove = false;
-        el.classList.add("dragging-hotspot");
+function selectHotspotForEdit(item, sceneId) {
+    const curPitch = (selectedHotspotEdit &&
+        selectedHotspotEdit.sceneId === sceneId &&
+        selectedHotspotEdit.source === item.source &&
+        selectedHotspotEdit.index === item.index &&
+        typeof selectedHotspotEdit.tempPitch === 'number')
+        ? selectedHotspotEdit.tempPitch
+        : round1(item.data.pitch);
+
+    const curYaw = (selectedHotspotEdit &&
+        selectedHotspotEdit.sceneId === sceneId &&
+        selectedHotspotEdit.source === item.source &&
+        selectedHotspotEdit.index === item.index &&
+        typeof selectedHotspotEdit.tempYaw === 'number')
+        ? selectedHotspotEdit.tempYaw
+        : round1(item.data.yaw);
+
+    selectedHotspotEdit = {
+        sceneId: sceneId,
+        source: item.source,
+        index: item.index,
+        data: item.data,
+        pnlmId: item.pnlmId,
+        tempPitch: curPitch,
+        tempYaw: curYaw
     };
 
-    el.addEventListener("mousedown", onDown, true);
-    el.addEventListener("pointerdown", onDown, true);
-
-    el.addEventListener("click", function (e) {
-        if (isEditMode || didDragMove || performance.now() < suppressClickUntil) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-    }, true);
+    highlightSelectedHotspotDom();
+    const label = item.data.text || item.data.id || item.data.cssClass || 'アイコン';
+    setCoordBarMessage(
+        `選択中「${label}」(pitch:${curPitch}, yaw:${curYaw}) → 動かしたい位置をタップし、下のボタンで固定`,
+        false
+    );
 }
 
-// シーン再読み込みなしで現在シーンのホットスポットだけを差し替える
+function renderSingleHotspotItem(item, sceneId, pitchVal, yawVal) {
+    if (!viewer || !item) return;
+    const p = round1(pitchVal);
+    const y = round1(yawVal);
+
+    if (item.pnlmId) {
+        try {
+            viewer.removeHotSpot(item.pnlmId, sceneId);
+        } catch (e) {}
+    }
+
+    const newId = "hs_" + sceneId + "_" + item.source + "_" + item.index + "_" + Math.random().toString(36).slice(2, 7);
+    item.pnlmId = newId;
+
+    const hsConfig = Object.assign({}, item.data, {
+        id: newId,
+        pitch: p,
+        yaw: y
+    });
+
+    if (isEditMode) {
+        delete hsConfig.type;
+        delete hsConfig.sceneId;
+        hsConfig.clickHandlerFunc = function (e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            selectHotspotForEdit(item, sceneId);
+        };
+    }
+
+    try {
+        viewer.addHotSpot(hsConfig, sceneId);
+    } catch (e) {}
+
+    setTimeout(() => {
+        const el = getHotspotDomElement(item.pnlmId, item.data);
+        if (el) {
+            item.el = el;
+            el.dataset.boundTapItem = "1";
+            el.addEventListener("click", function (e) {
+                if (!isEditMode) return;
+                e.stopPropagation();
+                e.preventDefault();
+                selectHotspotForEdit(item, sceneId);
+            }, true);
+        }
+        highlightSelectedHotspotDom();
+    }, 20);
+}
+
 function populateSceneHotspotsWithoutReload(sceneId) {
     if (!viewer || !sceneId) return;
 
-    // 既存の追加/管理ホットスポットを削除
     activeSceneHotspots.forEach(item => {
         if (item.pnlmId) {
             try {
@@ -2099,7 +2150,6 @@ function populateSceneHotspotsWithoutReload(sceneId) {
     });
     activeSceneHotspots.length = 0;
 
-    // config上の初期ホットスポットも一旦クリア（シーン再読み込みせずに消す）
     const container = viewer.getContainer();
     if (container) {
         container.querySelectorAll('.pnlm-hotspot').forEach(node => node.remove());
@@ -2121,30 +2171,141 @@ function populateSceneHotspotsWithoutReload(sceneId) {
         const customId = "hs_" + sceneId + "_" + entry.source + "_" + entry.index + "_" + i + "_" + Date.now();
         const hsConfig = Object.assign({}, entry.data, { id: customId });
 
+        const item = {
+            source: entry.source,
+            index: entry.index,
+            data: entry.data,
+            pnlmId: customId,
+            el: null
+        };
+
         if (isEditMode) {
             delete hsConfig.type;
             delete hsConfig.sceneId;
             hsConfig.clickHandlerFunc = function (e) {
                 if (e && e.stopPropagation) e.stopPropagation();
+                selectHotspotForEdit(item, sceneId);
             };
         }
 
         try {
             viewer.addHotSpot(hsConfig, sceneId);
-            const item = {
-                source: entry.source,
-                index: entry.index,
-                data: entry.data,
-                pnlmId: customId,
-                el: null
-            };
             activeSceneHotspots.push(item);
         } catch (e) {}
     });
 
     setTimeout(() => {
-        activeSceneHotspots.forEach(item => attachDragToItem(item, sceneId));
+        activeSceneHotspots.forEach(item => {
+            const el = getHotspotDomElement(item.pnlmId, item.data);
+            if (el) {
+                item.el = el;
+                el.dataset.boundTapItem = "1";
+                el.addEventListener("click", function (e) {
+                    if (!isEditMode) return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    selectHotspotForEdit(item, sceneId);
+                }, true);
+            }
+        });
+        highlightSelectedHotspotDom();
     }, 30);
+}
+
+function bindPanoramaTapToMove() {
+    if (isPanoTapBound) return;
+    isPanoTapBound = true;
+
+    const panoEl = document.getElementById('panorama');
+    if (!panoEl) return;
+
+    let downX = 0;
+    let downY = 0;
+
+    panoEl.addEventListener('pointerdown', function (e) {
+        downX = e.clientX;
+        downY = e.clientY;
+    }, true);
+
+    panoEl.addEventListener('pointerup', function (e) {
+        if (!isEditMode || !isGameStarted || !viewer || !selectedHotspotEdit) return;
+        // ホットスポット自体をタップした場合はそちらで選択処理
+        if (e.target && e.target.closest && e.target.closest('.pnlm-hotspot')) return;
+
+        // 視点ドラッグ（大きく動かした操作）ではなく「タップ」とみなす場合のみ移動
+        const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
+        if (dist > 8) return;
+
+        const coords = viewer.mouseEventToCoords(e);
+        if (!coords || !Array.isArray(coords)) return;
+
+        const newPitch = round1(coords[0]);
+        const newYaw = round1(coords[1]);
+
+        selectedHotspotEdit.tempPitch = newPitch;
+        selectedHotspotEdit.tempYaw = newYaw;
+
+        const sceneId = viewer.getScene();
+        const targetItem = activeSceneHotspots.find(
+            x => x.source === selectedHotspotEdit.source && x.index === selectedHotspotEdit.index
+        );
+
+        if (targetItem) {
+            renderSingleHotspotItem(targetItem, sceneId, newPitch, newYaw);
+        }
+
+        const label = selectedHotspotEdit.data.text || selectedHotspotEdit.data.id || selectedHotspotEdit.data.cssClass || 'アイコン';
+        setCoordBarMessage(
+            `仮移動中「${label}」→ pitch:${newPitch}, yaw:${newYaw}（「位置を固定＆JSONコピー」で確定）`,
+            false
+        );
+    }, true);
+}
+
+// 下のコピーボタンを押したときに位置を確定・固定し、JSONをコピー
+function fixAndCopySelectedHotspot() {
+    if (!selectedHotspotEdit || !viewer) {
+        setCoordBarMessage('先に動かしたいアイコンをタップして選択し、移動先をタップしてください', false);
+        return;
+    }
+
+    const sceneId = selectedHotspotEdit.sceneId || viewer.getScene();
+    const finalPitch = (typeof selectedHotspotEdit.tempPitch === 'number')
+        ? round1(selectedHotspotEdit.tempPitch)
+        : round1(selectedHotspotEdit.data.pitch);
+    const finalYaw = (typeof selectedHotspotEdit.tempYaw === 'number')
+        ? round1(selectedHotspotEdit.tempYaw)
+        : round1(selectedHotspotEdit.data.yaw);
+
+    selectedHotspotEdit.data.pitch = finalPitch;
+    selectedHotspotEdit.data.yaw = finalYaw;
+
+    if (selectedHotspotEdit.source === "scene" && scenesConfig[sceneId] && scenesConfig[sceneId].hotSpots[selectedHotspotEdit.index]) {
+        scenesConfig[sceneId].hotSpots[selectedHotspotEdit.index].pitch = finalPitch;
+        scenesConfig[sceneId].hotSpots[selectedHotspotEdit.index].yaw = finalYaw;
+    } else if (selectedHotspotEdit.source === "quiz" && Array.isArray(sceneQuizHotspots[sceneId]) && sceneQuizHotspots[sceneId][selectedHotspotEdit.index]) {
+        sceneQuizHotspots[sceneId][selectedHotspotEdit.index].pitch = finalPitch;
+        sceneQuizHotspots[sceneId][selectedHotspotEdit.index].yaw = finalYaw;
+    }
+
+    saveFixedCoord(sceneId, selectedHotspotEdit.source, selectedHotspotEdit.index, finalPitch, finalYaw);
+
+    const snippet = formatHotspotJson(selectedHotspotEdit.data, finalPitch, finalYaw);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(snippet).catch(() => {});
+    }
+
+    const label = selectedHotspotEdit.data.text || selectedHotspotEdit.data.id || selectedHotspotEdit.data.cssClass || 'アイコン';
+    setCoordBarMessage(`固定＆JSONコピー完了「${label}」pitch:${finalPitch}, yaw:${finalYaw} → ${snippet}`, true);
+
+    const copyBtn = document.getElementById('coord-copy-btn');
+    if (copyBtn) {
+        const orig = copyBtn.innerText;
+        copyBtn.innerText = '固定＆コピー済';
+        setTimeout(() => { copyBtn.innerText = orig; }, 1200);
+    }
+
+    highlightSelectedHotspotDom();
 }
 
 function setEditMode(enabled) {
@@ -2159,6 +2320,12 @@ function setEditMode(enabled) {
         btn.classList.toggle('active', isEditMode);
     }
 
+    if (!isEditMode) {
+        selectedHotspotEdit = null;
+    } else {
+        setCoordBarMessage('編集モードON：動かしたいアイコンをタップして選択してください', false);
+    }
+
     if (bar) {
         bar.style.display = (isEditMode && isGameStarted) ? 'flex' : 'none';
     }
@@ -2171,97 +2338,6 @@ function setEditMode(enabled) {
 function toggleEditMode() {
     if (!isGameStarted) return;
     setEditMode(!isEditMode);
-}
-
-function copyLastCoordSnippet() {
-    if (!lastCoordSnippet) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(lastCoordSnippet).catch(() => {});
-    }
-    const copyBtn = document.getElementById('coord-copy-btn');
-    if (copyBtn) {
-        const orig = copyBtn.innerText;
-        copyBtn.innerText = 'コピー済';
-        setTimeout(() => { copyBtn.innerText = orig; }, 1000);
-    }
-}
-
-function moveHotspotLive(target, pitch, yaw) {
-    target.pitch = round1(pitch);
-    target.yaw = round1(yaw);
-
-    target.item.data.pitch = target.pitch;
-    target.item.data.yaw = target.yaw;
-
-    if (target.item.source === "scene" && scenesConfig[target.sceneId] && scenesConfig[target.sceneId].hotSpots[target.item.index]) {
-        scenesConfig[target.sceneId].hotSpots[target.item.index].pitch = target.pitch;
-        scenesConfig[target.sceneId].hotSpots[target.item.index].yaw = target.yaw;
-    } else if (target.item.source === "quiz" && sceneQuizHotspots[target.sceneId] && sceneQuizHotspots[target.sceneId][target.item.index]) {
-        sceneQuizHotspots[target.sceneId][target.item.index].pitch = target.pitch;
-        sceneQuizHotspots[target.sceneId][target.item.index].yaw = target.yaw;
-    }
-
-    // ドラッグ中もPannellum側のホットスポット座標を更新して即座に見た目を動かす
-    if (viewer && target.item.pnlmId) {
-        try {
-            viewer.removeHotSpot(target.item.pnlmId, target.sceneId);
-            const updatedConfig = Object.assign({}, target.item.data, {
-                id: target.item.pnlmId,
-                pitch: target.pitch,
-                yaw: target.yaw,
-                clickHandlerFunc: function (e) {
-                    if (e && e.stopPropagation) e.stopPropagation();
-                }
-            });
-            delete updatedConfig.type;
-            delete updatedConfig.sceneId;
-            viewer.addHotSpot(updatedConfig, target.sceneId);
-
-            const newEl = getHotspotDomElement(target.item.pnlmId, target.item.data);
-            if (newEl) {
-                target.el = newEl;
-                target.item.el = newEl;
-                newEl.classList.add("dragging-hotspot");
-            }
-        } catch (e) {}
-    }
-}
-
-function bindGlobalDragListeners() {
-    if (isGlobalDragBound) return;
-    isGlobalDragBound = true;
-
-    const handleMove = function (e) {
-        if (!draggingTarget || !isEditMode || !isGameStarted || !viewer) return;
-        const coords = viewer.mouseEventToCoords(e);
-        if (!coords || !Array.isArray(coords)) return;
-
-        didDragMove = true;
-        moveHotspotLive(draggingTarget, coords[0], coords[1]);
-    };
-
-    const handleUp = function () {
-        if (!draggingTarget) return;
-
-        const finished = draggingTarget;
-        draggingTarget = null;
-
-        if (finished.el) {
-            finished.el.classList.remove("dragging-hotspot");
-        }
-
-        if (didDragMove) {
-            suppressClickUntil = performance.now() + 250;
-            saveFixedCoord(finished.sceneId, finished.item.source, finished.item.index, finished.pitch, finished.yaw);
-            updateCoordBar(finished.sceneId, finished.item.data, true);
-            populateSceneHotspotsWithoutReload(finished.sceneId);
-        }
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("mouseup", handleUp);
-    window.addEventListener("pointerup", handleUp);
 }
 
 let currentQuiz = null;
@@ -2302,7 +2378,7 @@ function startGame() {
     answeredIds.clear();
     answeredGroups.clear();
     currentQuiz = null;
-    draggingTarget = null;
+    selectedHotspotEdit = null;
     setEditMode(false);
 
     updateScoreDisplay();
@@ -2339,7 +2415,7 @@ function startGame() {
         "scenes": scenesConfig
     });
 
-    bindGlobalDragListeners();
+    bindPanoramaTapToMove();
 
     viewer.on('load', function () {
         const sceneId = viewer.getScene();
@@ -2352,7 +2428,7 @@ function startGame() {
 }
 
 function showQuiz(event, args) {
-    if (!isGameStarted || isEditMode || didDragMove || performance.now() < suppressClickUntil) return;
+    if (!isGameStarted || isEditMode) return;
 
     const resolvedQuiz = getQuizDataForCurrentTime(args);
     currentQuiz = resolvedQuiz;
