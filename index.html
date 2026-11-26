@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ゼミ室＆キャンパス探索クイズ（全100問・15問クリア）</title>
+  <title>キャンパス探索クイズ（全100問・15問クリア）</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --panel-2: #0b1120;
+      --bg: #090d16;
+      --panel: rgba(15, 23, 42, 0.88);
+      --panel-solid: #1e293b;
+      --panel-dark: #0b1120;
       --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #38bdf8;
       --accent-2: #22c55e;
       --warn: #f59e0b;
       --danger: #ef4444;
-      --border: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
     }
 
     * {
@@ -28,70 +29,66 @@
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
+    /* 上部最小限HUD */
     header {
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 20;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
       gap: 10px;
-      font-weight: 700;
-      font-size: 1rem;
+      pointer-events: none;
     }
 
-    .badge {
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-    }
-
-    .hud {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      font-size: 0.9rem;
-    }
-
-    .hud-box {
+    .hud-card {
+      pointer-events: auto;
       background: var(--panel);
+      backdrop-filter: blur(10px);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 12px;
+      border-radius: 14px;
+      padding: 8px 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
 
-    .hud-box strong {
+    .location-name {
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+
+    .location-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.86rem;
+    }
+
+    .stat-pill strong {
       color: var(--accent);
       font-size: 1.05rem;
     }
 
     .progress-wrap {
-      width: 140px;
-      height: 8px;
-      background: var(--panel-2);
+      width: 110px;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -103,243 +100,231 @@
       transition: width 0.3s ease;
     }
 
-    main {
+    /* メイン360度風探索ビューポート */
+    .viewport {
+      position: relative;
       flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 16px;
-      padding: 16px 20px 24px;
-      max-width: 1380px;
       width: 100%;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 960px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .stage-card {
-      position: relative;
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      min-height: 480px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .scene-viewport {
-      position: relative;
-      flex: 1;
-      min-height: 430px;
+      height: 100%;
       cursor: grab;
       overflow: hidden;
     }
 
-    .scene-viewport:active {
+    .viewport:active {
       cursor: grabbing;
     }
 
-    .scene-canvas {
+    .panorama-world {
       position: absolute;
       inset: 0;
-      transition: background 0.35s ease;
+      transition: background 0.45s ease;
     }
 
-    .scene-overlay-info {
+    /* 空間の奥行き・グリッド演出（パノラマ回転の目安） */
+    .panorama-grid {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 5;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(6px);
-      padding: 8px 14px;
-      border-radius: 12px;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 90px 90px;
       pointer-events: none;
     }
 
-    .scene-title {
-      font-weight: 700;
-      font-size: 1rem;
-    }
-
-    .scene-sub {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .compass {
-      position: absolute;
-      top: 14px;
+    /* コンパス（北基準） */
+    .compass-hud {
+      position: fixed;
+      top: 72px;
       right: 14px;
-      z-index: 5;
-      background: rgba(15, 23, 42, 0.78);
+      z-index: 15;
+      background: var(--panel);
       border: 1px solid var(--border);
-      padding: 6px 12px;
+      backdrop-filter: blur(8px);
       border-radius: 12px;
+      padding: 6px 12px;
       font-size: 0.8rem;
       color: var(--accent);
       pointer-events: none;
     }
 
-    .hotspot {
+    /* 空間内のオブジェクト（クイズ対象箇所） */
+    .hotspot-target {
       position: absolute;
       transform: translate(-50%, -50%);
-      z-index: 6;
-      border: 2px solid #fff;
-      background: rgba(56, 189, 248, 0.88);
-      color: #082f49;
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 7px 11px;
-      border-radius: 999px;
-      cursor: pointer;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-      transition: transform 0.15s ease, background 0.15s ease, opacity 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .hotspot:hover {
-      transform: translate(-50%, -50%) scale(1.08);
-      background: #7dd3fc;
-    }
-
-    .hotspot.solved {
-      background: rgba(34, 197, 94, 0.85);
-      color: #052e16;
-      opacity: 0.68;
-    }
-
-    .hotspot.door {
-      background: rgba(245, 158, 11, 0.92);
-      color: #451a03;
-    }
-
-    .controls-bar {
-      background: var(--panel);
-      border-top: 1px solid var(--border);
-      padding: 10px 14px;
+      z-index: 10;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.25s ease;
     }
 
-    .btn-group {
+    .hotspot-target:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .hotspot-ring {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.24);
+      border: 2px solid #7dd3fc;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.55);
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #fff;
+      animation: pulseRing 2.2s infinite;
     }
 
-    button.btn {
-      background: #334155;
+    .hotspot-target.solved .hotspot-ring {
+      background: rgba(34, 197, 94, 0.26);
+      border-color: #86efac;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+      animation: none;
+    }
+
+    .hotspot-label {
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      white-space: nowrap;
+      color: #f8fafc;
+    }
+
+    @keyframes pulseRing {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    /* ストリートビュー風 移動アイコン（透明感＋立体感） */
+    .nav-arrow {
+      position: absolute;
+      transform: translate(-50%, -50%) perspective(360px) rotateX(42deg);
+      z-index: 12;
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.12) 65%, rgba(15, 23, 42, 0.35));
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.5),
+        inset 0 2px 6px rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .nav-arrow:hover {
+      transform: translate(-50%, -50%) perspective(360px) rotateX(36deg) scale(1.1);
+      background: radial-gradient(circle at 35% 30%, rgba(125, 211, 252, 0.65), rgba(56, 189, 248, 0.25) 70%);
+      box-shadow:
+        0 14px 28px rgba(56, 189, 248, 0.45),
+        inset 0 2px 8px rgba(255, 255, 255, 0.75);
+    }
+
+    .nav-arrow svg {
+      width: 28px;
+      height: 28px;
+      fill: #ffffff;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+    }
+
+    .nav-arrow-caption {
+      position: absolute;
+      bottom: -24px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* 下部操作バー（視点回転＆ヒントのみ） */
+    .bottom-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn {
+      background: rgba(51, 65, 85, 0.85);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 13px;
-      font-size: 0.85rem;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.1s ease;
+      transition: background 0.15s ease;
     }
 
-    button.btn:hover {
-      background: #475569;
+    .btn:hover {
+      background: rgba(71, 85, 105, 0.95);
     }
 
-    button.btn:active {
-      transform: scale(0.98);
-    }
-
-    button.btn.primary {
+    .btn.primary {
       background: var(--accent);
       color: #082f49;
       border-color: transparent;
     }
 
-    button.btn.primary:hover {
-      background: #7dd3fc;
-    }
-
-    button.btn.success {
+    .btn.success {
       background: var(--accent-2);
       color: #052e16;
       border-color: transparent;
     }
 
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .panel {
-      background: var(--panel);
+    .toast {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
     }
 
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 0.98rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .toast.show {
+      opacity: 1;
     }
 
-    .area-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .area-btn {
-      text-align: left;
-      padding: 9px 10px;
-      border-radius: 10px;
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .area-btn.active {
-      border-color: var(--accent);
-      background: rgba(56, 189, 248, 0.14);
-    }
-
-    .area-btn small {
-      display: block;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .log-box {
-      font-size: 0.83rem;
-      color: var(--muted);
-      line-height: 1.55;
-      max-height: 220px;
-      overflow-y: auto;
-    }
-
-    .log-item {
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    /* モーダル（クイズ＆15問クリア演出） */
+    /* モーダル */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(2, 6, 23, 0.78);
+      background: rgba(2, 6, 23, 0.76);
       backdrop-filter: blur(5px);
       display: none;
       align-items: center;
@@ -353,20 +338,20 @@
     }
 
     .modal {
-      background: var(--panel);
+      background: var(--panel-solid);
       border: 1px solid var(--border);
       border-radius: 18px;
-      max-width: 540px;
+      max-width: 520px;
       width: 100%;
       padding: 22px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
     }
 
     .diff-tag {
       display: inline-block;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 3px 10px;
       border-radius: 999px;
       margin-bottom: 8px;
     }
@@ -376,23 +361,23 @@
     .diff-hard { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
 
     .question-text {
-      font-size: 1.05rem;
+      font-size: 1.04rem;
       font-weight: 700;
       line-height: 1.55;
-      margin: 6px 0 16px;
+      margin: 8px 0 16px;
     }
 
     .choices {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 9px;
     }
 
     .choice-btn {
       text-align: left;
       padding: 12px 14px;
       border-radius: 12px;
-      background: var(--panel-2);
+      background: var(--panel-dark);
       border: 1px solid var(--border);
       color: var(--text);
       font-size: 0.92rem;
@@ -407,20 +392,20 @@
 
     .choice-btn.correct {
       border-color: var(--accent-2);
-      background: rgba(34, 197, 94, 0.2);
+      background: rgba(34, 197, 94, 0.22);
     }
 
     .choice-btn.wrong {
       border-color: var(--danger);
-      background: rgba(239, 68, 68, 0.2);
+      background: rgba(239, 68, 68, 0.22);
     }
 
     .feedback {
       margin-top: 14px;
       padding: 12px;
       border-radius: 12px;
-      background: var(--panel-2);
-      font-size: 0.88rem;
+      background: var(--panel-dark);
+      font-size: 0.87rem;
       line-height: 1.5;
       display: none;
     }
@@ -439,561 +424,538 @@
 </head>
 <body>
   <header>
-    <div class="brand">
-      <span>ゼミ室＆キャンパス探索クイズ</span>
-      <span class="badge">全100問 / 15問正解でクリア</span>
+    <div class="hud-card">
+      <div>
+        <div class="location-name" id="locationName">ゼミ室（スタート拠点）</div>
+        <div class="location-desc" id="locationDesc">視点を回して気になる箇所をクリック／矢印で移動</div>
+      </div>
     </div>
-    <div class="hud">
-      <div class="hud-box">
-        <span>正解数</span>
+
+    <div class="hud-card">
+      <div class="stat-pill">
+        <span>発見・正解</span>
         <strong id="correctCount">0</strong>
-        <span>/ 15（全100問）</span>
+        <span>/ 15問（全100問）</span>
       </div>
-      <div class="hud-box">
-        <span>クリア進捗</span>
-        <div class="progress-wrap">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <span id="progressPct">0%</span>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
       </div>
-      <button class="btn" id="openQuickQuizBtn">今いるエリアの問題を解く</button>
+      <button class="btn" id="resetBtn" title="最初からやり直す">リセット</button>
     </div>
   </header>
 
-  <main>
-    <section class="stage-card">
-      <div class="scene-viewport" id="sceneViewport" title="ドラッグまたは左右ボタンで視点を回転できます">
-        <div class="scene-canvas" id="sceneCanvas"></div>
-        <div class="scene-overlay-info">
-          <div class="scene-title" id="sceneTitle">ゼミ室（スタート拠点）</div>
-          <div class="scene-sub" id="sceneSub">ドラッグで視点回転・ピンをクリックしてクイズに挑戦</div>
-        </div>
-        <div class="compass" id="compass">北（0°）</div>
-        <div id="hotspotsLayer"></div>
-      </div>
+  <div class="compass-hud" id="compassHud">北（0°）</div>
 
-      <div class="controls-bar">
-        <div class="btn-group">
-          <button class="btn" id="turnLeftBtn">← 左へ視点回転</button>
-          <button class="btn" id="turnRightBtn">右へ視点回転 →</button>
-          <button class="btn" id="resetYawBtn">北向きに戻す</button>
-        </div>
-        <div class="btn-group">
-          <button class="btn primary" id="moveOutdoorBtn">外へ出る（中庭・キャンパスへ）</button>
-        </div>
-      </div>
-    </section>
-
-    <aside class="sidebar">
-      <div class="panel">
-        <h2>
-          <span>エリア移動</span>
-          <small style="color: var(--muted); font-weight: 400;">全6エリア</small>
-        </h2>
-        <div class="area-list" id="areaList"></div>
-      </div>
-
-      <div class="panel">
-        <h2>
-          <span>探索ログ</span>
-          <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" id="resetAllBtn">リセット</button>
-        </h2>
-        <div class="log-box" id="logBox">
-          <div class="log-item">ゼミ室からスタートしました。まずは机やホワイトボード、エアコン周辺を調べてみましょう。</div>
-        </div>
-      </div>
-    </aside>
+  <main class="viewport" id="viewport">
+    <div class="panorama-world" id="panoramaWorld"></div>
+    <div class="panorama-grid" id="panoramaGrid"></div>
+    <div id="interactiveLayer"></div>
   </main>
 
-  <!-- クイズモーダル -->
+  <div class="toast" id="toast"></div>
+
+  <div class="bottom-bar">
+    <button class="btn" id="turnLeftBtn">← 左を見る</button>
+    <button class="btn" id="northBtn">北向き</button>
+    <button class="btn" id="turnRightBtn">右を見る →</button>
+  </div>
+
+  <!-- クイズモーダル（空間内の箇所を見つけてクリックしたときのみ開く） -->
   <div class="modal-backdrop" id="quizModal">
     <div class="modal">
       <span class="diff-tag" id="qDiffTag">中問</span>
-      <div style="font-size: 0.8rem; color: var(--muted);" id="qMeta">問題 #1 / 100</div>
+      <div style="font-size: 0.8rem; color: var(--muted);" id="qMeta">発見箇所：ゼミ室 / 問題 #1</div>
       <div class="question-text" id="qText">問題文</div>
       <div class="choices" id="qChoices"></div>
       <div class="feedback" id="qFeedback"></div>
       <div class="modal-footer">
-        <button class="btn" id="closeQuizBtn">閉じる</button>
-        <button class="btn primary" id="nextQuizBtn" style="display: none;">次の問題へ</button>
+        <button class="btn primary" id="closeQuizBtn">探索に戻る</button>
       </div>
     </div>
   </div>
 
-  <!-- 15問クリアモーダル -->
+  <!-- 15問正解クリア通知（探索状態は維持したまま続行可能） -->
   <div class="modal-backdrop" id="clearModal">
     <div class="modal">
       <span class="diff-tag diff-easy">CLEAR!</span>
-      <h2 style="margin: 4px 0 8px; font-size: 1.35rem;">15問正解達成！一応クリアおめでとうございます</h2>
-      <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin: 0 0 16px;">
-        大学生向けの基準ライン（15問正解）をクリアしました。<br>
-        このまま残りの問題（全100問）に挑戦してコンプリートを目指すことも、ここで終了することもできます。
+      <h2 style="margin: 4px 0 8px; font-size: 1.3rem;">15問正解を達成しました！</h2>
+      <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin: 0 0 16px;">
+        クリア基準の15問に到達しました。<br>
+        このまま校内・屋外を自由に歩き回り、残りの問題（全100問）を探し続けることもできます。
       </p>
       <div class="modal-footer" style="justify-content: flex-start;">
-        <button class="btn success" id="continuePlayBtn">そのまま続ける（残り問題に挑戦）</button>
-        <button class="btn" id="finishPlayBtn">ここで終了する</button>
+        <button class="btn success" id="continueExploreBtn">探索を続ける（残り問題を探す）</button>
+        <button class="btn" id="finishBtn">終了して結果を見る</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 1. 設定・状態管理
-    // ==========================================
+    // =========================================================
+    // 1. 学校内・屋外マップ定義（空間内の矢印移動でつながる構造）
+    // =========================================================
     const CLEAR_GOAL = 15;
     const TOTAL_QUESTIONS = 100;
 
-    const AREAS = [
-      {
+    // 各シーンの背景（実運用時はここにパノラマ画像URLを設定可能）と隣接シーンへの移動矢印
+    const SCENES = {
+      seminar_room: {
         id: "seminar_room",
-        name: "ゼミ室（スタート）",
-        isOutdoor: false,
-        sub: "ホワイトボード・長机・エアコン・プロジェクターがある拠点",
-        bg: "radial-gradient(circle at 50% 35%, #1e3a5f 0%, #0f172a 75%)",
-        range: [1, 20]
+        name: "ゼミ室（スタート拠点）",
+        desc: "長机・エアコン・ホワイトボード・テレビがある部屋",
+        bg: "radial-gradient(circle at 50% 40%, #1e3a5f 0%, #0f172a 78%)",
+        links: [
+          { target: "hallway_1", yaw: 90, top: 68, label: "廊下へ出る" },
+          { target: "break_corner", yaw: 270, top: 68, label: "休憩スペースへ" }
+        ]
       },
-      {
-        id: "hallway",
-        name: "研究室前の廊下",
-        isOutdoor: false,
-        sub: "掲示板・給水機・ごみ箱・非常口案内が並ぶ通路",
+      break_corner: {
+        id: "break_corner",
+        name: "ゼミ室・休憩コーナー",
+        desc: "給湯ポット・冷蔵庫・分別ゴミ箱・ペットボトルが置かれた一角",
+        bg: "radial-gradient(circle at 40% 45%, #1d4ed8 0%, #0f172a 78%)",
+        links: [
+          { target: "seminar_room", yaw: 90, top: 68, label: "ゼミ室中央へ戻る" }
+        ]
+      },
+      hallway_1: {
+        id: "hallway_1",
+        name: "研究棟 2F 廊下",
+        desc: "掲示板・コピー機・照明スイッチ・階段への通路",
         bg: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-        range: [21, 36]
+        links: [
+          { target: "seminar_room", yaw: 270, top: 68, label: "ゼミ室へ入る" },
+          { target: "learning_commons", yaw: 0, top: 68, label: "ラーニングコモンズへ" },
+          { target: "entrance_hall", yaw: 180, top: 70, label: "1F エントランスへ" }
+        ]
       },
-      {
-        id: "library_lounge",
+      learning_commons: {
+        id: "learning_commons",
         name: "ラーニングコモンズ",
-        isOutdoor: false,
-        sub: "グループ作業スペース・電源席・プリンターコーナー",
-        bg: "radial-gradient(circle at 30% 30%, #1d4ed8 0%, #0f172a 75%)",
-        range: [37, 52]
+        desc: "大型モニター・電源席・共同作業テーブルが並ぶエリア",
+        bg: "radial-gradient(circle at 60% 35%, #0f766e 0%, #0f172a 78%)",
+        links: [
+          { target: "hallway_1", yaw: 180, top: 68, label: "2F 廊下へ戻る" }
+        ]
       },
-      {
+      entrance_hall: {
+        id: "entrance_hall",
+        name: "1F エントランスホール",
+        desc: "自動ドア・デジタルサイネージ・傘立て・中庭への出口",
+        bg: "linear-gradient(160deg, #334155 0%, #0f172a 100%)",
+        links: [
+          { target: "hallway_1", yaw: 0, top: 68, label: "2F 廊下へ上がる" },
+          { target: "courtyard", yaw: 120, top: 68, label: "外へ出る（中庭）" }
+        ]
+      },
+      courtyard: {
         id: "courtyard",
-        name: "中庭（外エリア）",
-        isOutdoor: true,
-        sub: "ベンチ・植栽・駐輪場・太陽光パネルが見える屋外スペース",
-        bg: "linear-gradient(180deg, #0369a1 0%, #14532d 65%, #0f172a 100%)",
-        range: [53, 68]
+        name: "中庭（屋外エリア）",
+        desc: "ベンチ・植栽・太陽光パネル・自販機がある屋外広場",
+        bg: "linear-gradient(180deg, #0369a1 0%, #14532d 62%, #0f172a 100%)",
+        links: [
+          { target: "entrance_hall", yaw: 300, top: 68, label: "校舎内へ入る" },
+          { target: "campus_walk", yaw: 60, top: 68, label: "並木道へ進む" }
+        ]
       },
-      {
+      campus_walk: {
         id: "campus_walk",
-        name: "キャンパス並木道",
-        isOutdoor: true,
-        sub: "学食棟へ続く歩道・街灯・自販機・ゴミ分別ステーション",
-        bg: "linear-gradient(160deg, #0284c7 0%, #15803d 60%, #1e293b 100%)",
-        range: [69, 84]
-      },
-      {
-        id: "rooftop_deck",
-        name: "展望デッキ（外エリア）",
-        isOutdoor: true,
-        sub: "風向計・校舎全景・ソーラーベンチがある開放エリア",
-        bg: "linear-gradient(180deg, #0ea5e9 0%, #1e3a8a 60%, #0f172a 100%)",
-        range: [85, 100]
+        name: "キャンパス並木道（屋外）",
+        desc: "駐輪場・LED街灯・学食棟前・リサイクルステーション",
+        bg: "linear-gradient(170deg, #0284c7 0%, #15803d 58%, #1e293b 100%)",
+        links: [
+          { target: "courtyard", yaw: 240, top: 68, label: "中庭へ戻る" }
+        ]
       }
-    ];
+    };
 
-    // 100問分のデータ生成（易30 / 中50 / 難20 のバランス。実データに差し替え可能）
-    function create100Questions() {
-      const bank = [];
+    // =========================================================
+    // 2. 全100問の空間配置データ生成（各シーンの特定座標・角度に配置）
+    // =========================================================
+    const SPOT_NAMES_BY_SCENE = {
+      seminar_room: ["エアコンリモコン", "ホワイトボード", "窓際のブラインド", "プロジェクター", "長机の電源タップ", "天井照明スイッチ"],
+      break_corner: ["机上のペットボトル", "電気ポット", "小型冷蔵庫", "分別ゴミ箱", "マイボトル置き場"],
+      hallway_1: ["共用コピー機", "省エネ啓発ポスター", "廊下のセンサー照明", "掲示板の資料", "階段前の案内板"],
+      learning_commons: ["大型ディスプレイ", "グループ席のコンセント", "プリンター複合機", "空調吹き出し口", "換気モニター"],
+      entrance_hall: ["自動ドア", "消費電力モニター", "宅配ロッカー", "ロビー照明"],
+      courtyard: ["ソーラーベンチ", "屋外自販機", "屋上太陽光パネル案内", "緑化スペース", "雨水タンク"],
+      campus_walk: ["LED街灯", "学食前の分別BOX", "シェアサイクル駐輪場", "木陰のベンチ", "掲示スタンド"]
+    };
+
+    function generate100SpatialQuestions() {
+      const sceneKeys = Object.keys(SCENES);
       const templatesEasy = [
         {
-          q: "ゼミ室で誰もいない時間帯に照明を消す行動は、主にどの資源の節約につながる？",
-          choices: ["電力の消費削減", "上水道の使用量削減", "紙資源の削減"],
+          q: "ゼミ室や教室を最後に退室するとき、照明やモニターの電源を切ることで直接減らせるものは？",
+          choices: ["待機電力・無駄な消費電力", "建物の床面積", "Wi-Fiの通信速度"],
           ans: 0,
-          exp: "照明の消灯は最もシンプルで効果的な節電アクションの一つです。"
+          exp: "使っていない機器の電源オフは最も基本で確実な節電行動です。"
         },
         {
-          q: "ペットボトルをリサイクルに出す前に行う基本のひと手間として正しいものはどれ？",
-          choices: ["キャップとラベルを外し、中をすすぐ", "潰さずにそのまま燃えるごみへ入れる", "油分が残ったまま他のプラと混ぜる"],
+          q: "ペットボトルを捨てる際、リサイクルの品質を保つために行うべき行動はどれ？",
+          choices: ["キャップとラベルを外し、中を軽くすすぐ", "飲み残しを入れたまま潰す", "燃えるごみ袋にそのまま混ぜる"],
           ans: 0,
-          exp: "分別ルールを守ることで再生資源の品質が保たれます。"
+          exp: "素材ごとに正しく分別することで再資源化率が大きく向上します。"
         },
         {
-          q: "資料を印刷する前に「両面印刷」や「集約印刷」を選ぶ主なメリットは？",
-          choices: ["紙の使用量と印刷コストを減らせる", "インクの乾燥時間がゼロになる", "モニターの輝度が自動で下がる"],
+          q: "ゼミ発表のレジュメを印刷する際、紙資源を半分に減らせる設定はどれ？",
+          choices: ["両面印刷（または2ページ集約）", "片面カラー拡大印刷", "余白を最大にして1行ずつ印刷"],
           ans: 0,
-          exp: "1枚あたりの情報量を増やすことで紙資源の消費を抑えられます。"
+          exp: "両面印刷・集約印刷は大学の資料作成ですぐ実践できる工夫です。"
         }
       ];
 
       const templatesMed = [
         {
-          q: "エアコンの設定温度を冬場に1℃下げた場合の一般的な省エネ効果の目安に近いものはどれ？",
-          choices: ["約10%前後の消費電力削減", "約50%以上の消費電力削減", "消費電力は一切変わらない"],
+          q: "冷暖房の効きを良くし、エアコンの消費電力を抑えるために有効な窓際の工夫はどれ？",
+          choices: ["ブラインドやカーテンで直射日光や冷気を遮る", "窓を全開にしたまま冷房を強風にする", "室外機の吹き出し口を荷物で塞ぐ"],
           ans: 0,
-          exp: "冷暖房は空調設定の見直しによる消費電力の変化が大きい設備です。"
+          exp: "窓からの熱の出入りを抑えると空調負荷が大きく下がります。"
         },
         {
-          q: "キャンパス内の自動販売機や共用設備で「待機電力」を抑える考え方として適切なのはどれ？",
-          choices: ["長時間使わない機器の主電源や省エネモードを活用する", "使っていないモニターを最大輝度で点けっぱなしにする", "冷房と暖房を同時に稼働させる"],
+          q: "自動販売機や冷蔵庫の省エネ運用として、大学キャンパスでも導入されている仕組みはどれ？",
+          choices: ["ピーク時間帯に冷却を控えるヒートポンプ・ピークカット機能", "24時間ずっと最大出力で加熱と冷却を同時に行う機能", "扉を開けたまま保冷する機能"],
           ans: 0,
-          exp: "使わない時間の無駄な電力消費を減らすことが基本になります。"
+          exp: "電力需要のピークを避けて冷却する技術により消費電力を抑えています。"
         },
         {
-          q: "大学のグループワークでクラウド資料共有を活用する利点として最も妥当なものはどれ？",
-          choices: ["不要な紙出力や版管理のミスを減らせる", "通信量が常にゼロになる", "バッテリー消費が必ずなくなる"],
+          q: "複数の家電を1つの電源タップに繋いでいるとき、節電につながる使い方はどれ？",
+          choices: ["個別スイッチ付きタップで未使用機器の待機電力を切る", "使わない充電器もすべて挿しっぱなしにする", "タコ足配線を何重にもつなぐ"],
           ans: 0,
-          exp: "紙の刷り直しを減らしつつ、共同編集の効率も高められます。"
+          exp: "使わない時間の待機電力をこまめに遮断するのが効果的です。"
         }
       ];
 
       const templatesHard = [
         {
-          q: "【難問】電力需要が逼迫しやすい時間帯（ピーク時）に、節電行動の社会的価値が高まる理由はどれ？",
-          choices: ["発電設備の限界や需給バランスの崩れを防ぎやすいため", "昼間は太陽光発電が完全に停止するため", "送電線の抵抗が夜間に必ずゼロになるため"],
+          q: "【難問】再生可能エネルギーの導入が増える中、昼間の太陽光発電が余りやすい時間帯に電気を使う工夫を何と呼ぶ？",
+          choices: ["デマンドレスポンス（上げDR・昼間シフト）", "ブラックアウト", "ベースロード固定"],
           ans: 0,
-          exp: "総量だけでなく「どの時間帯に使うか（デマンド・ピークシフト）」も重要です。"
+          exp: "発電量に合わせて需要側（使う時間）をシフトさせる取り組みが注目されています。"
         },
         {
-          q: "【難問】製品のライフサイクル全体（LCA）で環境負荷を考えるとき、見落としやすい視点はどれ？",
-          choices: ["製造・輸送・廃棄まで含めたトータルの排出・負荷", "店頭でのパッケージの色味だけ", "購入直後の1日だけの使用状態"],
+          q: "【難問】製品やサービスの環境負荷を『原料調達→製造→輸送→使用→廃棄』の全工程で評価する手法はどれ？",
+          choices: ["LCA（ライフサイクルアセスメント）", "KPI（重要業績評価指標）", "BCP（事業継続計画）"],
           ans: 0,
-          exp: "使用時だけでなく、作る前・運ぶとき・手放すときの工程全体を見るのがポイントです。"
+          exp: "使用時だけでなくライフサイクル全体で見ることで本質的な削減策が見えてきます。"
         }
       ];
 
+      const questions = [];
       for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
-        const area = AREAS.find(a => i >= a.range[0] && i <= a.range[1]) || AREAS[0];
-        // 易30問 / 中50問 / 難20問 の比率
+        const sceneId = sceneKeys[(i - 1) % sceneKeys.length];
+        const spotList = SPOT_NAMES_BY_SCENE[sceneId];
+        const spotName = spotList[(i - 1) % spotList.length];
+
         let diff = "med";
-        if (i % 10 <= 3 && i % 10 >= 1) diff = "easy";
+        if (i % 10 >= 1 && i % 10 <= 3) diff = "easy";
         else if (i % 5 === 0) diff = "hard";
 
         const pool = diff === "easy" ? templatesEasy : diff === "hard" ? templatesHard : templatesMed;
         const tpl = pool[(i - 1) % pool.length];
 
-        bank.push({
+        // 空間内の360度方位(yaw)と高さ(top)に分散配置
+        const yaw = (i * 47 + sceneKeys.indexOf(sceneId) * 31) % 360;
+        const top = 32 + ((i * 17) % 34);
+
+        questions.push({
           id: i,
-          areaId: area.id,
+          sceneId,
+          spotName,
           diff,
-          label: `Q${i}（${area.name.split("（")[0]}）`,
-          question: `${tpl.q} [No.${i}]`,
+          question: `【${spotName}を調査】${tpl.q}`,
           choices: tpl.choices,
           answerIndex: tpl.ans,
           explanation: tpl.exp,
-          yaw: ((i * 53) % 360),
-          top: 28 + ((i * 19) % 46),
-          left: 18 + ((i * 29) % 64)
+          yaw,
+          top
         });
       }
-      return bank;
+      return questions;
     }
 
+    // =========================================================
+    // 3. ゲーム状態
+    // =========================================================
     const state = {
-      currentAreaId: "seminar_room",
-      yaw: 0, // 0〜359度（北=0）
+      currentSceneId: "seminar_room",
+      yaw: 0, // 0 = 北
       correctIds: new Set(),
-      triedIds: new Set(),
-      clearedModalShown: false,
-      questions: create100Questions(),
-      activeQuestionId: null,
+      clearedNotified: false,
+      isFinishedMode: false,
+      questions: generate100SpatialQuestions(),
       isDragging: false,
       dragStartX: 0,
       dragStartYaw: 0
     };
 
-    // ==========================================
-    // 2. 描画・UI更新
-    // ==========================================
-    const sceneViewport = document.getElementById("sceneViewport");
-    const sceneCanvas = document.getElementById("sceneCanvas");
-    const hotspotsLayer = document.getElementById("hotspotsLayer");
-    const sceneTitle = document.getElementById("sceneTitle");
-    const sceneSub = document.getElementById("sceneSub");
-    const compass = document.getElementById("compass");
-    const areaList = document.getElementById("areaList");
-    const logBox = document.getElementById("logBox");
+    const viewport = document.getElementById("viewport");
+    const panoramaWorld = document.getElementById("panoramaWorld");
+    const panoramaGrid = document.getElementById("panoramaGrid");
+    const interactiveLayer = document.getElementById("interactiveLayer");
+    const locationName = document.getElementById("locationName");
+    const locationDesc = document.getElementById("locationDesc");
+    const compassHud = document.getElementById("compassHud");
+    const toastEl = document.getElementById("toast");
 
-    function getCurrentArea() {
-      return AREAS.find(a => a.id === state.currentAreaId) || AREAS[0];
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2600);
     }
 
     function normalizeYaw(deg) {
       return ((deg % 360) + 360) % 360;
     }
 
-    function getDirectionLabel(deg) {
+    // 現在の視点(currentYaw)から見た対象方位(targetYaw)の相対角度(-180 ~ +180)
+    function getRelativeAngle(targetYaw, currentYaw) {
+      return ((targetYaw - currentYaw + 540) % 360) - 180;
+    }
+
+    function getDirectionText(deg) {
       const dirs = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
       const idx = Math.round(normalizeYaw(deg) / 45) % 8;
       return `${dirs[idx]}（${Math.round(normalizeYaw(deg))}°）`;
     }
 
-    function addLog(text) {
-      const div = document.createElement("div");
-      div.className = "log-item";
-      div.textContent = text;
-      logBox.prepend(div);
-    }
-
     function updateHud() {
-      const count = state.correctIds.size;
-      document.getElementById("correctCount").textContent = String(count);
-      const pct = Math.min(100, Math.round((count / CLEAR_GOAL) * 100));
+      const solved = state.correctIds.size;
+      document.getElementById("correctCount").textContent = String(solved);
+      const pct = Math.min(100, Math.round((solved / CLEAR_GOAL) * 100));
       document.getElementById("progressBar").style.width = `${pct}%`;
-      document.getElementById("progressPct").textContent = `${pct}%`;
 
-      if (count >= CLEAR_GOAL && !state.clearedModalShown) {
-        state.clearedModalShown = true;
+      if (solved >= CLEAR_GOAL && !state.clearedNotified) {
+        state.clearedNotified = true;
         document.getElementById("clearModal").classList.add("open");
-        addLog(`【達成】${CLEAR_GOAL}問正解を達成しました！そのまま全100問探索を続けることもできます。`);
       }
     }
 
-    function renderAreaButtons() {
-      areaList.innerHTML = "";
-      AREAS.forEach(area => {
-        const areaQs = state.questions.filter(q => q.areaId === area.id);
-        const solvedInArea = areaQs.filter(q => state.correctIds.has(q.id)).length;
-        const btn = document.createElement("button");
-        btn.className = `area-btn ${area.id === state.currentAreaId ? "active" : ""}`;
-        btn.innerHTML = `
-          <div>${area.name}</div>
-          <small>正解 ${solvedInArea}/${areaQs.length}問 ${area.isOutdoor ? "・屋外" : "・室内"}</small>
-        `;
-        btn.onclick = () => switchArea(area.id);
-        areaList.appendChild(btn);
-      });
-    }
-
-    function renderScene() {
-      const area = getCurrentArea();
+    // =========================================================
+    // 4. 空間レンダリング（視点に応じて対象物と移動矢印を配置）
+    // =========================================================
+    function renderSpace() {
       state.yaw = normalizeYaw(state.yaw);
-      sceneTitle.textContent = area.name;
-      sceneSub.textContent = area.sub;
-      compass.textContent = getDirectionLabel(state.yaw);
+      const scene = SCENES[state.currentSceneId];
 
-      // 視点回転に合わせて背景グラデーション位置をずらす（パノラマ視点の疑似表現）
-      const shiftX = ((state.yaw / 360) * 100).toFixed(1);
-      sceneCanvas.style.background = area.bg;
-      sceneCanvas.style.backgroundPosition = `${shiftX}% 50%`;
+      locationName.textContent = scene.name;
+      locationDesc.textContent = scene.desc;
+      compassHud.textContent = getDirectionText(state.yaw);
 
-      const moveBtn = document.getElementById("moveOutdoorBtn");
-      if (area.id === "seminar_room") {
-        moveBtn.textContent = "外へ出る（中庭・キャンパスへ）";
-      } else if (area.isOutdoor) {
-        moveBtn.textContent = "ゼミ室へ戻る（スタート拠点）";
-      } else {
-        moveBtn.textContent = "外へ出る（中庭・キャンパスへ）";
-      }
+      panoramaWorld.style.background = scene.bg;
+      // 視点回転に合わせて背景グリッドを水平スクロール
+      const gridOffsetX = -(state.yaw * 4);
+      panoramaGrid.style.backgroundPosition = `${gridOffsetX}px 0px`;
 
-      hotspotsLayer.innerHTML = "";
-      const areaQuestions = state.questions.filter(q => q.areaId === area.id);
+      interactiveLayer.innerHTML = "";
 
-      // 現在の視点（yaw）に近い問題を最大6個ピン表示（見やすさ重視）
-      const visibleQs = areaQuestions
-        .map(q => {
-          const diffYaw = Math.abs(((q.yaw - state.yaw + 540) % 360) - 180);
-          return { q, diffYaw };
-        })
-        .sort((a, b) => a.diffYaw - b.diffYaw)
-        .slice(0, 6);
+      // A. このエリアに隠れている問題スポットを描画（視野角 ±65度以内に入ったものだけ見える）
+      const sceneQuestions = state.questions.filter(q => q.sceneId === scene.id);
+      sceneQuestions.forEach(q => {
+        const rel = getRelativeAngle(q.yaw, state.yaw);
+        if (Math.abs(rel) > 65) return; // 視界外は隠す＝見回して探す体験
 
-      visibleQs.forEach(({ q, diffYaw }) => {
-        const pin = document.createElement("button");
+        const screenX = 50 + (rel / 65) * 44; // 6%〜94%
         const isSolved = state.correctIds.has(q.id);
-        pin.className = `hotspot ${isSolved ? "solved" : ""}`;
-        pin.style.top = `${q.top}%`;
-        // 視点差を横位置に反映
-        const relOffset = Math.max(-35, Math.min(35, ((q.yaw - state.yaw + 540) % 360 - 180) * 0.35));
-        pin.style.left = `${Math.max(12, Math.min(88, q.left + relOffset))}%`;
-        pin.style.opacity = diffYaw > 120 ? "0.45" : "1";
-        pin.textContent = isSolved ? `✓ ${q.label}` : q.label;
-        pin.onclick = (e) => {
+
+        const el = document.createElement("div");
+        el.className = `hotspot-target ${isSolved ? "solved" : ""}`;
+        el.style.left = `${screenX}%`;
+        el.style.top = `${q.top}%`;
+
+        el.innerHTML = `
+          <div class="hotspot-ring">${isSolved ? "✓" : "?"}</div>
+          <div class="hotspot-label">${q.spotName} #${q.id}</div>
+        `;
+
+        el.onclick = (e) => {
           e.stopPropagation();
-          openQuestion(q.id);
+          openQuizModal(q);
         };
-        hotspotsLayer.appendChild(pin);
+
+        interactiveLayer.appendChild(el);
       });
 
-      renderAreaButtons();
+      // B. 隣接空間へ移動するための矢印アイコン（視野角 ±85度以内で表示）
+      scene.links.forEach(link => {
+        const rel = getRelativeAngle(link.yaw, state.yaw);
+        if (Math.abs(rel) > 85) return;
+
+        const screenX = 50 + (rel / 85) * 42;
+        const arrowBtn = document.createElement("button");
+        arrowBtn.className = "nav-arrow";
+        arrowBtn.style.left = `${screenX}%`;
+        arrowBtn.style.top = `${link.top}%`;
+        arrowBtn.title = link.label;
+
+        arrowBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4l-7 8h4.5v8h5v-8H19l-7-8z"/>
+          </svg>
+          <span class="nav-arrow-caption">${link.label}</span>
+        `;
+
+        arrowBtn.onclick = (e) => {
+          e.stopPropagation();
+          moveToScene(link.target);
+        };
+
+        interactiveLayer.appendChild(arrowBtn);
+      });
     }
 
-    function switchArea(areaId) {
-      const target = AREAS.find(a => a.id === areaId);
-      if (!target) return;
-      state.currentAreaId = areaId;
-      state.yaw = 0;
-      addLog(`「${target.name}」に移動しました。`);
-      renderScene();
+    function moveToScene(targetSceneId) {
+      const nextScene = SCENES[targetSceneId];
+      if (!nextScene) return;
+      state.currentSceneId = targetSceneId;
+      // 北向き(yaw)は維持したまま移動（方向感覚を保てる設計）
+      renderSpace();
+      showToast(`「${nextScene.name}」に移動しました`);
     }
 
-    // ==========================================
-    // 3. クイズモーダル制御
-    // ==========================================
+    // =========================================================
+    // 5. クイズ出題モーダル（見つけた箇所をクリックした時のみ起動）
+    // =========================================================
     const quizModal = document.getElementById("quizModal");
     const qDiffTag = document.getElementById("qDiffTag");
     const qMeta = document.getElementById("qMeta");
     const qText = document.getElementById("qText");
     const qChoices = document.getElementById("qChoices");
     const qFeedback = document.getElementById("qFeedback");
-    const nextQuizBtn = document.getElementById("nextQuizBtn");
 
-    function openQuestion(qId) {
-      const q = state.questions.find(item => item.id === qId);
-      if (!q) return;
-      state.activeQuestionId = qId;
-
+    function openQuizModal(q) {
+      const scene = SCENES[q.sceneId];
       qDiffTag.className = "diff-tag";
       if (q.diff === "easy") {
         qDiffTag.classList.add("diff-easy");
-        qDiffTag.textContent = "易問（観察・基本）";
+        qDiffTag.textContent = "易問";
       } else if (q.diff === "hard") {
         qDiffTag.classList.add("diff-hard");
-        qDiffTag.textContent = "難問（応用・思考）";
+        qDiffTag.textContent = "難問";
       } else {
         qDiffTag.classList.add("diff-med");
-        qDiffTag.textContent = "中問（探索・理解）";
+        qDiffTag.textContent = "中問";
       }
 
-      qMeta.textContent = `問題 #${q.id} / ${TOTAL_QUESTIONS} ｜ 現在 ${state.correctIds.size} 問正解（目標 ${CLEAR_GOAL} 問）`;
+      qMeta.textContent = `場所：${scene.name} ／ 対象：${q.spotName}（問題 #${q.id}）`;
       qText.textContent = q.question;
       qFeedback.className = "feedback";
       qFeedback.textContent = "";
-      nextQuizBtn.style.display = "none";
       qChoices.innerHTML = "";
 
-      q.choices.forEach((choiceText, idx) => {
+      q.choices.forEach((choice, idx) => {
         const btn = document.createElement("button");
         btn.className = "choice-btn";
-        btn.textContent = `${idx + 1}. ${choiceText}`;
-        btn.onclick = () => handleAnswer(q, idx, btn);
+        btn.textContent = `${idx + 1}. ${choice}`;
+        btn.onclick = () => submitAnswer(q, idx, btn);
         qChoices.appendChild(btn);
       });
 
       quizModal.classList.add("open");
     }
 
-    function handleAnswer(q, chosenIdx, clickedBtn) {
-      state.triedIds.add(q.id);
+    function submitAnswer(q, chosenIdx, clickedBtn) {
       const allBtns = qChoices.querySelectorAll(".choice-btn");
       allBtns.forEach(b => (b.disabled = true));
 
-      const isCorrect = chosenIdx === q.answerIndex;
-      if (isCorrect) {
+      if (chosenIdx === q.answerIndex) {
         clickedBtn.classList.add("correct");
-        const firstTimeCorrect = !state.correctIds.has(q.id);
+        const isNew = !state.correctIds.has(q.id);
         state.correctIds.add(q.id);
         qFeedback.innerHTML = `<strong style="color:#86efac;">正解！</strong> ${q.explanation}`;
-        if (firstTimeCorrect) {
-          addLog(`Q${q.id} に正解（累計 ${state.correctIds.size} 問正解）`);
+        if (isNew) {
+          showToast(`正解！（現在 ${state.correctIds.size} / ${CLEAR_GOAL} 問）`);
         }
         updateHud();
       } else {
         clickedBtn.classList.add("wrong");
         allBtns[q.answerIndex].classList.add("correct");
         qFeedback.innerHTML = `<strong style="color:#fca5a5;">不正解。</strong> ${q.explanation}`;
-        addLog(`Q${q.id} で不正解（解説を確認）`);
       }
 
       qFeedback.classList.add("show");
-      nextQuizBtn.style.display = "inline-block";
-      renderScene();
+      renderSpace();
     }
 
-    function openNextUnsolvedInCurrentArea() {
-      const area = getCurrentArea();
-      const candidates = state.questions.filter(
-        q => q.areaId === area.id && !state.correctIds.has(q.id) && q.id !== state.activeQuestionId
-      );
-      const fallback = state.questions.filter(q => !state.correctIds.has(q.id));
-      const nextQ = candidates[0] || fallback[0];
-      if (nextQ) {
-        if (nextQ.areaId !== state.currentAreaId) {
-          switchArea(nextQ.areaId);
-        }
-        openQuestion(nextQ.id);
-      } else {
-        quizModal.classList.remove("open");
-        addLog("全100問を制覇しました！");
-      }
-    }
-
-    // ==========================================
-    // 4. イベント登録
-    // ==========================================
+    // =========================================================
+    // 6. 操作イベント（視点ドラッグ・左右ボタン・モーダル制御）
+    // =========================================================
     document.getElementById("turnLeftBtn").onclick = () => {
-      state.yaw -= 30;
-      renderScene();
+      state.yaw -= 35;
+      renderSpace();
     };
+
     document.getElementById("turnRightBtn").onclick = () => {
-      state.yaw += 30;
-      renderScene();
+      state.yaw += 35;
+      renderSpace();
     };
-    document.getElementById("resetYawBtn").onclick = () => {
+
+    document.getElementById("northBtn").onclick = () => {
       state.yaw = 0;
-      renderScene();
-    };
-
-    document.getElementById("moveOutdoorBtn").onclick = () => {
-      const area = getCurrentArea();
-      if (area.isOutdoor) {
-        switchArea("seminar_room");
-      } else {
-        switchArea("courtyard");
-      }
-    };
-
-    document.getElementById("openQuickQuizBtn").onclick = () => {
-      const area = getCurrentArea();
-      const firstInArea = state.questions.find(q => q.areaId === area.id && !state.correctIds.has(q.id))
-        || state.questions.find(q => q.areaId === area.id);
-      if (firstInArea) openQuestion(firstInArea.id);
+      renderSpace();
     };
 
     document.getElementById("closeQuizBtn").onclick = () => {
       quizModal.classList.remove("open");
     };
 
-    nextQuizBtn.onclick = () => {
-      openNextUnsolvedInCurrentArea();
-    };
-
-    document.getElementById("continuePlayBtn").onclick = () => {
+    document.getElementById("continueExploreBtn").onclick = () => {
       document.getElementById("clearModal").classList.remove("open");
+      showToast("探索モード継続中！残りの箇所も自由に探せます");
     };
 
-    document.getElementById("finishPlayBtn").onclick = () => {
+    document.getElementById("finishBtn").onclick = () => {
       document.getElementById("clearModal").classList.remove("open");
-      addLog(`プレイを終了しました（最終正解数: ${state.correctIds.size} / 100問）。`);
+      showToast(`お疲れさまでした！最終正解数：${state.correctIds.size} / 100問`);
     };
 
-    document.getElementById("resetAllBtn").onclick = () => {
+    document.getElementById("resetBtn").onclick = () => {
       state.correctIds.clear();
-      state.triedIds.clear();
-      state.clearedModalShown = false;
-      state.currentAreaId = "seminar_room";
+      state.clearedNotified = false;
+      state.currentSceneId = "seminar_room";
       state.yaw = 0;
-      logBox.innerHTML = "";
-      addLog("進捗をリセットし、ゼミ室から再開しました。");
       updateHud();
-      renderScene();
+      renderSpace();
+      showToast("ゼミ室から探索をやり直します");
     };
 
-    // ドラッグで視点回転
-    sceneViewport.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".hotspot")) return;
+    // ドラッグで360度見回す
+    viewport.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".hotspot-target") || e.target.closest(".nav-arrow")) return;
       state.isDragging = true;
       state.dragStartX = e.clientX;
       state.dragStartYaw = state.yaw;
-      sceneViewport.setPointerCapture(e.pointerId);
+      viewport.setPointerCapture(e.pointerId);
     });
 
-    sceneViewport.addEventListener("pointermove", (e) => {
+    viewport.addEventListener("pointermove", (e) => {
       if (!state.isDragging) return;
       const dx = e.clientX - state.dragStartX;
-      state.yaw = state.dragStartYaw - dx * 0.35;
-      renderScene();
+      state.yaw = state.dragStartYaw - dx * 0.32;
+      renderSpace();
     });
 
-    sceneViewport.addEventListener("pointerup", () => {
+    viewport.addEventListener("pointerup", () => {
       state.isDragging = false;
     });
 
-    // 初期描画
+    // キーボード左右キーでも視点を回せるように対応
+    window.addEventListener("keydown", (e) => {
+      if (quizModal.classList.contains("open")) return;
+      if (e.key === "ArrowLeft") {
+        state.yaw -= 25;
+        renderSpace();
+      } else if (e.key === "ArrowRight") {
+        state.yaw += 25;
+        renderSpace();
+      }
+    });
+
+    // 初期表示
     updateHud();
-    renderScene();
+    renderSpace();
   </script>
 </body>
 </html>
