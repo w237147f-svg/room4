@@ -547,17 +547,10 @@ const SPAWN_SCENES = [
     "out369", "out371", "out373", "out375", "out377", "out379"
 ];
 
-/**
- * 角度を -180 〜 +180 度の範囲に正規化する
- */
 function normalizeYaw(deg) {
-    let angle = ((deg + 180) % 360 + 360) % 360 - 180;
-    return angle;
+    return ((deg + 180) % 360 + 360) % 360 - 180;
 }
 
-/**
- * 180度反対の角度を返す
- */
 function oppositeYaw(deg) {
     return normalizeYaw(Number(deg) + 180);
 }
@@ -3318,15 +3311,11 @@ const TOTAL_UNIQUE_QUIZZES = (() => {
 })();
 
 /**
- * 移動ホットスポットの構築：
- * 1) 指定の個別角度変更（269->280, 147->334, 320->305, 305->320, 344->360）
- * 2) 戻るアイコン（isBack: true または text に「戻る」を含む）を、
- *    「相手シーンから自シーンへ進むアイコンの yaw」の180度反対方向に自動配置
+ * 移動ホットスポットの構築（戻るアイコンの自動180度変更は行わず元のyawを維持）
  */
-function buildScenesWith180BackHotspots(rawScenes) {
+function buildScenesConfig(rawScenes) {
     const scenes = JSON.parse(JSON.stringify(rawScenes));
 
-    // 1. 個別指定の移動アイコンを追加・調整
     // 269から280への移動アイコンを右に110度移動（基準 -20 + 110 = 90）
     if (scenes.out269) {
         scenes.out269.hotSpots.push({
@@ -3391,43 +3380,6 @@ function buildScenesWith180BackHotspots(rawScenes) {
             cssClass: "right-arrow-icon"
         });
     }
-
-    // 2. 各シーンの「進む」アイコンの向きを記録（fromScene -> toScene -> yaw）
-    const forwardYawMap = {};
-    Object.entries(scenes).forEach(([fromId, sceneObj]) => {
-        if (!Array.isArray(sceneObj.hotSpots)) return;
-        sceneObj.hotSpots.forEach(hs => {
-            if (hs.type !== "scene" || !hs.sceneId) return;
-            const isBack = Boolean(hs.isBack) || (typeof hs.text === "string" && hs.text.includes("戻る"));
-            if (!isBack) {
-                if (!forwardYawMap[fromId]) forwardYawMap[fromId] = {};
-                forwardYawMap[fromId][hs.sceneId] = Number(hs.yaw);
-            }
-        });
-    });
-
-    // 3. 「戻る」アイコンを、相手シーン（hs.sceneId）から自シーン（sceneId）へ進む方向の180度反対に配置
-    Object.entries(scenes).forEach(([sceneId, sceneObj]) => {
-        if (!Array.isArray(sceneObj.hotSpots)) return;
-        sceneObj.hotSpots.forEach(hs => {
-            if (hs.type !== "scene" || !hs.sceneId) return;
-            const isBack = Boolean(hs.isBack) || (typeof hs.text === "string" && hs.text.includes("戻る"));
-            if (isBack) {
-                const reverseForwardYaw = forwardYawMap[hs.sceneId] && forwardYawMap[hs.sceneId][sceneId];
-                if (typeof reverseForwardYaw === "number" && !Number.isNaN(reverseForwardYaw)) {
-                    hs.yaw = oppositeYaw(reverseForwardYaw);
-                } else {
-                    // 相手側からの「進む」定義がない場合は、自シーン内の「進む」アイコンの180度反対をフォールバックに使う
-                    const localForward = sceneObj.hotSpots.find(
-                        other => other.type === "scene" && other !== hs && !(typeof other.text === "string" && other.text.includes("戻る"))
-                    );
-                    if (localForward && typeof localForward.yaw === "number") {
-                        hs.yaw = oppositeYaw(localForward.yaw);
-                    }
-                }
-            }
-        });
-    });
 
     return scenes;
 }
@@ -4638,49 +4590,72 @@ const rawScenesConfig = {
     }
 };
 
-const scenesConfig = buildScenesWith180BackHotspots(rawScenesConfig);
+const scenesConfig = buildScenesConfig(rawScenesConfig);
 
 let currentQuiz = null;
-let currentHotspotId = null;
+let currentHotspotArgs = null;
+
+function isQuizAlreadyCleared(quizArgs) {
+    if (!quizArgs) return false;
+    if (quizArgs.quizId && answeredIds.has(quizArgs.quizId)) return true;
+    if (quizArgs.quizGroup && answeredGroups.has(quizArgs.quizGroup)) return true;
+    return false;
+}
+
+function removeClearedHotspotsFromScene(sceneId) {
+    if (!viewer || !sceneQuizHotspots[sceneId]) return;
+    sceneQuizHotspots[sceneId].forEach(hs => {
+        if (isQuizAlreadyCleared(hs.clickHandlerArgs)) {
+            try {
+                viewer.removeHotSpot(hs.id, sceneId);
+            } catch (e) {}
+        }
+    });
+}
+
+function removeClearedHotspotsAllScenes() {
+    if (!viewer) return;
+    Object.keys(sceneQuizHotspots).forEach(sceneId => {
+        removeClearedHotspotsFromScene(sceneId);
+    });
+}
 
 function initPanorama(initialScene = "scene1") {
-    if (viewer && typeof viewer.destroy === "function") {
+    if (viewer) {
         viewer.destroy();
     }
+
+    const configWithQuiz = JSON.parse(JSON.stringify(scenesConfig));
+
+    Object.keys(sceneQuizHotspots).forEach(sceneId => {
+        if (configWithQuiz[sceneId]) {
+            const activeQuizSpots = sceneQuizHotspots[sceneId].filter(
+                hs => !isQuizAlreadyCleared(hs.clickHandlerArgs)
+            );
+            configWithQuiz[sceneId].hotSpots = configWithQuiz[sceneId].hotSpots.concat(activeQuizSpots);
+        }
+    });
 
     viewer = pannellum.viewer('panorama', {
         "default": {
             "firstScene": initialScene,
-            "sceneFadeDuration": 800,
-            "autoLoad": true
+            "sceneFadeDuration": 600,
+            "autoLoad": true,
+            "yaw": 0,
+            "pitch": 0,
+            "hfov": 100
         },
-        "scenes": scenesConfig
+        "scenes": configWithQuiz
+    });
+
+    viewer.on('scenechange', function(newSceneId) {
+        removeClearedHotspotsFromScene(newSceneId);
     });
 
     viewer.on('load', function() {
-        const activeSceneId = viewer.getScene();
-        renderQuizHotspotsForScene(activeSceneId);
-        applyArrowRotations(activeSceneId);
-    });
-}
-
-function applyArrowRotations(sceneId) {
-    const scene = scenesConfig[sceneId];
-    if (!scene || !Array.isArray(scene.hotSpots)) return;
-
-    const panoContainer = document.getElementById('panorama');
-    if (!panoContainer) return;
-
-    const spotEls = panoContainer.querySelectorAll('.pnlm-hotspot');
-    spotEls.forEach(el => {
-        if (el.classList.contains('right-arrow-icon')) {
-            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(90deg)';
-        } else if (el.classList.contains('left-arrow-icon')) {
-            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(-90deg)';
-        } else if (el.classList.contains('diag-ne-arrow-icon')) {
-            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(45deg)';
-        } else if (el.classList.contains('diag-nw-arrow-icon')) {
-            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(-45deg)';
+        const activeScene = viewer.getScene();
+        if (activeScene) {
+            removeClearedHotspotsFromScene(activeScene);
         }
     });
 }
@@ -4690,154 +4665,107 @@ function startGame() {
     isGameStarted = true;
     answeredIds.clear();
     answeredGroups.clear();
-    updateScoreBoard();
+
+    document.getElementById("score-value").innerText = score;
+    document.getElementById("max-score-value").innerText = TOTAL_UNIQUE_QUIZZES;
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("end-screen").style.display = "none";
+    document.getElementById("score-board").style.display = "block";
+    document.getElementById("time-controls").style.display = "flex";
 
     const randomTime = pickRandomTimeOfDay();
-    const randomSpawnScene = pickRandomSpawnScene();
+    const randomSpawn = pickRandomSpawnScene();
 
     applyTimeOfDay(randomTime, true);
-    console.log('ランダム選択された開始地点:', randomSpawnScene);
-
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('end-screen').style.display = 'none';
-    document.getElementById('score-board').style.display = 'block';
-    document.getElementById('time-controls').style.display = 'flex';
-
-    initPanorama(randomSpawnScene);
+    initPanorama(randomSpawn);
 }
 
-function updateScoreBoard() {
-    document.getElementById('score-value').innerText = score;
-    document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
-}
-
-function isQuizAlreadyAnswered(quizArgs) {
-    if (!quizArgs) return false;
-    if (quizArgs.quizId && answeredIds.has(quizArgs.quizId)) return true;
-    if (quizArgs.quizGroup && answeredGroups.has(quizArgs.quizGroup)) return true;
-    return false;
-}
-
-function renderQuizHotspotsForScene(sceneId) {
-    if (!viewer || !sceneId) return;
-
-    const allDefinedInScene = sceneQuizHotspots[sceneId] || [];
-    allDefinedInScene.forEach(hs => {
-        try { viewer.removeHotSpot(hs.id, sceneId); } catch (e) {}
-    });
-
-    if (!isGameStarted) return;
-
-    allDefinedInScene.forEach(hs => {
-        if (!isQuizAlreadyAnswered(hs.clickHandlerArgs)) {
-            const spotConfig = Object.assign({}, hs, {
-                clickHandlerArgs: hs.clickHandlerArgs
-            });
-            viewer.addHotSpot(spotConfig, sceneId);
-        }
-    });
-}
-
-function removeAnsweredHotspotsFromAllScenes(quizId, quizGroup) {
-    Object.keys(sceneQuizHotspots).forEach(sceneId => {
-        const list = sceneQuizHotspots[sceneId] || [];
-        list.forEach(hs => {
-            const args = hs.clickHandlerArgs || {};
-            const matchId = quizId && args.quizId === quizId;
-            const matchGroup = quizGroup && args.quizGroup === quizGroup;
-            if (matchId || matchGroup) {
-                try { viewer.removeHotSpot(hs.id, sceneId); } catch (e) {}
-            }
-        });
-    });
-}
-
-function checkAllCleared() {
-    if (answeredGroups.size >= TOTAL_UNIQUE_QUIZZES && TOTAL_UNIQUE_QUIZZES > 0) {
-        setTimeout(() => {
-            document.getElementById('quiz-overlay').style.display = 'none';
-            document.getElementById('final-score-value').innerText = score;
-            document.getElementById('end-screen').style.display = 'flex';
-        }, 450);
+function showEndScreenIfCompleted() {
+    if (answeredGroups.size >= TOTAL_UNIQUE_QUIZZES) {
+        document.getElementById("final-score-value").innerText = score;
+        document.getElementById("end-screen").style.display = "flex";
     }
 }
 
 function showQuiz(hotSpotDiv, args) {
-    if (isQuizAlreadyAnswered(args)) {
-        return;
-    }
+    if (!isGameStarted) return;
+    if (isQuizAlreadyCleared(args)) return;
 
-    const resolvedQuiz = getQuizDataForCurrentTime(args);
-    currentQuiz = resolvedQuiz;
-    currentHotspotId = args.quizId;
+    currentHotspotArgs = args;
+    currentQuiz = getQuizDataForCurrentTime(args);
 
-    document.getElementById('quiz-title').innerText = "脱炭素クイズ";
-    document.getElementById('quiz-time-badge').innerText = TIME_LABELS[currentTimeOfDay] || "昼";
-    document.getElementById('quiz-text').innerHTML = resolvedQuiz.question;
-    document.getElementById('btn-A').innerText = resolvedQuiz.choiceA;
-    document.getElementById('btn-B').innerText = resolvedQuiz.choiceB;
-    document.getElementById('btn-C').innerText = resolvedQuiz.choiceC;
+    document.getElementById("quiz-time-badge").innerText = TIME_LABELS[currentTimeOfDay];
+    document.getElementById("quiz-text").innerHTML = currentQuiz.question;
+    document.getElementById("btn-A").innerText = currentQuiz.choiceA;
+    document.getElementById("btn-B").innerText = currentQuiz.choiceB;
+    document.getElementById("btn-C").innerText = currentQuiz.choiceC;
 
-    document.querySelectorAll('.quiz-choice-btn').forEach(btn => {
-        btn.disabled = false;
-        btn.style.backgroundColor = "#f4f7f5";
-        btn.style.borderColor = "#c8dfd1";
-    });
+    document.getElementById("btn-A").disabled = false;
+    document.getElementById("btn-B").disabled = false;
+    document.getElementById("btn-C").disabled = false;
 
-    const resultDiv = document.getElementById('quiz-result');
+    const resultDiv = document.getElementById("quiz-result");
     resultDiv.style.display = "none";
     resultDiv.innerHTML = "";
 
-    document.getElementById('quiz-overlay').style.display = "flex";
+    document.getElementById("quiz-overlay").style.display = "flex";
 }
 
-function answerQuiz(choice) {
+function answerQuiz(selected) {
     if (!currentQuiz) return;
 
-    const resultDiv = document.getElementById('quiz-result');
+    document.getElementById("btn-A").disabled = true;
+    document.getElementById("btn-B").disabled = true;
+    document.getElementById("btn-C").disabled = true;
+
+    const resultDiv = document.getElementById("quiz-result");
     resultDiv.style.display = "block";
 
-    const isCorrect = (choice === currentQuiz.correctAnswer);
+    if (selected === currentQuiz.correctAnswer) {
+        const alreadyCleared = isQuizAlreadyCleared(currentHotspotArgs);
 
-    if (isCorrect) {
-        if (!answeredIds.has(currentQuiz.quizId)) {
+        if (!alreadyCleared) {
             score += 1;
-            updateScoreBoard();
-        }
+            document.getElementById("score-value").innerText = score;
 
-        if (currentQuiz.quizId) answeredIds.add(currentQuiz.quizId);
-        if (currentQuiz.quizGroup) answeredGroups.add(currentQuiz.quizGroup);
+            if (currentHotspotArgs && currentHotspotArgs.quizId) {
+                answeredIds.add(currentHotspotArgs.quizId);
+            }
+            if (currentHotspotArgs && currentHotspotArgs.quizGroup) {
+                answeredGroups.add(currentHotspotArgs.quizGroup);
+            }
+            removeClearedHotspotsAllScenes();
+        }
 
         resultDiv.style.backgroundColor = "#e6f4ea";
         resultDiv.style.color = "#137333";
         resultDiv.style.border = "1px solid #a8dab5";
-        resultDiv.innerHTML = "<strong>正解！（+1ポイント）</strong><br>" + currentQuiz.explanation;
-
-        document.querySelectorAll('.quiz-choice-btn').forEach(btn => {
-            btn.disabled = true;
-        });
-
-        removeAnsweredHotspotsFromAllScenes(currentQuiz.quizId, currentQuiz.quizGroup);
-        checkAllCleared();
+        resultDiv.innerHTML =
+            "<strong>正解です！（+1ポイント）</strong><br>" +
+            currentQuiz.explanation +
+            "<br><span style='font-size:13px; color:#1e5631;'>※この問題（同テーマの電球）はマップから消えました。</span>";
     } else {
         resultDiv.style.backgroundColor = "#fce8e6";
         resultDiv.style.color = "#c5221f";
         resultDiv.style.border = "1px solid #f6aea9";
-        resultDiv.innerHTML = "<strong>不正解</strong><br>もう一度よく考えて別の選択肢を選んでみましょう！";
+        resultDiv.innerHTML =
+            "<strong>残念、不正解です。</strong><br>正解は <strong>" + currentQuiz.correctAnswer + "</strong> です。<br>" +
+            currentQuiz.explanation;
     }
 }
 
 function closeQuiz() {
-    document.getElementById('quiz-overlay').style.display = "none";
+    document.getElementById("quiz-overlay").style.display = "none";
     currentQuiz = null;
-    currentHotspotId = null;
+    currentHotspotArgs = null;
+    showEndScreenIfCompleted();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
+window.onload = function() {
+    document.getElementById("max-score-value").innerText = TOTAL_UNIQUE_QUIZZES;
     applyTimeOfDay('day', false);
     initPanorama("scene1");
-});
+};
 </script>
 
 </body>
