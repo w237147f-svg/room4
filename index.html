@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360度パノラマ 脱炭素クイズゲーム（20問クリア）</title>
+    <title>360度パノラマ 脱炭素クイズゲーム（20問クリア・配置モード付）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
@@ -183,7 +183,7 @@
             font-size: 22px;
         }
 
-        /* 時間帯コントロール */
+        /* 時間帯・配置モードコントロール */
         #time-controls {
             position: fixed;
             top: 16px;
@@ -196,6 +196,7 @@
             display: none;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
         }
 
         .time-btn {
@@ -219,6 +220,60 @@
             color: #fff;
             border-color: #1e88e5;
             box-shadow: 0 2px 6px rgba(30, 136, 229, 0.35);
+        }
+
+        #btn-placement-mode {
+            border: 1px solid #ff9800;
+            background-color: #fff8e1;
+            color: #e65100;
+        }
+
+        #btn-placement-mode.active {
+            background-color: #ef6c00;
+            color: #fff;
+            border-color: #ef6c00;
+        }
+
+        /* 座標出力バー（配置モード用） */
+        #coord-output-bar {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(20, 24, 30, 0.94);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+            z-index: 2200;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: 92vw;
+            font-size: 13px;
+        }
+
+        #coord-output-text {
+            font-family: Consolas, Monaco, monospace;
+            white-space: nowrap;
+            overflow-x: auto;
+            max-width: 68vw;
+            color: #a5d6a7;
+        }
+
+        #coord-copy-btn {
+            border: none;
+            background-color: #2e7d32;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        #coord-copy-btn:hover {
+            background-color: #1b5e20;
         }
 
         /* クイズモーダル */
@@ -488,10 +543,16 @@
     スコア: <span class="score-num" id="score-value">0</span> / <span id="max-score-value">20</span> pt
 </div>
 
-<div id="time-controls" aria-label="時間帯切り替え">
+<div id="time-controls" aria-label="時間帯と配置モード">
     <button id="btn-time-morning" class="time-btn" onclick="applyTimeOfDay('morning')">朝</button>
     <button id="btn-time-day" class="time-btn active" onclick="applyTimeOfDay('day')">昼</button>
     <button id="btn-time-night" class="time-btn" onclick="applyTimeOfDay('night')">夜</button>
+    <button id="btn-placement-mode" class="time-btn" onclick="togglePlacementMode()">配置モード: OFF</button>
+</div>
+
+<div id="coord-output-bar">
+    <span id="coord-output-text">配置モードON：置きたい場所をクリック</span>
+    <button id="coord-copy-btn" onclick="copyLastCoordSnippet()">コピー</button>
 </div>
 
 <div id="panorama"></div>
@@ -521,6 +582,9 @@ let viewer;
 let score = 0;
 let isGameStarted = false;
 let currentTimeOfDay = 'day';
+let isPlacementMode = false;
+let isPlacementListenerBound = false;
+let lastCoordSnippet = "";
 
 const answeredIds = new Set();
 const answeredGroups = new Set();
@@ -580,7 +644,7 @@ function applyTimeOfDay(mode, isInitialRandom = false) {
     tintEl.classList.remove('morning', 'day', 'night');
     tintEl.classList.add(mode);
 
-    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.time-btn:not(#btn-placement-mode)').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById('btn-time-' + mode);
     if (activeBtn) activeBtn.classList.add('active');
 
@@ -590,6 +654,74 @@ function applyTimeOfDay(mode, isInitialRandom = false) {
     if (isInitialRandom) {
         console.log('ランダム選択された時間帯:', TIME_LABELS[mode]);
     }
+}
+
+function setPlacementMode(enabled) {
+    isPlacementMode = Boolean(enabled);
+    const btn = document.getElementById('btn-placement-mode');
+    const bar = document.getElementById('coord-output-bar');
+    const textEl = document.getElementById('coord-output-text');
+
+    if (btn) {
+        btn.innerText = isPlacementMode ? '配置モード: ON' : '配置モード: OFF';
+        btn.classList.toggle('active', isPlacementMode);
+    }
+
+    if (bar) {
+        if (isPlacementMode && isGameStarted) {
+            bar.style.display = 'flex';
+            if (!lastCoordSnippet && textEl) {
+                const sceneId = viewer ? viewer.getScene() : '';
+                textEl.innerText = `[${sceneId}] 置きたい場所をクリックしてください`;
+            }
+        } else {
+            bar.style.display = 'none';
+        }
+    }
+}
+
+function togglePlacementMode() {
+    if (!isGameStarted) return;
+    setPlacementMode(!isPlacementMode);
+}
+
+function copyLastCoordSnippet() {
+    if (!lastCoordSnippet) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lastCoordSnippet).catch(() => {});
+    }
+    const copyBtn = document.getElementById('coord-copy-btn');
+    if (copyBtn) {
+        const orig = copyBtn.innerText;
+        copyBtn.innerText = 'コピー済';
+        setTimeout(() => { copyBtn.innerText = orig; }, 1000);
+    }
+}
+
+function bindPlacementClickListener() {
+    if (!viewer || isPlacementListenerBound) return;
+    const container = viewer.getContainer();
+    if (!container) return;
+
+    container.addEventListener('click', function (e) {
+        if (!isPlacementMode || !isGameStarted || !viewer) return;
+        const coords = viewer.mouseEventToCoords(e);
+        if (!coords) return;
+
+        const pitch = Math.round(coords[0] * 10) / 10;
+        const yaw = Math.round(coords[1] * 10) / 10;
+        const sceneId = viewer.getScene();
+        const snippet = `{ "pitch": ${pitch}, "yaw": ${yaw}, "type": "scene", "text": "次へ進む", "sceneId": "outXXX", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }`;
+
+        lastCoordSnippet = snippet;
+        const textEl = document.getElementById('coord-output-text');
+        if (textEl) {
+            textEl.innerText = `[${sceneId}] pitch:${pitch}, yaw:${yaw} → ${snippet}`;
+        }
+        console.log(`[${sceneId}] クリック座標:`, { pitch, yaw, snippet });
+    });
+
+    isPlacementListenerBound = true;
 }
 
 function getQuizDataForCurrentTime(quizArgs) {
@@ -750,8 +882,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（147〜189） ---
     "out147": [
         {
             "id": "hs_out1", "pitch": 2, "yaw": 70, "cssClass": "bulb-hotspot",
@@ -1124,8 +1254,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（191〜202） ---
     "out191": [
         {
             "id": "hs_out23", "pitch": 4, "yaw": -110, "cssClass": "bulb-hotspot",
@@ -1238,8 +1366,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（203〜231） ---
     "out203": [
         {
             "id": "hs_out30", "pitch": 6, "yaw": -15, "cssClass": "bulb-hotspot",
@@ -1480,8 +1606,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（233〜251） ---
     "out233": [
         {
             "id": "hs_out42", "pitch": 8, "yaw": 10, "cssClass": "bulb-hotspot",
@@ -1702,8 +1826,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（253〜265） ---
     "out253": [
         {
             "id": "hs_out52", "pitch": 4, "yaw": -15, "cssClass": "bulb-hotspot",
@@ -1856,8 +1978,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（267〜280） ---
     "out267": [
         {
             "id": "hs_out59", "pitch": 2, "yaw": 85, "cssClass": "bulb-hotspot",
@@ -2026,8 +2146,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（281〜294） ---
     "out281": [
         {
             "id": "hs_out67", "pitch": 4, "yaw": -25, "cssClass": "bulb-hotspot",
@@ -2196,8 +2314,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（295〜305） ---
     "out295": [
         {
             "id": "hs_out75", "pitch": 6, "yaw": 120, "cssClass": "bulb-hotspot",
@@ -2366,8 +2482,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（307〜319） ---
     "out307": [
         {
             "id": "hs_out83", "pitch": -2, "yaw": -25, "cssClass": "bulb-hotspot",
@@ -2520,8 +2634,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（320〜334） ---
     "out320": [
         {
             "id": "hs_out90", "pitch": 4, "yaw": 5, "cssClass": "bulb-hotspot",
@@ -2674,8 +2786,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（335〜344） ---
     "out335": [
         {
             "id": "hs_out97", "pitch": 6, "yaw": -5, "cssClass": "bulb-hotspot",
@@ -2812,8 +2922,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（345〜359） ---
     "out345": [
         {
             "id": "hs_out103", "pitch": 7, "yaw": -20, "cssClass": "bulb-hotspot",
@@ -3018,8 +3126,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（360〜368） ---
     "out360": [
         {
             "id": "hs_out112", "pitch": 7, "yaw": -10, "cssClass": "bulb-hotspot",
@@ -3140,8 +3246,6 @@ const sceneQuizHotspots = {
             }
         }
     ],
-
-    // --- 屋外クイズ（369〜379） ---
     "out369": [
         {
             "id": "hs_out117", "pitch": 7, "yaw": -25, "cssClass": "bulb-hotspot",
@@ -3300,13 +3404,9 @@ const sceneQuizHotspots = {
     ]
 };
 
-/**
- * 移動ホットスポットの構築（戻るアイコンの自動180度変更は行わず元のyawを維持）
- */
 function buildScenesConfig(rawScenes) {
     const scenes = JSON.parse(JSON.stringify(rawScenes));
 
-    // 269から280への移動アイコンを右に110度移動（基準 -20 + 110 = 90）
     if (scenes.out269) {
         scenes.out269.hotSpots.push({
             pitch: -5,
@@ -3320,7 +3420,6 @@ function buildScenesConfig(rawScenes) {
         });
     }
 
-    // 147から334への移動アイコンは左に100度動かす（0 - 100 = -100）
     if (scenes.out147) {
         const hs147to334 = scenes.out147.hotSpots.find(h => h.sceneId === "out334");
         if (hs147to334) {
@@ -3328,7 +3427,6 @@ function buildScenesConfig(rawScenes) {
         }
     }
 
-    // 320から305への移動アイコンは右に10度動かす（基準 -20 + 10 = -10）
     const yaw320to305 = normalizeYaw(-20 + 10);
     if (scenes.out320) {
         scenes.out320.hotSpots.push({
@@ -3343,7 +3441,6 @@ function buildScenesConfig(rawScenes) {
         });
     }
 
-    // 305から320への移動アイコンはそれ（320->305）の180度の向きに動かす
     if (scenes.out305) {
         scenes.out305.hotSpots.push({
             pitch: -5,
@@ -3357,7 +3454,6 @@ function buildScenesConfig(rawScenes) {
         });
     }
 
-    // 344から360の移動アイコンは右に60度動かす（基準 -20 + 60 = 40）
     if (scenes.out344) {
         scenes.out344.hotSpots.push({
             pitch: -5,
@@ -3423,8 +3519,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（147 → … → 189 → 191 → … → 202） ---
     "out147": {
         "title": "外 147",
         "type": "equirectangular",
@@ -3691,8 +3785,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": 150, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（203 → … → 231） ---
     "out203": {
         "title": "外 203",
         "type": "equirectangular",
@@ -3828,8 +3920,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "233へ進む", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（233 → … → 251） ---
     "out233": {
         "title": "外 233",
         "type": "equirectangular",
@@ -3920,8 +4010,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "253へ進む", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（253 → … → 265） ---
     "out253": {
         "title": "外 253",
         "type": "equirectangular",
@@ -3985,8 +4073,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "267へ進む", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（267 → … → 280） ---
     "out267": {
         "title": "外 267",
         "type": "equirectangular",
@@ -4059,8 +4145,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（281 → … → 294） ---
     "out281": {
         "title": "外 281",
         "type": "equirectangular",
@@ -4133,8 +4217,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "295へ進む", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（295 → … → 305） ---
     "out295": {
         "title": "外 295",
         "type": "equirectangular",
@@ -4207,8 +4289,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（307 → … → 319） ---
     "out307": {
         "title": "外 307",
         "type": "equirectangular",
@@ -4272,8 +4352,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（320 → … → 334） ---
     "out320": {
         "title": "外 320",
         "type": "equirectangular",
@@ -4337,8 +4415,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（335 → … → 344） ---
     "out335": {
         "title": "外 335",
         "type": "equirectangular",
@@ -4393,8 +4469,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "345へ進む", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（345 → … → 359） ---
     "out345": {
         "title": "外 345",
         "type": "equirectangular",
@@ -4476,8 +4550,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "360へ進む", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（360 → … → 368） ---
     "out360": {
         "title": "外 360",
         "type": "equirectangular",
@@ -4523,8 +4595,6 @@ const rawScenesConfig = {
             { "pitch": -5, "yaw": -20, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
         ]
     },
-
-    // --- 屋外360度ルート（369 → … → 379） ---
     "out369": {
         "title": "外 369",
         "type": "equirectangular",
@@ -4575,8 +4645,7 @@ const rawScenesConfig = {
         "type": "equirectangular",
         "panorama": "GS__0379.jpg",
         "hotSpots": [
-            { "pitch": -5, "yaw": 160, "type": "scene", "text": "377へ戻る", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-            { "pitch": -5, "yaw": -20, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "377へ戻る", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
         ]
     }
 };
@@ -4584,60 +4653,46 @@ const rawScenesConfig = {
 const scenesConfig = buildScenesConfig(rawScenesConfig);
 
 let currentQuiz = null;
-let answeredCurrentQuiz = false;
 
-function isQuizAlreadyAnswered(quizArgs) {
-    if (!quizArgs) return false;
-    if (quizArgs.quizId && answeredIds.has(quizArgs.quizId)) return true;
-    if (quizArgs.quizGroup && answeredGroups.has(quizArgs.quizGroup)) return true;
+function isQuizAlreadyAnswered(quizData) {
+    if (!quizData) return false;
+    if (quizData.quizId && answeredIds.has(quizData.quizId)) return true;
+    if (quizData.quizGroup && answeredGroups.has(quizData.quizGroup)) return true;
     return false;
 }
 
-function markQuizAnswered(quizArgs) {
-    if (!quizArgs) return;
-    if (quizArgs.quizId) answeredIds.add(quizArgs.quizId);
-    if (quizArgs.quizGroup) answeredGroups.add(quizArgs.quizGroup);
+function markQuizAnswered(quizData) {
+    if (!quizData) return;
+    if (quizData.quizId) answeredIds.add(quizData.quizId);
+    if (quizData.quizGroup) answeredGroups.add(quizData.quizGroup);
 }
 
-function refreshHotspotsForScene(sceneId) {
-    if (!viewer) return;
-    const targetSceneId = sceneId || viewer.getScene();
-    const quizList = sceneQuizHotspots[targetSceneId] || [];
-
-    quizList.forEach(q => {
-        try { viewer.removeHotSpot(q.id, targetSceneId); } catch (e) {}
-    });
-
-    quizList.forEach(q => {
-        const args = q.clickHandlerArgs;
-        if (!isQuizAlreadyAnswered(args)) {
-            viewer.addHotSpot({
-                id: q.id,
-                pitch: q.pitch,
-                yaw: q.yaw,
-                cssClass: q.cssClass,
-                clickHandlerFunc: q.clickHandlerFunc,
-                clickHandlerArgs: q.clickHandlerArgs
-            }, targetSceneId);
-        }
-    });
-}
-
-function updateScoreBoard() {
+function updateScoreDisplay() {
     document.getElementById("score-value").innerText = score;
     document.getElementById("max-score-value").innerText = TARGET_CLEAR_COUNT;
+    document.getElementById("final-score-value").innerText = score;
     document.getElementById("end-target-value").innerText = TARGET_CLEAR_COUNT;
+}
+
+function showEndScreen() {
+    isGameStarted = false;
+    setPlacementMode(false);
+    document.getElementById("quiz-overlay").style.display = "none";
+    document.getElementById("score-board").style.display = "none";
+    document.getElementById("time-controls").style.display = "none";
+    updateScoreDisplay();
+    document.getElementById("end-screen").style.display = "flex";
 }
 
 function startGame() {
     score = 0;
+    isGameStarted = true;
     answeredIds.clear();
     answeredGroups.clear();
     currentQuiz = null;
-    answeredCurrentQuiz = false;
-    isGameStarted = true;
+    setPlacementMode(false);
 
-    updateScoreBoard();
+    updateScoreDisplay();
 
     document.getElementById("start-screen").style.display = "none";
     document.getElementById("end-screen").style.display = "none";
@@ -4648,129 +4703,139 @@ function startGame() {
     const randomTime = pickRandomTimeOfDay();
     applyTimeOfDay(randomTime, true);
 
-    const spawnScene = pickRandomSpawnScene();
-    console.log("ランダム選択された開始地点:", spawnScene);
+    const randomSpawnScene = pickRandomSpawnScene();
+    console.log("ランダム選択された開始地点:", randomSpawnScene);
 
     if (viewer) {
-        try { viewer.destroy(); } catch (e) {}
+        try {
+            viewer.destroy();
+        } catch (e) {
+            console.warn("viewer破棄時の警告:", e);
+        }
         viewer = null;
+        isPlacementListenerBound = false;
     }
 
-    viewer = pannellum.viewer("panorama", {
+    viewer = pannellum.viewer('panorama', {
         "default": {
-            "firstScene": spawnScene,
+            "firstScene": randomSpawnScene,
             "sceneFadeDuration": 800,
-            "autoLoad": true,
-            "compass": false
+            "autoLoad": true
         },
         "scenes": scenesConfig
     });
 
-    viewer.on("load", function () {
-        refreshHotspotsForScene(viewer.getScene());
+    bindPlacementClickListener();
+
+    viewer.on('load', function () {
+        const sceneId = viewer.getScene();
+        const extraHotspots = sceneQuizHotspots[sceneId] || [];
+        extraHotspots.forEach(hs => {
+            try {
+                viewer.addHotSpot(hs, sceneId);
+            } catch (e) {}
+        });
     });
 
-    viewer.on("scenechange", function (newSceneId) {
-        refreshHotspotsForScene(newSceneId);
+    viewer.on('scenechange', function (newSceneId) {
+        const extraHotspots = sceneQuizHotspots[newSceneId] || [];
+        extraHotspots.forEach(hs => {
+            try {
+                viewer.addHotSpot(hs, newSceneId);
+            } catch (e) {}
+        });
     });
-
-    setTimeout(() => {
-        if (viewer) {
-            refreshHotspotsForScene(viewer.getScene());
-        }
-    }, 200);
 }
 
-function showQuiz(hotSpotDiv, args) {
-    if (!isGameStarted) return;
-    if (isQuizAlreadyAnswered(args)) return;
+function showQuiz(event, args) {
+    if (!isGameStarted || isPlacementMode) return;
 
     const resolvedQuiz = getQuizDataForCurrentTime(args);
-    currentQuiz = {
-        rawArgs: args,
-        quizId: resolvedQuiz.quizId,
-        quizGroup: resolvedQuiz.quizGroup,
-        question: resolvedQuiz.question,
-        choiceA: resolvedQuiz.choiceA,
-        choiceB: resolvedQuiz.choiceB,
-        choiceC: resolvedQuiz.choiceC,
-        correctAnswer: resolvedQuiz.correctAnswer,
-        explanation: resolvedQuiz.explanation
-    };
-    answeredCurrentQuiz = false;
+    currentQuiz = resolvedQuiz;
 
     document.getElementById("quiz-title").innerText = "脱炭素クイズ";
     document.getElementById("quiz-time-badge").innerText = TIME_LABELS[currentTimeOfDay];
-    document.getElementById("quiz-text").innerHTML = currentQuiz.question;
-    document.getElementById("btn-A").innerText = currentQuiz.choiceA;
-    document.getElementById("btn-B").innerText = currentQuiz.choiceB;
-    document.getElementById("btn-C").innerText = currentQuiz.choiceC;
+    document.getElementById("quiz-text").innerHTML = resolvedQuiz.question;
 
-    document.querySelectorAll(".quiz-choice-btn").forEach(btn => {
-        btn.disabled = false;
-        btn.style.backgroundColor = "#f4f7f5";
-        btn.style.borderColor = "#c8dfd1";
-    });
+    const btnA = document.getElementById("btn-A");
+    const btnB = document.getElementById("btn-B");
+    const btnC = document.getElementById("btn-C");
+
+    btnA.innerText = resolvedQuiz.choiceA;
+    btnB.innerText = resolvedQuiz.choiceB;
+    btnC.innerText = resolvedQuiz.choiceC;
 
     const resultDiv = document.getElementById("quiz-result");
     resultDiv.style.display = "none";
     resultDiv.innerHTML = "";
 
+    const alreadyAnswered = isQuizAlreadyAnswered(resolvedQuiz);
+
+    [btnA, btnB, btnC].forEach(btn => {
+        btn.disabled = alreadyAnswered;
+        btn.style.backgroundColor = alreadyAnswered ? "#e9ecef" : "#f4f7f5";
+        btn.style.borderColor = alreadyAnswered ? "#ced4da" : "#c8dfd1";
+        btn.style.cursor = alreadyAnswered ? "default" : "pointer";
+    });
+
+    if (alreadyAnswered) {
+        resultDiv.style.display = "block";
+        resultDiv.style.backgroundColor = "#eef2f7";
+        resultDiv.style.color = "#334155";
+        resultDiv.style.border = "1px solid #cbd5e1";
+        resultDiv.innerHTML =
+            "<strong>この問題（または同じテーマの問題）はすでに回答済みです。</strong><br>" +
+            resolvedQuiz.explanation;
+    }
+
     document.getElementById("quiz-overlay").style.display = "flex";
 }
 
-function answerQuiz(choice) {
-    if (!currentQuiz || answeredCurrentQuiz) return;
+function answerQuiz(selectedChoice) {
+    if (!currentQuiz || !isGameStarted) return;
+    if (isQuizAlreadyAnswered(currentQuiz)) return;
+
+    const btnA = document.getElementById("btn-A");
+    const btnB = document.getElementById("btn-B");
+    const btnC = document.getElementById("btn-C");
+    [btnA, btnB, btnC].forEach(btn => {
+        btn.disabled = true;
+        btn.style.cursor = "default";
+    });
 
     const resultDiv = document.getElementById("quiz-result");
     resultDiv.style.display = "block";
 
-    if (choice === currentQuiz.correctAnswer) {
-        answeredCurrentQuiz = true;
+    markQuizAnswered(currentQuiz);
 
-        document.querySelectorAll(".quiz-choice-btn").forEach(btn => {
-            btn.disabled = true;
-        });
-
+    if (selectedChoice === currentQuiz.correctAnswer) {
         score += 1;
-        updateScoreBoard();
-
-        markQuizAnswered(currentQuiz.rawArgs);
-        if (viewer) {
-            refreshHotspotsForScene(viewer.getScene());
-        }
+        updateScoreDisplay();
 
         resultDiv.style.backgroundColor = "#e6f4ea";
         resultDiv.style.color = "#137333";
-        resultDiv.style.border = "1px solid #a8dab5";
-        resultDiv.innerHTML = `<strong>正解！（+1ポイント）</strong><br>${currentQuiz.explanation}`;
+        resultDiv.style.border = "1px solid #34a853";
+        resultDiv.innerHTML =
+            "<strong>正解です！（+1ポイント）</strong><br>" +
+            currentQuiz.explanation;
     } else {
         resultDiv.style.backgroundColor = "#fce8e6";
         resultDiv.style.color = "#c5221f";
-        resultDiv.style.border = "1px solid #f6aea9";
-        resultDiv.innerHTML = `<strong>不正解です。</strong> もう一度よく考えて別の選択肢を選んでみましょう！`;
-    }
-}
-
-function showEndScreenIfCompleted() {
-    if (score >= TARGET_CLEAR_COUNT) {
-        document.getElementById("final-score-value").innerText = score;
-        document.getElementById("end-target-value").innerText = TARGET_CLEAR_COUNT;
-        document.getElementById("end-screen").style.display = "flex";
+        resultDiv.style.border = "1px solid #ea4335";
+        resultDiv.innerHTML =
+            "<strong>残念、不正解です。</strong>（正解は <strong>" + currentQuiz.correctAnswer + "</strong>）<br>" +
+            currentQuiz.explanation;
     }
 }
 
 function closeQuiz() {
     document.getElementById("quiz-overlay").style.display = "none";
     currentQuiz = null;
-    answeredCurrentQuiz = false;
-    showEndScreenIfCompleted();
-}
 
-window.addEventListener("DOMContentLoaded", () => {
-    updateScoreBoard();
-    applyTimeOfDay('day', false);
-});
+    if (isGameStarted && score >= TARGET_CLEAR_COUNT) {
+        showEndScreen();
+    }
+}
 </script>
 
 </body>
