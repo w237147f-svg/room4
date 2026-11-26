@@ -547,6 +547,21 @@ const SPAWN_SCENES = [
     "out369", "out371", "out373", "out375", "out377", "out379"
 ];
 
+/**
+ * 角度を -180 〜 +180 度の範囲に正規化する
+ */
+function normalizeYaw(deg) {
+    let angle = ((deg + 180) % 360 + 360) % 360 - 180;
+    return angle;
+}
+
+/**
+ * 180度反対の角度を返す
+ */
+function oppositeYaw(deg) {
+    return normalizeYaw(Number(deg) + 180);
+}
+
 function pickRandomTimeOfDay() {
     const idx = Math.floor(Math.random() * TIME_MODES.length);
     return TIME_MODES[idx];
@@ -3302,1332 +3317,1526 @@ const TOTAL_UNIQUE_QUIZZES = (() => {
     return groups.size;
 })();
 
+/**
+ * 移動ホットスポットの構築：
+ * 1) 指定の個別角度変更（269->280, 147->334, 320->305, 305->320, 344->360）
+ * 2) 戻るアイコン（isBack: true または text に「戻る」を含む）を、
+ *    「相手シーンから自シーンへ進むアイコンの yaw」の180度反対方向に自動配置
+ */
+function buildScenesWith180BackHotspots(rawScenes) {
+    const scenes = JSON.parse(JSON.stringify(rawScenes));
+
+    // 1. 個別指定の移動アイコンを追加・調整
+    // 269から280への移動アイコンを右に110度移動（基準 -20 + 110 = 90）
+    if (scenes.out269) {
+        scenes.out269.hotSpots.push({
+            pitch: -5,
+            yaw: normalizeYaw(-20 + 110),
+            type: "scene",
+            text: "280へ進む",
+            sceneId: "out280",
+            targetYaw: "same",
+            targetPitch: "same",
+            cssClass: "right-arrow-icon"
+        });
+    }
+
+    // 147から334への移動アイコンは左に100度動かす（0 - 100 = -100）
+    if (scenes.out147) {
+        const hs147to334 = scenes.out147.hotSpots.find(h => h.sceneId === "out334");
+        if (hs147to334) {
+            hs147to334.yaw = normalizeYaw(hs147to334.yaw - 100);
+        }
+    }
+
+    // 320から305への移動アイコンは右に10度動かす（基準 -20 + 10 = -10）
+    const yaw320to305 = normalizeYaw(-20 + 10);
+    if (scenes.out320) {
+        scenes.out320.hotSpots.push({
+            pitch: -5,
+            yaw: yaw320to305,
+            type: "scene",
+            text: "305へ進む",
+            sceneId: "out305",
+            targetYaw: "same",
+            targetPitch: "same",
+            cssClass: "right-arrow-icon"
+        });
+    }
+
+    // 305から320への移動アイコンはそれ（320->305）の180度の向きに動かす
+    if (scenes.out305) {
+        scenes.out305.hotSpots.push({
+            pitch: -5,
+            yaw: oppositeYaw(yaw320to305),
+            type: "scene",
+            text: "320へ進む",
+            sceneId: "out320",
+            targetYaw: "same",
+            targetPitch: "same",
+            cssClass: "right-arrow-icon"
+        });
+    }
+
+    // 344から360の移動アイコンは右に60度動かす（基準 -20 + 60 = 40）
+    if (scenes.out344) {
+        scenes.out344.hotSpots.push({
+            pitch: -5,
+            yaw: normalizeYaw(-20 + 60),
+            type: "scene",
+            text: "360へ進む",
+            sceneId: "out360",
+            targetYaw: "same",
+            targetPitch: "same",
+            cssClass: "right-arrow-icon"
+        });
+    }
+
+    // 2. 各シーンの「進む」アイコンの向きを記録（fromScene -> toScene -> yaw）
+    const forwardYawMap = {};
+    Object.entries(scenes).forEach(([fromId, sceneObj]) => {
+        if (!Array.isArray(sceneObj.hotSpots)) return;
+        sceneObj.hotSpots.forEach(hs => {
+            if (hs.type !== "scene" || !hs.sceneId) return;
+            const isBack = Boolean(hs.isBack) || (typeof hs.text === "string" && hs.text.includes("戻る"));
+            if (!isBack) {
+                if (!forwardYawMap[fromId]) forwardYawMap[fromId] = {};
+                forwardYawMap[fromId][hs.sceneId] = Number(hs.yaw);
+            }
+        });
+    });
+
+    // 3. 「戻る」アイコンを、相手シーン（hs.sceneId）から自シーン（sceneId）へ進む方向の180度反対に配置
+    Object.entries(scenes).forEach(([sceneId, sceneObj]) => {
+        if (!Array.isArray(sceneObj.hotSpots)) return;
+        sceneObj.hotSpots.forEach(hs => {
+            if (hs.type !== "scene" || !hs.sceneId) return;
+            const isBack = Boolean(hs.isBack) || (typeof hs.text === "string" && hs.text.includes("戻る"));
+            if (isBack) {
+                const reverseForwardYaw = forwardYawMap[hs.sceneId] && forwardYawMap[hs.sceneId][sceneId];
+                if (typeof reverseForwardYaw === "number" && !Number.isNaN(reverseForwardYaw)) {
+                    hs.yaw = oppositeYaw(reverseForwardYaw);
+                } else {
+                    // 相手側からの「進む」定義がない場合は、自シーン内の「進む」アイコンの180度反対をフォールバックに使う
+                    const localForward = sceneObj.hotSpots.find(
+                        other => other.type === "scene" && other !== hs && !(typeof other.text === "string" && other.text.includes("戻る"))
+                    );
+                    if (localForward && typeof localForward.yaw === "number") {
+                        hs.yaw = oppositeYaw(localForward.yaw);
+                    }
+                }
+            }
+        });
+    });
+
+    return scenes;
+}
+
+const rawScenesConfig = {
+    "scene1": {
+        "title": "地点1",
+        "type": "equirectangular",
+        "panorama": "66.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 210, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": -30, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": 120, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": -110, "type": "scene", "text": "外へ移動（147）", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "scene2": {
+        "title": "地点2",
+        "type": "equirectangular",
+        "panorama": "68.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
+        ]
+    },
+    "scene3": {
+        "title": "地点3",
+        "type": "equirectangular",
+        "panorama": "200.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
+        ]
+    },
+    "scene4": {
+        "title": "地点4",
+        "type": "equirectangular",
+        "panorama": "201.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": -60, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
+        ]
+    },
+    "scene5": {
+        "title": "地点5",
+        "type": "equirectangular",
+        "panorama": "203.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
+            { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（147 → … → 189 → 191 → … → 202） ---
+    "out147": {
+        "title": "外 147",
+        "type": "equirectangular",
+        "panorama": "GS__0147.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 250, "type": "scene", "text": "ゼミ室（地点1）へ戻る", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "149へ進む", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+            { "pitch": -5, "yaw": 0, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out149": {
+        "title": "外 149",
+        "type": "equirectangular",
+        "panorama": "GS__0149.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "147へ戻る", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "151へ進む", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out151": {
+        "title": "外 151",
+        "type": "equirectangular",
+        "panorama": "GS__0151.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "149へ戻る", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 70, "type": "scene", "text": "153へ進む", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out153": {
+        "title": "外 153",
+        "type": "equirectangular",
+        "panorama": "GS__0153.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "151へ戻る", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out155": {
+        "title": "外 155",
+        "type": "equirectangular",
+        "panorama": "GS__0155.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "153へ戻る", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "157へ進む", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
+            { "pitch": -5, "yaw": -25, "type": "scene", "text": "379へ戻る", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 10, "type": "scene", "text": "379へ進む", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out157": {
+        "title": "外 157",
+        "type": "equirectangular",
+        "panorama": "GS__0157.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "155へ戻る", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "159へ進む", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out159": {
+        "title": "外 159",
+        "type": "equirectangular",
+        "panorama": "GS__0159.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "157へ戻る", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "161へ進む", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out161": {
+        "title": "外 161",
+        "type": "equirectangular",
+        "panorama": "GS__0161.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "159へ戻る", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "163へ進む", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out163": {
+        "title": "外 163",
+        "type": "equirectangular",
+        "panorama": "GS__0163.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "161へ戻る", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "165へ進む", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out165": {
+        "title": "外 165",
+        "type": "equirectangular",
+        "panorama": "GS__0165.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "163へ戻る", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "167へ進む", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out167": {
+        "title": "外 167",
+        "type": "equirectangular",
+        "panorama": "GS__0167.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "165へ戻る", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "169へ進む", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out169": {
+        "title": "外 169",
+        "type": "equirectangular",
+        "panorama": "GS__0169.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "167へ戻る", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "171へ進む", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out171": {
+        "title": "外 171",
+        "type": "equirectangular",
+        "panorama": "GS__0171.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "169へ戻る", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 60, "type": "scene", "text": "173へ進む", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out173": {
+        "title": "外 173",
+        "type": "equirectangular",
+        "panorama": "GS__0173.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "171へ戻る", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 50, "type": "scene", "text": "175へ進む", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out175": {
+        "title": "外 175",
+        "type": "equirectangular",
+        "panorama": "GS__0175.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "173へ戻る", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "177へ進む", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out177": {
+        "title": "外 177",
+        "type": "equirectangular",
+        "panorama": "GS__0177.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "175へ戻る", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "179へ進む", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out179": {
+        "title": "外 179",
+        "type": "equirectangular",
+        "panorama": "GS__0179.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "177へ戻る", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "181へ進む", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out181": {
+        "title": "外 181",
+        "type": "equirectangular",
+        "panorama": "GS__0181.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "179へ戻る", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "183へ進む", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out183": {
+        "title": "外 183",
+        "type": "equirectangular",
+        "panorama": "GS__0183.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "181へ戻る", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "185へ進む", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out185": {
+        "title": "外 185",
+        "type": "equirectangular",
+        "panorama": "GS__0185.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "183へ戻る", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "187へ進む", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out187": {
+        "title": "外 187",
+        "type": "equirectangular",
+        "panorama": "GS__0187.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "185へ戻る", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "189へ進む", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out189": {
+        "title": "外 189",
+        "type": "equirectangular",
+        "panorama": "GS__0189.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "187へ戻る", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "191へ進む", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "203へ進む", "sceneId": "out203", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out191": {
+        "title": "外 191",
+        "type": "equirectangular",
+        "panorama": "GS__0191.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "193へ進む", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out193": {
+        "title": "外 193",
+        "type": "equirectangular",
+        "panorama": "GS__0193.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "191へ戻る", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "195へ進む", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out195": {
+        "title": "外 195",
+        "type": "equirectangular",
+        "panorama": "GS__0195.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "193へ戻る", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "197へ進む", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out197": {
+        "title": "外 197",
+        "type": "equirectangular",
+        "panorama": "GS__0197.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "195へ戻る", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "199へ進む", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out199": {
+        "title": "外 199",
+        "type": "equirectangular",
+        "panorama": "GS__0199.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "197へ戻る", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "201へ進む", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out201": {
+        "title": "外 201",
+        "type": "equirectangular",
+        "panorama": "GS__0201.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "199へ戻る", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -100, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
+        ]
+    },
+    "out202": {
+        "title": "外 202",
+        "type": "equirectangular",
+        "panorama": "GS__0202.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "368へ戻る", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": 150, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（203 → … → 231） ---
+    "out203": {
+        "title": "外 203",
+        "type": "equirectangular",
+        "panorama": "GS__0203.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "205へ進む", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out205": {
+        "title": "外 205",
+        "type": "equirectangular",
+        "panorama": "GS__0205.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "203へ戻る", "sceneId": "out203", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "207へ進む", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out207": {
+        "title": "外 207",
+        "type": "equirectangular",
+        "panorama": "GS__0207.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "205へ戻る", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "209へ進む", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out209": {
+        "title": "外 209",
+        "type": "equirectangular",
+        "panorama": "GS__0209.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "207へ戻る", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "211へ進む", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out211": {
+        "title": "外 211",
+        "type": "equirectangular",
+        "panorama": "GS__0211.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "209へ戻る", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "213へ進む", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out213": {
+        "title": "外 213",
+        "type": "equirectangular",
+        "panorama": "GS__0213.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "211へ戻る", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "215へ進む", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out215": {
+        "title": "外 215",
+        "type": "equirectangular",
+        "panorama": "GS__0215.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "213へ戻る", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "217へ進む", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out217": {
+        "title": "外 217",
+        "type": "equirectangular",
+        "panorama": "GS__0217.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "215へ戻る", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "219へ進む", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out219": {
+        "title": "外 219",
+        "type": "equirectangular",
+        "panorama": "GS__0219.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "217へ戻る", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "221へ進む", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out221": {
+        "title": "外 221",
+        "type": "equirectangular",
+        "panorama": "GS__0221.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "219へ戻る", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "223へ進む", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out223": {
+        "title": "外 223",
+        "type": "equirectangular",
+        "panorama": "GS__0223.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "221へ戻る", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "225へ進む", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out225": {
+        "title": "外 225",
+        "type": "equirectangular",
+        "panorama": "GS__0225.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "223へ戻る", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "227へ進む", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out227": {
+        "title": "外 227",
+        "type": "equirectangular",
+        "panorama": "GS__0227.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "225へ戻る", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "229へ進む", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out229": {
+        "title": "外 229",
+        "type": "equirectangular",
+        "panorama": "GS__0229.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "227へ戻る", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "231へ進む", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out231": {
+        "title": "外 231",
+        "type": "equirectangular",
+        "panorama": "GS__0231.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "229へ戻る", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "233へ進む", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（233 → … → 251） ---
+    "out233": {
+        "title": "外 233",
+        "type": "equirectangular",
+        "panorama": "GS__0233.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "231へ戻る", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "235へ進む", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out235": {
+        "title": "外 235",
+        "type": "equirectangular",
+        "panorama": "GS__0235.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "233へ戻る", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "237へ進む", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out237": {
+        "title": "外 237",
+        "type": "equirectangular",
+        "panorama": "GS__0237.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "235へ戻る", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "239へ進む", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out239": {
+        "title": "外 239",
+        "type": "equirectangular",
+        "panorama": "GS__0239.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "237へ戻る", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "241へ進む", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out241": {
+        "title": "外 241",
+        "type": "equirectangular",
+        "panorama": "GS__0241.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "239へ戻る", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "243へ進む", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out243": {
+        "title": "外 243",
+        "type": "equirectangular",
+        "panorama": "GS__0243.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "241へ戻る", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "245へ進む", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out245": {
+        "title": "外 245",
+        "type": "equirectangular",
+        "panorama": "GS__0245.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "243へ戻る", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "247へ進む", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out247": {
+        "title": "外 247",
+        "type": "equirectangular",
+        "panorama": "GS__0247.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "245へ戻る", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "249へ進む", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out249": {
+        "title": "外 249",
+        "type": "equirectangular",
+        "panorama": "GS__0249.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "247へ戻る", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "251へ進む", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out251": {
+        "title": "外 251",
+        "type": "equirectangular",
+        "panorama": "GS__0251.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "249へ戻る", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "253へ進む", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（253 → … → 265） ---
+    "out253": {
+        "title": "外 253",
+        "type": "equirectangular",
+        "panorama": "GS__0253.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "251へ戻る", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "255へ進む", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out255": {
+        "title": "外 255",
+        "type": "equirectangular",
+        "panorama": "GS__0255.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "257へ進む", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out257": {
+        "title": "外 257",
+        "type": "equirectangular",
+        "panorama": "GS__0257.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "255へ戻る", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "259へ進む", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out259": {
+        "title": "外 259",
+        "type": "equirectangular",
+        "panorama": "GS__0259.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "257へ戻る", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "261へ進む", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out261": {
+        "title": "外 261",
+        "type": "equirectangular",
+        "panorama": "GS__0261.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "259へ戻る", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "263へ進む", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out263": {
+        "title": "外 263",
+        "type": "equirectangular",
+        "panorama": "GS__0263.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "261へ戻る", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "265へ進む", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out265": {
+        "title": "外 265",
+        "type": "equirectangular",
+        "panorama": "GS__0265.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "263へ戻る", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "267へ進む", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（267 → … → 280） ---
+    "out267": {
+        "title": "外 267",
+        "type": "equirectangular",
+        "panorama": "GS__0267.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "265へ戻る", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "269へ進む", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out269": {
+        "title": "外 269",
+        "type": "equirectangular",
+        "panorama": "GS__0269.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "267へ戻る", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "271へ進む", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out271": {
+        "title": "外 271",
+        "type": "equirectangular",
+        "panorama": "GS__0271.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "273へ進む", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out273": {
+        "title": "外 273",
+        "type": "equirectangular",
+        "panorama": "GS__0273.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "271へ戻る", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "275へ進む", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out275": {
+        "title": "外 275",
+        "type": "equirectangular",
+        "panorama": "GS__0275.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "273へ戻る", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "277へ進む", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out277": {
+        "title": "外 277",
+        "type": "equirectangular",
+        "panorama": "GS__0277.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out279": {
+        "title": "外 279",
+        "type": "equirectangular",
+        "panorama": "GS__0279.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out280": {
+        "title": "外 280",
+        "type": "equirectangular",
+        "panorama": "GS__0280.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "279へ戻る", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "281へ進む", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（281 → … → 294） ---
+    "out281": {
+        "title": "外 281",
+        "type": "equirectangular",
+        "panorama": "GS__0281.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "283へ進む", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out283": {
+        "title": "外 283",
+        "type": "equirectangular",
+        "panorama": "GS__0283.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "281へ戻る", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "285へ進む", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out285": {
+        "title": "外 285",
+        "type": "equirectangular",
+        "panorama": "GS__0285.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "283へ戻る", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "287へ進む", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out287": {
+        "title": "外 287",
+        "type": "equirectangular",
+        "panorama": "GS__0287.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "285へ戻る", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "289へ進む", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out289": {
+        "title": "外 289",
+        "type": "equirectangular",
+        "panorama": "GS__0289.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "287へ戻る", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "291へ進む", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out291": {
+        "title": "外 291",
+        "type": "equirectangular",
+        "panorama": "GS__0291.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "289へ戻る", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "293へ進む", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out293": {
+        "title": "外 293",
+        "type": "equirectangular",
+        "panorama": "GS__0293.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "291へ戻る", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out294": {
+        "title": "外 294",
+        "type": "equirectangular",
+        "panorama": "GS__0294.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "293へ戻る", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "295へ進む", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（295 → … → 305） ---
+    "out295": {
+        "title": "外 295",
+        "type": "equirectangular",
+        "panorama": "GS__0295.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out296": {
+        "title": "外 296",
+        "type": "equirectangular",
+        "panorama": "GS__0296.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out297": {
+        "title": "外 297",
+        "type": "equirectangular",
+        "panorama": "GS__0297.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out299": {
+        "title": "外 299",
+        "type": "equirectangular",
+        "panorama": "GS__0299.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out301": {
+        "title": "外 301",
+        "type": "equirectangular",
+        "panorama": "GS__0301.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out302": {
+        "title": "外 302",
+        "type": "equirectangular",
+        "panorama": "GS__0302.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out303": {
+        "title": "外 303",
+        "type": "equirectangular",
+        "panorama": "GS__0303.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out305": {
+        "title": "外 305",
+        "type": "equirectangular",
+        "panorama": "GS__0305.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（307 → … → 319） ---
+    "out307": {
+        "title": "外 307",
+        "type": "equirectangular",
+        "panorama": "GS__0307.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out309": {
+        "title": "外 309",
+        "type": "equirectangular",
+        "panorama": "GS__0309.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out311": {
+        "title": "外 311",
+        "type": "equirectangular",
+        "panorama": "GS__0311.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out313": {
+        "title": "外 313",
+        "type": "equirectangular",
+        "panorama": "GS__0313.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out315": {
+        "title": "外 315",
+        "type": "equirectangular",
+        "panorama": "GS__0315.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out317": {
+        "title": "外 317",
+        "type": "equirectangular",
+        "panorama": "GS__0317.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out319": {
+        "title": "外 319",
+        "type": "equirectangular",
+        "panorama": "GS__0319.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（320 → … → 334） ---
+    "out320": {
+        "title": "外 320",
+        "type": "equirectangular",
+        "panorama": "GS__0320.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "319へ戻る", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "322へ進む", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out322": {
+        "title": "外 322",
+        "type": "equirectangular",
+        "panorama": "GS__0322.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "320へ戻る", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "324へ進む", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out324": {
+        "title": "外 324",
+        "type": "equirectangular",
+        "panorama": "GS__0324.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "322へ戻る", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "326へ進む", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out326": {
+        "title": "外 326",
+        "type": "equirectangular",
+        "panorama": "GS__0326.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "324へ戻る", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "330へ進む", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out330": {
+        "title": "外 330",
+        "type": "equirectangular",
+        "panorama": "GS__0330.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "326へ戻る", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "332へ進む", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out332": {
+        "title": "外 332",
+        "type": "equirectangular",
+        "panorama": "GS__0332.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "330へ戻る", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out334": {
+        "title": "外 334",
+        "type": "equirectangular",
+        "panorama": "GS__0334.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（335 → … → 344） ---
+    "out335": {
+        "title": "外 335",
+        "type": "equirectangular",
+        "panorama": "GS__0335.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "334へ戻る", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "337へ進む", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out337": {
+        "title": "外 337",
+        "type": "equirectangular",
+        "panorama": "GS__0337.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "335へ戻る", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "339へ進む", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out339": {
+        "title": "外 339",
+        "type": "equirectangular",
+        "panorama": "GS__0339.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "337へ戻る", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "341へ進む", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out341": {
+        "title": "外 341",
+        "type": "equirectangular",
+        "panorama": "GS__0341.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "339へ戻る", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "343へ進む", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out343": {
+        "title": "外 343",
+        "type": "equirectangular",
+        "panorama": "GS__0343.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "341へ戻る", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "344へ進む", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out344": {
+        "title": "外 344",
+        "type": "equirectangular",
+        "panorama": "GS__0344.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "343へ戻る", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "345へ進む", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（345 → … → 359） ---
+    "out345": {
+        "title": "外 345",
+        "type": "equirectangular",
+        "panorama": "GS__0345.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "346へ進む", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out346": {
+        "title": "外 346",
+        "type": "equirectangular",
+        "panorama": "GS__0346.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "345へ戻る", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "348へ進む", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out348": {
+        "title": "外 348",
+        "type": "equirectangular",
+        "panorama": "GS__0348.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "346へ戻る", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "350へ進む", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out350": {
+        "title": "外 350",
+        "type": "equirectangular",
+        "panorama": "GS__0350.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "348へ戻る", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "352へ進む", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out352": {
+        "title": "外 352",
+        "type": "equirectangular",
+        "panorama": "GS__0352.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "350へ戻る", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "354へ進む", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out354": {
+        "title": "外 354",
+        "type": "equirectangular",
+        "panorama": "GS__0354.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "352へ戻る", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "355へ進む", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out355": {
+        "title": "外 355",
+        "type": "equirectangular",
+        "panorama": "GS__0355.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "354へ戻る", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "357へ進む", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out357": {
+        "title": "外 357",
+        "type": "equirectangular",
+        "panorama": "GS__0357.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "355へ戻る", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "359へ進む", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out359": {
+        "title": "外 359",
+        "type": "equirectangular",
+        "panorama": "GS__0359.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "357へ戻る", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "360へ進む", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（360 → … → 368） ---
+    "out360": {
+        "title": "外 360",
+        "type": "equirectangular",
+        "panorama": "GS__0360.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "359へ戻る", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "362へ進む", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out362": {
+        "title": "外 362",
+        "type": "equirectangular",
+        "panorama": "GS__0362.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "360へ戻る", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "364へ進む", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out364": {
+        "title": "外 364",
+        "type": "equirectangular",
+        "panorama": "GS__0364.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "362へ戻る", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "366へ進む", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out366": {
+        "title": "外 366",
+        "type": "equirectangular",
+        "panorama": "GS__0366.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "364へ戻る", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "368へ進む", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out368": {
+        "title": "外 368",
+        "type": "equirectangular",
+        "panorama": "GS__0368.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "366へ戻る", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+
+    // --- 屋外360度ルート（369 → … → 379） ---
+    "out369": {
+        "title": "外 369",
+        "type": "equirectangular",
+        "panorama": "GS__0369.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "368へ戻る", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "371へ進む", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out371": {
+        "title": "外 371",
+        "type": "equirectangular",
+        "panorama": "GS__0371.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "369へ戻る", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "373へ進む", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out373": {
+        "title": "外 373",
+        "type": "equirectangular",
+        "panorama": "GS__0373.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "371へ戻る", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "375へ進む", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out375": {
+        "title": "外 375",
+        "type": "equirectangular",
+        "panorama": "GS__0375.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "373へ戻る", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "377へ進む", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out377": {
+        "title": "外 377",
+        "type": "equirectangular",
+        "panorama": "GS__0377.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "375へ戻る", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
+            { "pitch": -5, "yaw": -20, "type": "scene", "text": "379へ進む", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
+        ]
+    },
+    "out379": {
+        "title": "外 379",
+        "type": "equirectangular",
+        "panorama": "GS__0379.jpg",
+        "hotSpots": [
+            { "pitch": -5, "yaw": 160, "type": "scene", "text": "377へ戻る", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
+        ]
+    }
+};
+
+const scenesConfig = buildScenesWith180BackHotspots(rawScenesConfig);
+
+let currentQuiz = null;
+let currentHotspotId = null;
+
+function initPanorama(initialScene = "scene1") {
+    if (viewer && typeof viewer.destroy === "function") {
+        viewer.destroy();
+    }
+
+    viewer = pannellum.viewer('panorama', {
+        "default": {
+            "firstScene": initialScene,
+            "sceneFadeDuration": 800,
+            "autoLoad": true
+        },
+        "scenes": scenesConfig
+    });
+
+    viewer.on('load', function() {
+        const activeSceneId = viewer.getScene();
+        renderQuizHotspotsForScene(activeSceneId);
+        applyArrowRotations(activeSceneId);
+    });
+}
+
+function applyArrowRotations(sceneId) {
+    const scene = scenesConfig[sceneId];
+    if (!scene || !Array.isArray(scene.hotSpots)) return;
+
+    const panoContainer = document.getElementById('panorama');
+    if (!panoContainer) return;
+
+    const spotEls = panoContainer.querySelectorAll('.pnlm-hotspot');
+    spotEls.forEach(el => {
+        if (el.classList.contains('right-arrow-icon')) {
+            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(90deg)';
+        } else if (el.classList.contains('left-arrow-icon')) {
+            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(-90deg)';
+        } else if (el.classList.contains('diag-ne-arrow-icon')) {
+            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(45deg)';
+        } else if (el.classList.contains('diag-nw-arrow-icon')) {
+            el.style.transform = 'perspective(170px) rotateX(60deg) rotateZ(-45deg)';
+        }
+    });
+}
+
 function startGame() {
-    isGameStarted = true;
     score = 0;
+    isGameStarted = true;
     answeredIds.clear();
     answeredGroups.clear();
-    document.getElementById('score-value').innerText = score;
-    document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
+    updateScoreBoard();
+
+    const randomTime = pickRandomTimeOfDay();
+    const randomSpawnScene = pickRandomSpawnScene();
+
+    applyTimeOfDay(randomTime, true);
+    console.log('ランダム選択された開始地点:', randomSpawnScene);
+
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('end-screen').style.display = 'none';
     document.getElementById('score-board').style.display = 'block';
     document.getElementById('time-controls').style.display = 'flex';
 
-    const randomSpawnScene = pickRandomSpawnScene();
-    if (viewer) {
-        if (viewer.getScene() !== randomSpawnScene) {
-            viewer.loadScene(randomSpawnScene);
-        } else {
-            refreshSceneQuizHotspots(randomSpawnScene);
-        }
-    }
-
-    applyTimeOfDay(pickRandomTimeOfDay(), true);
+    initPanorama(randomSpawnScene);
 }
 
-let currentQuiz = null;
-
-function showQuiz(event, quizArgs) {
-    currentQuiz = getQuizDataForCurrentTime(quizArgs);
-    document.getElementById('quiz-time-badge').innerText = TIME_LABELS[currentTimeOfDay];
-    document.getElementById('quiz-text').innerHTML = currentQuiz.question;
-    document.getElementById('btn-A').innerText = currentQuiz.choiceA;
-    document.getElementById('btn-B').innerText = currentQuiz.choiceB;
-    document.getElementById('btn-C').innerText = currentQuiz.choiceC;
-
-    document.getElementById('quiz-overlay').style.display = 'flex';
-    document.getElementById('quiz-choices').style.display = 'block';
-    document.getElementById('quiz-result').style.display = 'none';
+function updateScoreBoard() {
+    document.getElementById('score-value').innerText = score;
+    document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
 }
 
-function answerQuiz(selectedChoice) {
-    const resultDiv = document.getElementById('quiz-result');
-    const choicesDiv = document.getElementById('quiz-choices');
-
-    choicesDiv.style.display = 'none';
-    resultDiv.style.display = 'block';
-
-    const alreadySolvedGroup = answeredGroups.has(currentQuiz.quizGroup);
-    const alreadySolvedId = answeredIds.has(currentQuiz.quizId);
-
-    if (selectedChoice === currentQuiz.correctAnswer) {
-        let pointMessage = "";
-        if (!alreadySolvedGroup && !alreadySolvedId) {
-            answeredIds.add(currentQuiz.quizId);
-            answeredGroups.add(currentQuiz.quizGroup);
-            if (isGameStarted) {
-                score += 1;
-                document.getElementById('score-value').innerText = score;
-                pointMessage = '<p style="font-weight:bold; color:#e83e8c;">+1 ポイント獲得！（正解した問題と関連問題は非表示になります）</p>';
-            }
-            refreshSceneQuizHotspots(viewer.getScene());
-        } else {
-            answeredIds.add(currentQuiz.quizId);
-            refreshSceneQuizHotspots(viewer.getScene());
-            pointMessage = '<p style="font-size: 14px; color: #666;">※すでに正解済みの問題（または同テーマ）です。</p>';
-        }
-
-        resultDiv.style.backgroundColor = '#d4edda';
-        resultDiv.style.color = '#155724';
-        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#28a745;">正解！</h3>' +
-                              pointMessage +
-                              '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
-    } else {
-        resultDiv.style.backgroundColor = '#f8d7da';
-        resultDiv.style.color = '#721c24';
-        resultDiv.innerHTML = '<h3 style="margin-top:0; color:#dc3545;">不正解...</h3>' +
-                              '<p>正解は <strong>' + currentQuiz.correctAnswer + '</strong> です。</p>' +
-                              '<p><strong>解説：</strong><br>' + currentQuiz.explanation + '</p>';
-    }
+function isQuizAlreadyAnswered(quizArgs) {
+    if (!quizArgs) return false;
+    if (quizArgs.quizId && answeredIds.has(quizArgs.quizId)) return true;
+    if (quizArgs.quizGroup && answeredGroups.has(quizArgs.quizGroup)) return true;
+    return false;
 }
 
-function closeQuiz() {
-    document.getElementById('quiz-overlay').style.display = 'none';
+function renderQuizHotspotsForScene(sceneId) {
+    if (!viewer || !sceneId) return;
 
-    if (isGameStarted && answeredGroups.size === TOTAL_UNIQUE_QUIZZES) {
-        document.getElementById('score-board').style.display = 'none';
-        document.getElementById('time-controls').style.display = 'none';
-        document.getElementById('final-score-value').innerText = score;
-        document.getElementById('end-screen').style.display = 'flex';
-    }
-}
-
-function refreshSceneQuizHotspots(sceneId) {
-    if (!viewer || !sceneQuizHotspots[sceneId]) return;
-    sceneQuizHotspots[sceneId].forEach(hs => {
+    const allDefinedInScene = sceneQuizHotspots[sceneId] || [];
+    allDefinedInScene.forEach(hs => {
         try { viewer.removeHotSpot(hs.id, sceneId); } catch (e) {}
-        const qId = hs.clickHandlerArgs.quizId;
-        const qGroup = hs.clickHandlerArgs.quizGroup;
-        if (!answeredIds.has(qId) && !answeredGroups.has(qGroup)) {
-            viewer.addHotSpot(hs, sceneId);
+    });
+
+    if (!isGameStarted) return;
+
+    allDefinedInScene.forEach(hs => {
+        if (!isQuizAlreadyAnswered(hs.clickHandlerArgs)) {
+            const spotConfig = Object.assign({}, hs, {
+                clickHandlerArgs: hs.clickHandlerArgs
+            });
+            viewer.addHotSpot(spotConfig, sceneId);
         }
     });
 }
 
-viewer = pannellum.viewer('panorama', {
-    "default": {
-        "firstScene": "scene1",
-        "sceneFadeDuration": 1000,
-        "autoLoad": true,
-        "northOffset": 0
-    },
-    "scenes": {
-        "scene1": {
-            "title": "地点1",
-            "type": "equirectangular",
-            "panorama": "66.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 210, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": -30, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "外へ移動（147）", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "scene2": {
-            "title": "地点2",
-            "type": "equirectangular",
-            "panorama": "68.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点4へ移動", "sceneId": "scene4", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
-            ]
-        },
-        "scene3": {
-            "title": "地点3",
-            "type": "equirectangular",
-            "panorama": "200.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "地点5へ移動", "sceneId": "scene5", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
-            ]
-        },
-        "scene4": {
-            "title": "地点4",
-            "type": "equirectangular",
-            "panorama": "201.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点2へ移動", "sceneId": "scene2", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
-            ]
-        },
-        "scene5": {
-            "title": "地点5",
-            "type": "equirectangular",
-            "panorama": "203.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "地点1へ移動", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" },
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "地点3へ移動", "sceneId": "scene3", "targetYaw": "same", "targetPitch": "same", "cssClass": "custom-move-icon" }
-            ]
-        },
+function removeAnsweredHotspotsFromAllScenes(quizId, quizGroup) {
+    Object.keys(sceneQuizHotspots).forEach(sceneId => {
+        const list = sceneQuizHotspots[sceneId] || [];
+        list.forEach(hs => {
+            const args = hs.clickHandlerArgs || {};
+            const matchId = quizId && args.quizId === quizId;
+            const matchGroup = quizGroup && args.quizGroup === quizGroup;
+            if (matchId || matchGroup) {
+                try { viewer.removeHotSpot(hs.id, sceneId); } catch (e) {}
+            }
+        });
+    });
+}
 
-        // --- 屋外360度ルート（147 → … → 189 → [進む:-100 / 戻る:60] 191 → … → 202） ---
-        "out147": {
-            "title": "外 147",
-            "type": "equirectangular",
-            "panorama": "GS__0147.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "ゼミ室（地点1）へ戻る", "sceneId": "scene1", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "149へ進む", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out149": {
-            "title": "外 149",
-            "type": "equirectangular",
-            "panorama": "GS__0149.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "147へ戻る", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "151へ進む", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out151": {
-            "title": "外 151",
-            "type": "equirectangular",
-            "panorama": "GS__0151.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "149へ戻る", "sceneId": "out149", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "153へ進む", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out153": {
-            "title": "外 153",
-            "type": "equirectangular",
-            "panorama": "GS__0153.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "151へ戻る", "sceneId": "out151", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out155": {
-            "title": "外 155",
-            "type": "equirectangular",
-            "panorama": "GS__0155.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "153へ戻る", "sceneId": "out153", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "157へ進む", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": -25, "type": "scene", "text": "379へ戻る", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "379へ進む", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out157": {
-            "title": "外 157",
-            "type": "equirectangular",
-            "panorama": "GS__0157.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "155へ戻る", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "159へ進む", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out159": {
-            "title": "外 159",
-            "type": "equirectangular",
-            "panorama": "GS__0159.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "157へ戻る", "sceneId": "out157", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "161へ進む", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out161": {
-            "title": "外 161",
-            "type": "equirectangular",
-            "panorama": "GS__0161.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "159へ戻る", "sceneId": "out159", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "163へ進む", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out163": {
-            "title": "外 163",
-            "type": "equirectangular",
-            "panorama": "GS__0163.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "161へ戻る", "sceneId": "out161", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "165へ進む", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out165": {
-            "title": "外 165",
-            "type": "equirectangular",
-            "panorama": "GS__0165.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "163へ戻る", "sceneId": "out163", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "167へ進む", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out167": {
-            "title": "外 167",
-            "type": "equirectangular",
-            "panorama": "GS__0167.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "165へ戻る", "sceneId": "out165", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "169へ進む", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out169": {
-            "title": "外 169",
-            "type": "equirectangular",
-            "panorama": "GS__0169.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "167へ戻る", "sceneId": "out167", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "171へ進む", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out171": {
-            "title": "外 171",
-            "type": "equirectangular",
-            "panorama": "GS__0171.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "169へ戻る", "sceneId": "out169", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "173へ進む", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out173": {
-            "title": "外 173",
-            "type": "equirectangular",
-            "panorama": "GS__0173.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "171へ戻る", "sceneId": "out171", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 50, "type": "scene", "text": "175へ進む", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out175": {
-            "title": "外 175",
-            "type": "equirectangular",
-            "panorama": "GS__0175.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 230, "type": "scene", "text": "173へ戻る", "sceneId": "out173", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "177へ進む", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out177": {
-            "title": "外 177",
-            "type": "equirectangular",
-            "panorama": "GS__0177.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "175へ戻る", "sceneId": "out175", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "179へ進む", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out179": {
-            "title": "外 179",
-            "type": "equirectangular",
-            "panorama": "GS__0179.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "177へ戻る", "sceneId": "out177", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "181へ進む", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out181": {
-            "title": "外 181",
-            "type": "equirectangular",
-            "panorama": "GS__0181.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "179へ戻る", "sceneId": "out179", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "183へ進む", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out183": {
-            "title": "外 183",
-            "type": "equirectangular",
-            "panorama": "GS__0183.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "181へ戻る", "sceneId": "out181", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "185へ進む", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out185": {
-            "title": "外 185",
-            "type": "equirectangular",
-            "panorama": "GS__0185.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "183へ戻る", "sceneId": "out183", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "187へ進む", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out187": {
-            "title": "外 187",
-            "type": "equirectangular",
-            "panorama": "GS__0187.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "185へ戻る", "sceneId": "out185", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "189へ進む", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out189": {
-            "title": "外 189",
-            "type": "equirectangular",
-            "panorama": "GS__0189.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "187へ戻る", "sceneId": "out187", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "191へ進む", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "203へ進む", "sceneId": "out203", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out191": {
-            "title": "外 191",
-            "type": "equirectangular",
-            "panorama": "GS__0191.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "193へ進む", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out193": {
-            "title": "外 193",
-            "type": "equirectangular",
-            "panorama": "GS__0193.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "191へ戻る", "sceneId": "out191", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "195へ進む", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out195": {
-            "title": "外 195",
-            "type": "equirectangular",
-            "panorama": "GS__0195.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "193へ戻る", "sceneId": "out193", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "197へ進む", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out197": {
-            "title": "外 197",
-            "type": "equirectangular",
-            "panorama": "GS__0197.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "195へ戻る", "sceneId": "out195", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "199へ進む", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out199": {
-            "title": "外 199",
-            "type": "equirectangular",
-            "panorama": "GS__0199.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "197へ戻る", "sceneId": "out197", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "201へ進む", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out201": {
-            "title": "外 201",
-            "type": "equirectangular",
-            "panorama": "GS__0201.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "199へ戻る", "sceneId": "out199", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "diag-nw-arrow-icon" }
-            ]
-        },
-        "out202": {
-            "title": "外 202",
-            "type": "equirectangular",
-            "panorama": "GS__0202.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 60, "type": "scene", "text": "201へ戻る", "sceneId": "out201", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "368へ戻る", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 150, "type": "scene", "text": "369へ進む", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（203 → … → 231） ---
-        "out203": {
-            "title": "外 203",
-            "type": "equirectangular",
-            "panorama": "GS__0203.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "189へ戻る", "sceneId": "out189", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "205へ進む", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out205": {
-            "title": "外 205",
-            "type": "equirectangular",
-            "panorama": "GS__0205.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "203へ戻る", "sceneId": "out203", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "207へ進む", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out207": {
-            "title": "外 207",
-            "type": "equirectangular",
-            "panorama": "GS__0207.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "205へ戻る", "sceneId": "out205", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "209へ進む", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out209": {
-            "title": "外 209",
-            "type": "equirectangular",
-            "panorama": "GS__0209.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "207へ戻る", "sceneId": "out207", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "211へ進む", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out211": {
-            "title": "外 211",
-            "type": "equirectangular",
-            "panorama": "GS__0211.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "209へ戻る", "sceneId": "out209", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "213へ進む", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out213": {
-            "title": "外 213",
-            "type": "equirectangular",
-            "panorama": "GS__0213.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "211へ戻る", "sceneId": "out211", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "215へ進む", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out215": {
-            "title": "外 215",
-            "type": "equirectangular",
-            "panorama": "GS__0215.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "213へ戻る", "sceneId": "out213", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "217へ進む", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out217": {
-            "title": "外 217",
-            "type": "equirectangular",
-            "panorama": "GS__0217.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "215へ戻る", "sceneId": "out215", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "219へ進む", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out219": {
-            "title": "外 219",
-            "type": "equirectangular",
-            "panorama": "GS__0219.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "217へ戻る", "sceneId": "out217", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "221へ進む", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out221": {
-            "title": "外 221",
-            "type": "equirectangular",
-            "panorama": "GS__0221.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "219へ戻る", "sceneId": "out219", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "223へ進む", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out223": {
-            "title": "外 223",
-            "type": "equirectangular",
-            "panorama": "GS__0223.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "221へ戻る", "sceneId": "out221", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "225へ進む", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out225": {
-            "title": "外 225",
-            "type": "equirectangular",
-            "panorama": "GS__0225.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "223へ戻る", "sceneId": "out223", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "227へ進む", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out227": {
-            "title": "外 227",
-            "type": "equirectangular",
-            "panorama": "GS__0227.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "225へ戻る", "sceneId": "out225", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "229へ進む", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out229": {
-            "title": "外 229",
-            "type": "equirectangular",
-            "panorama": "GS__0229.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "227へ戻る", "sceneId": "out227", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "231へ進む", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out231": {
-            "title": "外 231",
-            "type": "equirectangular",
-            "panorama": "GS__0231.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "229へ戻る", "sceneId": "out229", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "233へ進む", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（233 → … → 251） ---
-        "out233": {
-            "title": "外 233",
-            "type": "equirectangular",
-            "panorama": "GS__0233.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "231へ戻る", "sceneId": "out231", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "235へ進む", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out235": {
-            "title": "外 235",
-            "type": "equirectangular",
-            "panorama": "GS__0235.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "233へ戻る", "sceneId": "out233", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "237へ進む", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out237": {
-            "title": "外 237",
-            "type": "equirectangular",
-            "panorama": "GS__0237.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "235へ戻る", "sceneId": "out235", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "239へ進む", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out239": {
-            "title": "外 239",
-            "type": "equirectangular",
-            "panorama": "GS__0239.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "237へ戻る", "sceneId": "out237", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "241へ進む", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out241": {
-            "title": "外 241",
-            "type": "equirectangular",
-            "panorama": "GS__0241.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "239へ戻る", "sceneId": "out239", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "243へ進む", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out243": {
-            "title": "外 243",
-            "type": "equirectangular",
-            "panorama": "GS__0243.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "241へ戻る", "sceneId": "out241", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "245へ進む", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out245": {
-            "title": "外 245",
-            "type": "equirectangular",
-            "panorama": "GS__0245.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "243へ戻る", "sceneId": "out243", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "247へ進む", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out247": {
-            "title": "外 247",
-            "type": "equirectangular",
-            "panorama": "GS__0247.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "245へ戻る", "sceneId": "out245", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "249へ進む", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out249": {
-            "title": "外 249",
-            "type": "equirectangular",
-            "panorama": "GS__0249.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "247へ戻る", "sceneId": "out247", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "251へ進む", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out251": {
-            "title": "外 251",
-            "type": "equirectangular",
-            "panorama": "GS__0251.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "249へ戻る", "sceneId": "out249", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "253へ進む", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（253 → 255 → 257 → 259 → 261 → 263 → 265 → 267） ---
-        "out253": {
-            "title": "外 253",
-            "type": "equirectangular",
-            "panorama": "GS__0253.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "251へ戻る", "sceneId": "out251", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -20, "type": "scene", "text": "255へ進む", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out255": {
-            "title": "外 255",
-            "type": "equirectangular",
-            "panorama": "GS__0255.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "253へ戻る", "sceneId": "out253", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "257へ進む", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out257": {
-            "title": "外 257",
-            "type": "equirectangular",
-            "panorama": "GS__0257.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "255へ戻る", "sceneId": "out255", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "259へ進む", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out259": {
-            "title": "外 259",
-            "type": "equirectangular",
-            "panorama": "GS__0259.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "257へ戻る", "sceneId": "out257", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "261へ進む", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out261": {
-            "title": "外 261",
-            "type": "equirectangular",
-            "panorama": "GS__0261.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "259へ戻る", "sceneId": "out259", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "263へ進む", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out263": {
-            "title": "外 263",
-            "type": "equirectangular",
-            "panorama": "GS__0263.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "261へ戻る", "sceneId": "out261", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "265へ進む", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out265": {
-            "title": "外 265",
-            "type": "equirectangular",
-            "panorama": "GS__0265.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 80, "type": "scene", "text": "263へ戻る", "sceneId": "out263", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 90, "type": "scene", "text": "267へ進む", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（267 → 269 → 271 → 273 → 275 → 277 → 279 → 280） ---
-        "out267": {
-            "title": "外 267",
-            "type": "equirectangular",
-            "panorama": "GS__0267.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -90, "type": "scene", "text": "265へ戻る", "sceneId": "out265", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "269へ進む", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out269": {
-            "title": "外 269",
-            "type": "equirectangular",
-            "panorama": "GS__0269.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "267へ戻る", "sceneId": "out267", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "271へ進む", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out271": {
-            "title": "外 271",
-            "type": "equirectangular",
-            "panorama": "GS__0271.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "273へ進む", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out273": {
-            "title": "外 273",
-            "type": "equirectangular",
-            "panorama": "GS__0273.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "271へ戻る", "sceneId": "out271", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "275へ進む", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out275": {
-            "title": "外 275",
-            "type": "equirectangular",
-            "panorama": "GS__0275.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "273へ戻る", "sceneId": "out273", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "277へ進む", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out277": {
-            "title": "外 277",
-            "type": "equirectangular",
-            "panorama": "GS__0277.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "275へ戻る", "sceneId": "out275", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "279へ進む", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out279": {
-            "title": "外 279",
-            "type": "equirectangular",
-            "panorama": "GS__0279.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "277へ戻る", "sceneId": "out277", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 120, "type": "scene", "text": "280へ進む", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out280": {
-            "title": "外 280",
-            "type": "equirectangular",
-            "panorama": "GS__0280.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 300, "type": "scene", "text": "279へ戻る", "sceneId": "out279", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "269へ戻る", "sceneId": "out269", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（281 → 283 → 285 → 287 → 289 → 291 → 293 → 294） ---
-        "out281": {
-            "title": "外 281",
-            "type": "equirectangular",
-            "panorama": "GS__0281.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -115, "type": "scene", "text": "283へ進む", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out283": {
-            "title": "外 283",
-            "type": "equirectangular",
-            "panorama": "GS__0283.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 115, "type": "scene", "text": "281へ戻る", "sceneId": "out281", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -85, "type": "scene", "text": "285へ進む", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out285": {
-            "title": "外 285",
-            "type": "equirectangular",
-            "panorama": "GS__0285.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 145, "type": "scene", "text": "283へ戻る", "sceneId": "out283", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "287へ進む", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out287": {
-            "title": "外 287",
-            "type": "equirectangular",
-            "panorama": "GS__0287.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 150, "type": "scene", "text": "285へ戻る", "sceneId": "out285", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -70, "type": "scene", "text": "289へ進む", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out289": {
-            "title": "外 289",
-            "type": "equirectangular",
-            "panorama": "GS__0289.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 160, "type": "scene", "text": "287へ戻る", "sceneId": "out287", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "291へ進む", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out291": {
-            "title": "外 291",
-            "type": "equirectangular",
-            "panorama": "GS__0291.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 240, "type": "scene", "text": "289へ戻る", "sceneId": "out289", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "293へ進む", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out293": {
-            "title": "外 293",
-            "type": "equirectangular",
-            "panorama": "GS__0293.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 250, "type": "scene", "text": "291へ戻る", "sceneId": "out291", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "294へ進む", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out294": {
-            "title": "外 294",
-            "type": "equirectangular",
-            "panorama": "GS__0294.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 245, "type": "scene", "text": "293へ戻る", "sceneId": "out293", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 65, "type": "scene", "text": "295へ進む", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（295 → 296 → 297 → 299 → 301 → 302 → 303 → 305） ---
-        "out295": {
-            "title": "外 295",
-            "type": "equirectangular",
-            "panorama": "GS__0295.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "280へ戻る", "sceneId": "out280", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -160, "type": "scene", "text": "294へ戻る", "sceneId": "out294", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -130, "type": "scene", "text": "296へ進む", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out296": {
-            "title": "外 296",
-            "type": "equirectangular",
-            "panorama": "GS__0296.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "295へ戻る", "sceneId": "out295", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -130, "type": "scene", "text": "297へ進む", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out297": {
-            "title": "外 297",
-            "type": "equirectangular",
-            "panorama": "GS__0297.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "296へ戻る", "sceneId": "out296", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -130, "type": "scene", "text": "299へ進む", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out299": {
-            "title": "外 299",
-            "type": "equirectangular",
-            "panorama": "GS__0299.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 35, "type": "scene", "text": "297へ戻る", "sceneId": "out297", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -115, "type": "scene", "text": "301へ進む", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out301": {
-            "title": "外 301",
-            "type": "equirectangular",
-            "panorama": "GS__0301.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 50, "type": "scene", "text": "299へ戻る", "sceneId": "out299", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "302へ進む", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out302": {
-            "title": "外 302",
-            "type": "equirectangular",
-            "panorama": "GS__0302.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 50, "type": "scene", "text": "301へ戻る", "sceneId": "out301", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "303へ進む", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out303": {
-            "title": "外 303",
-            "type": "equirectangular",
-            "panorama": "GS__0303.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 50, "type": "scene", "text": "302へ戻る", "sceneId": "out302", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -100, "type": "scene", "text": "305へ進む", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out305": {
-            "title": "外 305",
-            "type": "equirectangular",
-            "panorama": "GS__0305.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 50, "type": "scene", "text": "303へ戻る", "sceneId": "out303", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "307へ進む", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "320へ進む", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（307 → 309 → 311 → 313 → 315 → 317 → 319） ---
-        "out307": {
-            "title": "外 307",
-            "type": "equirectangular",
-            "panorama": "GS__0307.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "309へ進む", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out309": {
-            "title": "外 309",
-            "type": "equirectangular",
-            "panorama": "GS__0309.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "307へ戻る", "sceneId": "out307", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "311へ進む", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out311": {
-            "title": "外 311",
-            "type": "equirectangular",
-            "panorama": "GS__0311.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "309へ戻る", "sceneId": "out309", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "313へ進む", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out313": {
-            "title": "外 313",
-            "type": "equirectangular",
-            "panorama": "GS__0313.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "311へ戻る", "sceneId": "out311", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "315へ進む", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out315": {
-            "title": "外 315",
-            "type": "equirectangular",
-            "panorama": "GS__0315.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "313へ戻る", "sceneId": "out313", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "317へ進む", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out317": {
-            "title": "外 317",
-            "type": "equirectangular",
-            "panorama": "GS__0317.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "315へ戻る", "sceneId": "out315", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -150, "type": "scene", "text": "319へ進む", "sceneId": "out319", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out319": {
-            "title": "外 319",
-            "type": "equirectangular",
-            "panorama": "GS__0319.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 30, "type": "scene", "text": "317へ戻る", "sceneId": "out317", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（320 → 322 → 324 → 326 → 330 → 332 → 334） ---
-        "out320": {
-            "title": "外 320",
-            "type": "equirectangular",
-            "panorama": "GS__0320.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "305へ戻る", "sceneId": "out305", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "322へ進む", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out322": {
-            "title": "外 322",
-            "type": "equirectangular",
-            "panorama": "GS__0322.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "320へ戻る", "sceneId": "out320", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "324へ進む", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out324": {
-            "title": "外 324",
-            "type": "equirectangular",
-            "panorama": "GS__0324.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "322へ戻る", "sceneId": "out322", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "326へ進む", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out326": {
-            "title": "外 326",
-            "type": "equirectangular",
-            "panorama": "GS__0326.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "324へ戻る", "sceneId": "out324", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "330へ進む", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out330": {
-            "title": "外 330",
-            "type": "equirectangular",
-            "panorama": "GS__0330.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "326へ戻る", "sceneId": "out326", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "332へ進む", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out332": {
-            "title": "外 332",
-            "type": "equirectangular",
-            "panorama": "GS__0332.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "330へ戻る", "sceneId": "out330", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 70, "type": "scene", "text": "334へ進む", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out334": {
-            "title": "外 334",
-            "type": "equirectangular",
-            "panorama": "GS__0334.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -110, "type": "scene", "text": "332へ戻る", "sceneId": "out332", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "147へ戻る", "sceneId": "out147", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 40, "type": "scene", "text": "335へ進む", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（335 → 337 → 339 → 341 → 343 → 344） ---
-        "out335": {
-            "title": "外 335",
-            "type": "equirectangular",
-            "panorama": "GS__0335.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -140, "type": "scene", "text": "334へ戻る", "sceneId": "out334", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "337へ進む", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out337": {
-            "title": "外 337",
-            "type": "equirectangular",
-            "panorama": "GS__0337.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "335へ戻る", "sceneId": "out335", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "339へ進む", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out339": {
-            "title": "外 339",
-            "type": "equirectangular",
-            "panorama": "GS__0339.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "337へ戻る", "sceneId": "out337", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "341へ進む", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out341": {
-            "title": "外 341",
-            "type": "equirectangular",
-            "panorama": "GS__0341.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "339へ戻る", "sceneId": "out339", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "343へ進む", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out343": {
-            "title": "外 343",
-            "type": "equirectangular",
-            "panorama": "GS__0343.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "341へ戻る", "sceneId": "out341", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -50, "type": "scene", "text": "344へ進む", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out344": {
-            "title": "外 344",
-            "type": "equirectangular",
-            "panorama": "GS__0344.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "343へ戻る", "sceneId": "out343", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "345へ進む", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" },
-                { "pitch": -5, "yaw": 0, "type": "scene", "text": "360へ進む", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（345 → 346 → 348 → 350 → 352 → 354 → 355 → 357 → 359） ---
-        "out345": {
-            "title": "外 345",
-            "type": "equirectangular",
-            "panorama": "GS__0345.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "346へ進む", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out346": {
-            "title": "外 346",
-            "type": "equirectangular",
-            "panorama": "GS__0346.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "345へ戻る", "sceneId": "out345", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "348へ進む", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out348": {
-            "title": "外 348",
-            "type": "equirectangular",
-            "panorama": "GS__0348.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "346へ戻る", "sceneId": "out346", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "350へ進む", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out350": {
-            "title": "外 350",
-            "type": "equirectangular",
-            "panorama": "GS__0350.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "348へ戻る", "sceneId": "out348", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "352へ進む", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out352": {
-            "title": "外 352",
-            "type": "equirectangular",
-            "panorama": "GS__0352.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "350へ戻る", "sceneId": "out350", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "354へ進む", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out354": {
-            "title": "外 354",
-            "type": "equirectangular",
-            "panorama": "GS__0354.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "352へ戻る", "sceneId": "out352", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "355へ進む", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out355": {
-            "title": "外 355",
-            "type": "equirectangular",
-            "panorama": "GS__0355.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "354へ戻る", "sceneId": "out354", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "357へ進む", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out357": {
-            "title": "外 357",
-            "type": "equirectangular",
-            "panorama": "GS__0357.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "355へ戻る", "sceneId": "out355", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 10, "type": "scene", "text": "359へ進む", "sceneId": "out359", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out359": {
-            "title": "外 359",
-            "type": "equirectangular",
-            "panorama": "GS__0359.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -60, "type": "scene", "text": "357へ戻る", "sceneId": "out357", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（360 → 362 → 364 → 366 → 368 → 202） ---
-        "out360": {
-            "title": "外 360",
-            "type": "equirectangular",
-            "panorama": "GS__0360.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 180, "type": "scene", "text": "344へ戻る", "sceneId": "out344", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 100, "type": "scene", "text": "362へ進む", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out362": {
-            "title": "外 362",
-            "type": "equirectangular",
-            "panorama": "GS__0362.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "360へ戻る", "sceneId": "out360", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 100, "type": "scene", "text": "364へ進む", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out364": {
-            "title": "外 364",
-            "type": "equirectangular",
-            "panorama": "GS__0364.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "362へ戻る", "sceneId": "out362", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 100, "type": "scene", "text": "366へ進む", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out366": {
-            "title": "外 366",
-            "type": "equirectangular",
-            "panorama": "GS__0366.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "364へ戻る", "sceneId": "out364", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 100, "type": "scene", "text": "368へ進む", "sceneId": "out368", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out368": {
-            "title": "外 368",
-            "type": "equirectangular",
-            "panorama": "GS__0368.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -80, "type": "scene", "text": "366へ戻る", "sceneId": "out366", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": 20, "type": "scene", "text": "202へ進む", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-
-        // --- 屋外360度ルート（369 → 371 → 373 → 375 → 377 → 379 → 155） ---
-        "out369": {
-            "title": "外 369",
-            "type": "equirectangular",
-            "panorama": "GS__0369.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": -30, "type": "scene", "text": "202へ戻る", "sceneId": "out202", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -165, "type": "scene", "text": "371へ進む", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out371": {
-            "title": "外 371",
-            "type": "equirectangular",
-            "panorama": "GS__0371.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "369へ戻る", "sceneId": "out369", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -165, "type": "scene", "text": "373へ進む", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out373": {
-            "title": "外 373",
-            "type": "equirectangular",
-            "panorama": "GS__0373.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "371へ戻る", "sceneId": "out371", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -165, "type": "scene", "text": "375へ進む", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out375": {
-            "title": "外 375",
-            "type": "equirectangular",
-            "panorama": "GS__0375.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "373へ戻る", "sceneId": "out373", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -165, "type": "scene", "text": "377へ進む", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out377": {
-            "title": "外 377",
-            "type": "equirectangular",
-            "panorama": "GS__0377.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "375へ戻る", "sceneId": "out375", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -165, "type": "scene", "text": "379へ進む", "sceneId": "out379", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        },
-        "out379": {
-            "title": "外 379",
-            "type": "equirectangular",
-            "panorama": "GS__0379.jpg",
-            "hotSpots": [
-                { "pitch": -5, "yaw": 15, "type": "scene", "text": "377へ戻る", "sceneId": "out377", "targetYaw": "same", "targetPitch": "same", "cssClass": "left-arrow-icon" },
-                { "pitch": -5, "yaw": -170, "type": "scene", "text": "155へ進む", "sceneId": "out155", "targetYaw": "same", "targetPitch": "same", "cssClass": "right-arrow-icon" }
-            ]
-        }
+function checkAllCleared() {
+    if (answeredGroups.size >= TOTAL_UNIQUE_QUIZZES && TOTAL_UNIQUE_QUIZZES > 0) {
+        setTimeout(() => {
+            document.getElementById('quiz-overlay').style.display = 'none';
+            document.getElementById('final-score-value').innerText = score;
+            document.getElementById('end-screen').style.display = 'flex';
+        }, 450);
     }
-});
+}
 
-Object.keys(sceneQuizHotspots).forEach(sceneId => {
-    refreshSceneQuizHotspots(sceneId);
-});
+function showQuiz(hotSpotDiv, args) {
+    if (isQuizAlreadyAnswered(args)) {
+        return;
+    }
 
-viewer.on('scenechange', function(sceneId) {
-    refreshSceneQuizHotspots(sceneId);
+    const resolvedQuiz = getQuizDataForCurrentTime(args);
+    currentQuiz = resolvedQuiz;
+    currentHotspotId = args.quizId;
+
+    document.getElementById('quiz-title').innerText = "脱炭素クイズ";
+    document.getElementById('quiz-time-badge').innerText = TIME_LABELS[currentTimeOfDay] || "昼";
+    document.getElementById('quiz-text').innerHTML = resolvedQuiz.question;
+    document.getElementById('btn-A').innerText = resolvedQuiz.choiceA;
+    document.getElementById('btn-B').innerText = resolvedQuiz.choiceB;
+    document.getElementById('btn-C').innerText = resolvedQuiz.choiceC;
+
+    document.querySelectorAll('.quiz-choice-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.style.backgroundColor = "#f4f7f5";
+        btn.style.borderColor = "#c8dfd1";
+    });
+
+    const resultDiv = document.getElementById('quiz-result');
+    resultDiv.style.display = "none";
+    resultDiv.innerHTML = "";
+
+    document.getElementById('quiz-overlay').style.display = "flex";
+}
+
+function answerQuiz(choice) {
+    if (!currentQuiz) return;
+
+    const resultDiv = document.getElementById('quiz-result');
+    resultDiv.style.display = "block";
+
+    const isCorrect = (choice === currentQuiz.correctAnswer);
+
+    if (isCorrect) {
+        if (!answeredIds.has(currentQuiz.quizId)) {
+            score += 1;
+            updateScoreBoard();
+        }
+
+        if (currentQuiz.quizId) answeredIds.add(currentQuiz.quizId);
+        if (currentQuiz.quizGroup) answeredGroups.add(currentQuiz.quizGroup);
+
+        resultDiv.style.backgroundColor = "#e6f4ea";
+        resultDiv.style.color = "#137333";
+        resultDiv.style.border = "1px solid #a8dab5";
+        resultDiv.innerHTML = "<strong>正解！（+1ポイント）</strong><br>" + currentQuiz.explanation;
+
+        document.querySelectorAll('.quiz-choice-btn').forEach(btn => {
+            btn.disabled = true;
+        });
+
+        removeAnsweredHotspotsFromAllScenes(currentQuiz.quizId, currentQuiz.quizGroup);
+        checkAllCleared();
+    } else {
+        resultDiv.style.backgroundColor = "#fce8e6";
+        resultDiv.style.color = "#c5221f";
+        resultDiv.style.border = "1px solid #f6aea9";
+        resultDiv.innerHTML = "<strong>不正解</strong><br>もう一度よく考えて別の選択肢を選んでみましょう！";
+    }
+}
+
+function closeQuiz() {
+    document.getElementById('quiz-overlay').style.display = "none";
+    currentQuiz = null;
+    currentHotspotId = null;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('max-score-value').innerText = TOTAL_UNIQUE_QUIZZES;
+    applyTimeOfDay('day', false);
+    initPanorama("scene1");
 });
 </script>
 
