@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360度パノラマ 脱炭素クイズゲーム（タップ移動＆ボタン固定対応）</title>
+    <title>360度パノラマ 脱炭素クイズゲーム（単一アイコン移動・ボタン固定対応）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
@@ -578,7 +578,7 @@
 
 <script>
 const TARGET_CLEAR_COUNT = 20;
-const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v3";
+const STORAGE_KEY_HOTSPOTS = "pannellum_carbon_fixed_hotspots_v4";
 
 let viewer;
 let score = 0;
@@ -587,7 +587,6 @@ let currentTimeOfDay = 'day';
 let isEditMode = false;
 let isPanoTapBound = false;
 
-// 編集用状態: { sceneId, source, index, data, pnlmId, tempPitch, tempYaw }
 let selectedHotspotEdit = null;
 const activeSceneHotspots = [];
 
@@ -2049,9 +2048,21 @@ function highlightSelectedHotspotDom() {
     const targetItem = activeSceneHotspots.find(
         x => x.source === selectedHotspotEdit.source && x.index === selectedHotspotEdit.index
     );
-    if (targetItem && targetItem.el) {
+    if (targetItem && targetItem.el && targetItem.el.isConnected) {
         targetItem.el.classList.add('selected-edit-hotspot');
     }
+}
+
+function attachHotspotEditListener(item, sceneId) {
+    if (!item || !item.el) return;
+    if (item.el.dataset.boundTapItem === "1") return;
+    item.el.dataset.boundTapItem = "1";
+    item.el.addEventListener("click", function (e) {
+        if (!isEditMode) return;
+        e.stopPropagation();
+        e.preventDefault();
+        selectHotspotForEdit(item, sceneId);
+    }, true);
 }
 
 function selectHotspotForEdit(item, sceneId) {
@@ -2089,18 +2100,27 @@ function selectHotspotForEdit(item, sceneId) {
     );
 }
 
-function renderSingleHotspotItem(item, sceneId, pitchVal, yawVal) {
+// 移動前のアイコンを確実に消してから、新しい座標で1つだけ再描画する
+function moveSingleHotspotItem(item, sceneId, pitchVal, yawVal) {
     if (!viewer || !item) return;
     const p = round1(pitchVal);
     const y = round1(yawVal);
 
+    // 1. 移動前の Pannellum ホットスポットと DOM 要素を完全に削除
     if (item.pnlmId) {
         try {
             viewer.removeHotSpot(item.pnlmId, sceneId);
         } catch (e) {}
     }
+    if (item.el && item.el.parentNode) {
+        try {
+            item.el.remove();
+        } catch (e) {}
+    }
+    item.el = null;
 
-    const newId = "hs_" + sceneId + "_" + item.source + "_" + item.index + "_" + Math.random().toString(36).slice(2, 7);
+    // 2. 新しい一意の ID を発行し、1つだけ追加
+    const newId = "hs_" + sceneId + "_" + item.source + "_" + item.index + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
     item.pnlmId = newId;
 
     const hsConfig = Object.assign({}, item.data, {
@@ -2122,17 +2142,19 @@ function renderSingleHotspotItem(item, sceneId, pitchVal, yawVal) {
         viewer.addHotSpot(hsConfig, sceneId);
     } catch (e) {}
 
+    if (selectedHotspotEdit &&
+        selectedHotspotEdit.source === item.source &&
+        selectedHotspotEdit.index === item.index) {
+        selectedHotspotEdit.pnlmId = newId;
+        selectedHotspotEdit.tempPitch = p;
+        selectedHotspotEdit.tempYaw = y;
+    }
+
     setTimeout(() => {
-        const el = getHotspotDomElement(item.pnlmId, item.data);
+        const el = getHotspotDomElement(newId, item.data);
         if (el) {
             item.el = el;
-            el.dataset.boundTapItem = "1";
-            el.addEventListener("click", function (e) {
-                if (!isEditMode) return;
-                e.stopPropagation();
-                e.preventDefault();
-                selectHotspotForEdit(item, sceneId);
-            }, true);
+            attachHotspotEditListener(item, sceneId);
         }
         highlightSelectedHotspotDom();
     }, 20);
@@ -2145,6 +2167,11 @@ function populateSceneHotspotsWithoutReload(sceneId) {
         if (item.pnlmId) {
             try {
                 viewer.removeHotSpot(item.pnlmId, sceneId);
+            } catch (e) {}
+        }
+        if (item.el && item.el.parentNode) {
+            try {
+                item.el.remove();
             } catch (e) {}
         }
     });
@@ -2168,8 +2195,26 @@ function populateSceneHotspotsWithoutReload(sceneId) {
     ];
 
     combined.forEach((entry, i) => {
+        const isSelected = Boolean(
+            selectedHotspotEdit &&
+            selectedHotspotEdit.sceneId === sceneId &&
+            selectedHotspotEdit.source === entry.source &&
+            selectedHotspotEdit.index === entry.index
+        );
+
+        const pVal = (isSelected && typeof selectedHotspotEdit.tempPitch === 'number')
+            ? selectedHotspotEdit.tempPitch
+            : entry.data.pitch;
+        const yVal = (isSelected && typeof selectedHotspotEdit.tempYaw === 'number')
+            ? selectedHotspotEdit.tempYaw
+            : entry.data.yaw;
+
         const customId = "hs_" + sceneId + "_" + entry.source + "_" + entry.index + "_" + i + "_" + Date.now();
-        const hsConfig = Object.assign({}, entry.data, { id: customId });
+        const hsConfig = Object.assign({}, entry.data, {
+            id: customId,
+            pitch: pVal,
+            yaw: yVal
+        });
 
         const item = {
             source: entry.source,
@@ -2178,6 +2223,10 @@ function populateSceneHotspotsWithoutReload(sceneId) {
             pnlmId: customId,
             el: null
         };
+
+        if (isSelected) {
+            selectedHotspotEdit.pnlmId = customId;
+        }
 
         if (isEditMode) {
             delete hsConfig.type;
@@ -2199,13 +2248,7 @@ function populateSceneHotspotsWithoutReload(sceneId) {
             const el = getHotspotDomElement(item.pnlmId, item.data);
             if (el) {
                 item.el = el;
-                el.dataset.boundTapItem = "1";
-                el.addEventListener("click", function (e) {
-                    if (!isEditMode) return;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    selectHotspotForEdit(item, sceneId);
-                }, true);
+                attachHotspotEditListener(item, sceneId);
             }
         });
         highlightSelectedHotspotDom();
@@ -2229,10 +2272,8 @@ function bindPanoramaTapToMove() {
 
     panoEl.addEventListener('pointerup', function (e) {
         if (!isEditMode || !isGameStarted || !viewer || !selectedHotspotEdit) return;
-        // ホットスポット自体をタップした場合はそちらで選択処理
         if (e.target && e.target.closest && e.target.closest('.pnlm-hotspot')) return;
 
-        // 視点ドラッグ（大きく動かした操作）ではなく「タップ」とみなす場合のみ移動
         const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
         if (dist > 8) return;
 
@@ -2251,7 +2292,7 @@ function bindPanoramaTapToMove() {
         );
 
         if (targetItem) {
-            renderSingleHotspotItem(targetItem, sceneId, newPitch, newYaw);
+            moveSingleHotspotItem(targetItem, sceneId, newPitch, newYaw);
         }
 
         const label = selectedHotspotEdit.data.text || selectedHotspotEdit.data.id || selectedHotspotEdit.data.cssClass || 'アイコン';
@@ -2262,7 +2303,6 @@ function bindPanoramaTapToMove() {
     }, true);
 }
 
-// 下のコピーボタンを押したときに位置を確定・固定し、JSONをコピー
 function fixAndCopySelectedHotspot() {
     if (!selectedHotspotEdit || !viewer) {
         setCoordBarMessage('先に動かしたいアイコンをタップして選択し、移動先をタップしてください', false);
